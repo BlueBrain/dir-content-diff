@@ -45,16 +45,16 @@ def _format_change_value(value):
 def compare_dicts(ref, comp, *args, **kwargs):
     """Compare two dictionaries.
 
-    This function call :func:`dictdiffer.diff` and format its output. The args and kwargs are
-    directly passed to this function, see the detail in the doc of this function.
+    This function call :func:`dictdiffer.diff` and format its output, read the doc of this
+    function for details on args and kwargs.
 
     Args:
         ref (dict): The reference dictionary.
         comp (dict): The compared dictionary.
 
     Returns:
-        bool or str: True if the dictionaries are considered as equal or a string explaining why
-        they are not considered as equal.
+        bool or str: ``True`` if the dictionaries are considered as equal or a string explaining
+        why they are not considered as equal.
     """
     format_mapping = {
         "add": _format_add_value,
@@ -84,7 +84,7 @@ def compare_dicts(ref, comp, *args, **kwargs):
 def compare_json_files(ref_path, comp_path, *args, **kwargs):
     """Compare data from two JSON files.
 
-    This function calls :func:`compare_dicts`, see in the doc of this function for details on args
+    This function calls :func:`compare_dicts`, read the doc of this function for details on args
     and kwargs.
     """
     with open(ref_path) as file:
@@ -98,7 +98,7 @@ def compare_json_files(ref_path, comp_path, *args, **kwargs):
 def compare_yaml_files(ref_path, comp_path, *args, **kwargs):
     """Compare data from two YAML files.
 
-    This function calls :func:`compare_dicts`, see in the doc of this function for details on args
+    This function calls :func:`compare_dicts`, read the doc of this function for details on args
     and kwargs.
     """
     with open(ref_path) as file:
@@ -112,7 +112,7 @@ def compare_yaml_files(ref_path, comp_path, *args, **kwargs):
 def compare_pdf_files(ref_path, comp_path, *args, **kwargs):
     """Compare two PDF files.
 
-    This function calls :func:`diff_pdf_visually.pdfdiff`, see in the doc of this function for
+    This function calls :func:`diff_pdf_visually.pdfdiff`, read the doc of this function for
     details on args and kwargs here:
     https://github.com/bgeron/diff-pdf-visually/blob/main/diff_pdf_visually/diff.py
     """

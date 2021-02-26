@@ -32,8 +32,9 @@ VERSION = imp.load_source("", "dir_content_diff/version.py").VERSION
 
 setup(
     name="dir-content-diff",
-    author="bbp-ou-cells",
-    author_email="bbp-ou-cells@groupes.epfl.ch",
+    author="bbp-ou-nse",
+    author_email="bbp-ou-nse@groupes.epfl.ch",
+    version=VERSION,
     description="Simple tool to compare directory contents.",
     long_description=README,
     long_description_content_type="text/x-rst",
@@ -58,6 +59,5 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
     ],
 )

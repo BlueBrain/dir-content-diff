@@ -5,7 +5,7 @@ _ext_pattern = re.compile(r"\.?(.*)")
 
 
 def format_ext(ext):
-    """Ensure that the givent extension string begins with a dot.
+    """Ensure that the given extension string begins with a dot.
 
     Args:
         ext(str): The extension to format.
@@ -23,8 +23,8 @@ def diff_msg_formatter(ref, comp, reason=None, args=None, kwargs=None):
     Args:
         ref (str): The path to the reference file.
         comp (str): The path to the compared file.
-        reason (True or str): If the reason is True, True is returned. If it is a str, a message
-            is formatted.
+        reason (bool or str): If the reason is True, True is returned. If it is a str, a formatted
+            message is returned.
         args (list): (optional) The args used for the comparison.
         kwargs (list): (optional) The kwargs used for the comparison.
 

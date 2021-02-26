@@ -103,8 +103,9 @@ def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
                 }
 
     Returns:
-        list: A list of difference messages. If the directories are considered as equal, an empty
-        list is returned.
+        dict: A dict in which the keys are the relative file paths and the values are the
+        difference messages. If the directories are considered as equal, an empty dict is
+        returned.
     """
     if comparators is None:
         comparators = _COMPARATORS
@@ -153,12 +154,13 @@ def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
 
 
 def assert_equal_trees(*args, **kwargs):
-    """Raises AssertionError if differences are found in the two different directory trees.
+    """Raises an :class:`AssertionError` if differences are found in the two directory trees.
 
     See the :func:`compare_trees` function for details on arguments as this function just calls it.
     """
     different_files = compare_trees(*args, **kwargs)
 
+    # Sort the files according to their relative paths
     sorted_items = sorted(different_files.items(), key=lambda x: x[0])
 
     # Test that all files are equal and raise the formatted messages if there are differences

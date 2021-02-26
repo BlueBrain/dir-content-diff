@@ -11,7 +11,7 @@ from dir_content_diff.util import diff_msg_formatter
 def compare_dataframes(ref, comp, *args, ignore_columns=None, replace_pattern=None, **kwargs):
     """Compare two :class:`Pandas.DataFrames`.
 
-    This function calls :func:`pandas.testing.assert_series_equal`, see in the doc of this function
+    This function calls :func:`pandas.testing.assert_series_equal`, read the doc of this function
     for details on args and kwargs.
 
     Args:
@@ -28,7 +28,7 @@ def compare_dataframes(ref, comp, *args, ignore_columns=None, replace_pattern=No
                 }
 
     Returns:
-        bool or str: True if the DataFrames are considered as equal or a string explaining why
+        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
         they are not considered as equal.
     """
     if ignore_columns is not None:
@@ -88,8 +88,8 @@ def compare_csv_files(
 ):
     """Compare data from two CSV / TSV / DAT files.
 
-    This function calls :func:`compare_dataframes`, see in the doc of this function
-    for details on args and kwargs.
+    This function calls :func:`compare_dataframes`, read the doc of this function for details on
+    args and kwargs.
 
     Args:
         ref_path (str): The path to the reference CSV file.
@@ -97,7 +97,7 @@ def compare_csv_files(
         read_csv_kwargs (dict): The kwargs that should be passed to :func:`pandas.read_csv`.
 
     Returns:
-        bool or str: True if the DataFrames are considered as equal or a string explaining why
+        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
         they are not considered as equal.
     """
     if read_csv_kwargs is None:

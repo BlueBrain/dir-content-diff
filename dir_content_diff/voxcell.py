@@ -24,7 +24,7 @@ def compare_nrrd_files(ref_path, comp_path, precision=None):
         precision (int): The desired precision, default is 6.
 
     Returns:
-        bool or str: True if the DataFrames are considered as equal or a string explaining why
+        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
         they are not considered as equal.
     """
     ref = VoxelData.load_nrrd(ref_path).raw
@@ -47,7 +47,7 @@ def compare_mvd3_files(ref_path, comp_path, *args, **kwargs):
     Note: MVD3 files can contain their creation date, so their hashes are depends on
     this creation date, even if the data are the same.
 
-    This function calls :func:`dir_content_diff.pandas.compare_dataframes`, see in the doc of this
+    This function calls :func:`dir_content_diff.pandas.compare_dataframes`, read the doc of this
     function for details on args and kwargs.
 
     Args:
@@ -55,7 +55,7 @@ def compare_mvd3_files(ref_path, comp_path, *args, **kwargs):
         comp_path (str): The path to the compared CSV file.
 
     Returns:
-        bool or str: True if the DataFrames are considered as equal or a string explaining why
+        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
         they are not considered as equal.
     """
     ref = CellCollection.load_mvd3(ref_path).as_dataframe()

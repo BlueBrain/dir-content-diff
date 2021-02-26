@@ -163,6 +163,35 @@ class TestEqualTrees:
         )
         assert match_res is not None
 
+        # Test with regex flag
+        specific_args = {
+            "file.csv": {
+                "kwargs": {
+                    "replace_pattern": {
+                        (str(res_tree_equal), "", re.DOTALL): [
+                            "test_path",
+                            "test_data_with_path",
+                            "test_path_only_in_ref",
+                            "test_path_only_in_res",
+                        ]
+                    }
+                }
+            }
+        }
+        res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
+
+        assert len(res) == 1
+        res_csv = res["file.csv"]
+        match_res = re.match(
+            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n\n"
+            r"Column 'test_path_only_in_ref': The column is missing in the compared DataFrame, "
+            r"please fix the 'replace_pattern' argument.\n\n"
+            r"Column 'test_path_only_in_res': The column is missing in the reference DataFrame, "
+            r"please fix the 'replace_pattern' argument.",
+            res_csv,
+        )
+        assert match_res is not None
+
         # Test with only nan values in column
         for df_path in [ref_csv, res_csv_equal]:
             df = pd.read_csv(df_path, index_col="index")

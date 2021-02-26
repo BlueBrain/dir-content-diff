@@ -24,7 +24,7 @@ def compare_dataframes(ref, comp, *args, ignore_columns=None, replace_pattern=No
             .. code-block:: python
 
                 {
-                    (<pattern>, <new_value>): [col1, col2]
+                    (<pattern>, <new_value>, <optional regex flag>): [col1, col2]
                 }
 
     Returns:
@@ -38,7 +38,13 @@ def compare_dataframes(ref, comp, *args, ignore_columns=None, replace_pattern=No
     res = {}
 
     if replace_pattern is not None:
-        for (pattern, new_value), cols in replace_pattern.items():
+        for pat, cols in replace_pattern.items():
+            pattern = pat[0]
+            new_value = pat[1]
+            if len(pat) > 2:
+                flags = pat[2]
+            else:
+                flags = 0
             for col in cols:
                 if col not in ref.columns:
                     res[col] = (
@@ -53,7 +59,7 @@ def compare_dataframes(ref, comp, *args, ignore_columns=None, replace_pattern=No
                 elif hasattr(comp[col], "str"):
                     # If all values are NaN, Pandas casts the column dtype to float, so the str
                     # attribute is not available.
-                    comp[col] = comp[col].str.replace(pattern, new_value)
+                    comp[col] = comp[col].str.replace(pattern, new_value, flags=flags)
 
     for col in ref.columns:
         if col in res:

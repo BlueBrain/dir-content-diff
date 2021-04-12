@@ -4,6 +4,7 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 import re
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -211,6 +212,65 @@ class TestEqualTrees:
             res_csv,
         )
         assert match_res is not None
+
+    def test_save_csv_file(self, tmpdir, ref_csv, res_csv_equal, pandas_registry_reseter):
+        # Add a column with relative paths in the CSV file
+        ref_df = pd.read_csv(ref_csv, index_col="index")
+        ref_df["test_path"] = "relative_path/test.file"
+        relative_path = "relative_path/test.file"
+        absolute_root = Path("/test/absolute/path")
+        absolute_path = str(absolute_root / relative_path)
+        path_data = (
+            f"Some text before the first path: {relative_path} some text after the first path.\n"
+            f"Some text before the second path: {relative_path} some text after the second path."
+        )
+        ref_df["test_data_with_path"] = path_data
+        ref_df["test_path_only_in_ref"] = relative_path
+        ref_df.to_csv(ref_csv, index=True, index_label="index")
+
+        res_df = pd.read_csv(res_csv_equal, index_col="index")
+        res_df["test_path"] = absolute_path
+        res_df["test_data_with_path"] = path_data.replace(relative_path, absolute_path, 1)
+        res_df["test_path_only_in_res"] = absolute_path
+        res_df.to_csv(res_csv_equal, index=True, index_label="index")
+
+        # Check that the missing column is found
+        replace_pattern = {
+            (str(absolute_root), ""): [
+                "test_path",
+                "test_data_with_path",
+                "test_path_only_in_ref",
+                "test_path_only_in_res",
+            ]
+        }
+
+        res = dir_content_diff.pandas.save_csv_file(
+            res_csv_equal,
+            str(tmpdir / "res.csv"),
+            replace_pattern=replace_pattern,
+            read_csv_kwargs={"index_col": "index"},
+        )
+
+        assert len(res) == 1
+        test_path_only_in_ref_msg = (
+            "The column is missing in the compared DataFrame, please fix the 'replace_pattern' "
+            "argument."
+        )
+        assert res["test_path_only_in_ref"] == test_path_only_in_ref_msg
+
+        res_with_ref = dir_content_diff.pandas.save_csv_file(
+            res_csv_equal,
+            str(tmpdir / "res_with_ref.csv"),
+            replace_pattern=replace_pattern,
+            ref_path=ref_csv,
+        )
+
+        assert len(res_with_ref) == 2
+        assert res_with_ref["test_path_only_in_ref"] == test_path_only_in_ref_msg
+        assert res_with_ref["test_path_only_in_res"] == (
+            "The column is missing in the reference DataFrame, please fix the 'replace_pattern' "
+            "argument."
+        )
 
 
 class TestDiffTrees:

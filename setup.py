@@ -1,7 +1,9 @@
-import imp
+"""Setup for the dir-content-diff package."""
+import imp  # pylint: disable=deprecated-module
 import sys
 
-from setuptools import find_packages, setup
+from setuptools import find_packages
+from setuptools import setup
 
 if sys.version_info < (3, 6):
     sys.exit("Sorry, Python < 3.6 is not supported")

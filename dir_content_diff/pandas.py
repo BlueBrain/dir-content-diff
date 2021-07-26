@@ -106,8 +106,8 @@ def compare_dataframes(ref, comp, *args, ignore_columns=None, replace_pattern=No
             else:
                 pd.testing.assert_series_equal(ref[col], comp[col], *args, **kwargs)
                 res[col] = True
-        except AssertionError as exception:
-            res[col] = exception.args[0]
+        except AssertionError as e:
+            res[col] = e.args[0]
 
     for col in comp.columns:
         if col not in res and col not in ref.columns:

@@ -1,17 +1,27 @@
-[MESSAGES CONTROL]
-disable=
-	invalid-name,
+# BLACK
+[tool.black]
+line-length = 100
+target-version = ['py36']
 
-[FORMAT]
+# PYLINT
+[tool.pylint.messages-control]
+disable = [
+	"invalid-name",
+	"similarities",
+]
+generated-members = 'pandas.*'
+extension-pkg-whitelist = 'numpy'
+
+[tool.pylint.format]
 # Maximum number of characters on a single line.
 max-line-length=100
 
-[DESIGN]
+[tool.pylint.design]
 # Maximum number of arguments for function / method
 max-args=10
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
-ignored-argument-names=args|kwargs|_.*
+ignored-argument-names='args|kwargs|_.*'
 # Maximum number of locals for function / method body
 max-locals=25
 # Maximum number of return / yield for function / method body

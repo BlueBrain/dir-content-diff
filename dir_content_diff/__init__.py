@@ -73,6 +73,59 @@ def unregister_comparator(ext, quiet=False):
     return _COMPARATORS.pop(ext, None)
 
 
+def compare_files(ref_file, comp_file, comparator, specific_args=None):
+    """Compare 2 files and return the difference.
+
+    Args:
+        ref_file (str): Path to the reference file.
+        comp_file (str): Path to the compared file.
+        comparator (callable): The comparator to use.
+        specific_args (dict): A dict with the args/kwargs that should be given to the comparator.
+            This dict should be like the following:
+
+            .. code-block:: Python
+
+                {
+                    args: [arg1, arg2, ...],
+                    kwargs: {
+                        kwarg_name_1: kwarg_value_1,
+                        kwarg_name_2: kwarg_value_2,
+                    }
+                }
+
+    Returns:
+        bool or str: True if the files are equal or a string with a message explaining the
+        differences if they are different.
+    """
+    # Get the compared file
+    L.debug("Compare: %s and %s", ref_file, comp_file)
+
+    # Get specific args and kwargs
+    if specific_args is None:
+        specific_args = {}
+    args = specific_args.get("args", [])
+    kwargs = specific_args.get("kwargs", {})
+
+    if comparator is not None:
+        # If the suffix has an associated comparator, use this comparator
+        try:
+            return comparator(ref_file, comp_file, *args, **kwargs)
+        except Exception as exception:  # pylint: disable=broad-except
+            return diff_msg_formatter(
+                ref_file,
+                comp_file,
+                reason="\n".join(exception.args),
+                args=args,
+                kwargs=kwargs,
+            )
+    else:
+        # If no comparator is known for this suffix, test with standard filecmp library
+        if not filecmp.cmp(ref_file, comp_file):
+            msg = diff_msg_formatter(ref_file, comp_file)
+            return msg
+        return True
+
+
 def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
     """Compare all files from 2 different directory trees and return the differences.
 
@@ -85,7 +138,7 @@ def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
     Args:
         ref_path (str): Path to the reference directory.
         comp_path (str): Path to the directory that must be compared against the reference.
-        comparator (dict): A dict to override the registered comparators.
+        comparators (dict): A dict to override the registered comparators.
         specific_args (dict): A dict with the args/kwargs that should be given to the comparator
             for a given file. This dict should be like the following:
 
@@ -121,31 +174,19 @@ def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
     for ref_file in ref_path.glob("**/*"):
         if ref_file.is_dir():
             continue
-        suffix = ref_file.suffix
+
         relative_path = ref_file.relative_to(ref_path).as_posix()
         comp_file = comp_path / relative_path
-        L.debug("Compare: %s and %s", ref_file, comp_file)
+
         if comp_file.exists():
-            args = specific_args.get(relative_path, {}).get("args", [])
-            kwargs = specific_args.get(relative_path, {}).get("kwargs", {})
-            if suffix in comparators:
-                try:
-                    res = comparators[suffix](ref_file, comp_file, *args, **kwargs)
-                    if res is not True:
-                        different_files[relative_path] = res
-                except Exception as exception:  # pylint: disable=broad-except
-                    different_files[relative_path] = diff_msg_formatter(
-                        ref_file,
-                        comp_file,
-                        reason="\n".join(exception.args),
-                        args=args,
-                        kwargs=kwargs,
-                    )
-            else:
-                # If no comparator is given for this suffix, test with standard filecmp library
-                if not filecmp.cmp(ref_file, comp_file):
-                    msg = diff_msg_formatter(ref_file, comp_file)
-                    different_files[relative_path] = msg
+            res = compare_files(
+                ref_file,
+                comp_file,
+                comparator=comparators.get(ref_file.suffix),
+                specific_args=specific_args.get(relative_path),
+            )
+            if res is not True:
+                different_files[relative_path] = res
         else:
             msg = f"The file '{relative_path}' does not exist in '{comp_path}'."
             different_files[relative_path] = msg
@@ -154,7 +195,7 @@ def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
 
 
 def assert_equal_trees(*args, **kwargs):
-    """Raises an :class:`AssertionError` if differences are found in the two directory trees.
+    """Raise an :class:`AssertionError` if differences are found in the two directory trees.
 
     See the :func:`compare_trees` function for details on arguments as this function just calls it.
     """

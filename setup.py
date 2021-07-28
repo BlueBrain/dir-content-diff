@@ -18,6 +18,7 @@ reqs = [
     "PyYaml",
 ]
 doc_reqs = [
+    "m2r2",
     "sphinx",
     "sphinx-bluebrain-theme",
 ]
@@ -43,7 +44,7 @@ setup(
     url="https://bbpteam.epfl.ch/documentation/projects/dir-content-diff",
     project_urls={
         "Tracker": "https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
-        "Source": "ssh://bbpcode.epfl.ch/common/dir-content-diff",
+        "Source": "https://bbpgitlab.epfl.ch/neuromath/dir-content-diff",
     },
     license="BBP-internal-confidential",
     packages=find_packages(exclude=["tests"]),

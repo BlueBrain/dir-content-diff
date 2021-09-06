@@ -8,63 +8,77 @@ except ImportError as e:  # pragma: no cover
     raise ImportError("Could not import voxcell package, please install it.") from e
 
 from dir_content_diff import register_comparator
-from dir_content_diff.pandas import compare_dataframes
-from dir_content_diff.util import diff_msg_formatter
+from dir_content_diff.base_comparators import BaseComparator
+from dir_content_diff.pandas import DataframeComparator
 
 
-def compare_nrrd_files(ref_path, comp_path, precision=None):
-    """Compare data from two NRRD files.
+class NrrdComparator(BaseComparator):
+    """Comparator for NRRD files."""
 
-    Note: NRRD files can contain their creation date, so their hashes are depends on
-    this creation date, even if the data are the same.
+    def load(self, path, **kwargs):
+        """Load a NRRD file into a :class:`numpy.ndarray`."""
+        return VoxelData.load_nrrd(path, **kwargs).raw
 
-    Args:
-        ref_path (str): The path to the reference CSV file.
-        comp_path (str): The path to the compared CSV file.
-        precision (int): The desired precision, default is 6.
+    def diff(self, ref, comp, precision=None):
+        """Compare data from two NRRD files.
 
-    Returns:
-        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
-        they are not considered as equal.
-    """
-    ref = VoxelData.load_nrrd(ref_path).raw
-    comp = VoxelData.load_nrrd(comp_path).raw
-    try:
-        if precision is not None:
-            np.testing.assert_array_almost_equal(ref, comp, decimal=precision)
-        else:
-            np.testing.assert_array_equal(ref, comp)
-        return True
-    except AssertionError as exception:
-        return diff_msg_formatter(
-            ref_path, comp_path, exception.args[0], kwargs={"precision": precision}
+        Note: NRRD files can contain their creation date, so their hashes are depends on
+        this creation date, even if the actual data are the same. This comparator only compares the
+        actual data in the files.
+
+        Args:
+            ref_path (str): The path to the reference CSV file.
+            comp_path (str): The path to the compared CSV file.
+            precision (int): The desired precision, default is exact precision.
+
+        Returns:
+            bool or str: ``False`` if the DataFrames are considered as equal or a string explaining
+            why they are not considered as equal.
+        """
+        try:
+            if precision is not None:
+                np.testing.assert_array_almost_equal(ref, comp, decimal=precision)
+            else:
+                np.testing.assert_array_equal(ref, comp)
+            return False
+        except AssertionError as exception:
+            return exception.args
+
+    def format(self, difference):
+        """Format one element difference."""
+        return difference
+
+    def report(self, ref_file, comp_file, formatted_differences, diff_args, diff_kwargs, **kwargs):
+        """Create a report from the formatted differences."""
+        if "precision" not in diff_kwargs:
+            diff_kwargs["precision"] = None
+        return super().report(
+            ref_file,
+            comp_file,
+            formatted_differences,
+            diff_args,
+            diff_kwargs,
+            **kwargs,
         )
 
 
-def compare_mvd3_files(ref_path, comp_path, *args, **kwargs):
-    """Compare data from two MVD3 files.
+class Mvd3Comparator(DataframeComparator):
+    """Comparator for MVD3 files.
 
     Note: MVD3 files can contain their creation date, so their hashes are depends on
     this creation date, even if the data are the same.
 
-    This function calls :func:`dir_content_diff.pandas.compare_dataframes`, read the doc of this
-    function for details on args and kwargs.
-
-    Args:
-        ref_path (str): The path to the reference CSV file.
-        comp_path (str): The path to the compared CSV file.
-
-    Returns:
-        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
-        they are not considered as equal.
+    The ``diff`` function of this comparator calls
+    :func:`dir_content_diff.pandas.compare_dataframes`, read the doc of this function for details
+    on args and kwargs.
     """
-    ref = CellCollection.load_mvd3(ref_path).as_dataframe()
-    comp = CellCollection.load_mvd3(comp_path).as_dataframe()
-    res = compare_dataframes(ref, comp, *args, **kwargs)
-    return diff_msg_formatter(ref_path, comp_path, res, args, kwargs)
+
+    def load(self, path, **kwargs):
+        """Load a MVD3 file into a :class:`Pandas.DataFrames`."""
+        return CellCollection.load_mvd3(path, **kwargs).as_dataframe()
 
 
 def register_voxcell():
     """Register Voxcell extensions."""
-    register_comparator(".nrrd", compare_nrrd_files)
-    register_comparator(".mvd3", compare_mvd3_files)
+    register_comparator(".nrrd", NrrdComparator())
+    register_comparator(".mvd3", Mvd3Comparator())

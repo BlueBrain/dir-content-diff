@@ -6,6 +6,7 @@ target-version = ['py36']
 # PYLINT
 [tool.pylint.messages-control]
 disable = [
+	"arguments-differ",
 	"invalid-name",
 	"similarities",
 ]

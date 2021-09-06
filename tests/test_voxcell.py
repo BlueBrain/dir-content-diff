@@ -20,20 +20,22 @@ class TestRegistry:
 
     def test_voxcell_register(self, registry_reseter):
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
         }
 
         dir_content_diff.voxcell.register_voxcell()
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
-            ".nrrd": dir_content_diff.voxcell.compare_nrrd_files,
-            ".mvd3": dir_content_diff.voxcell.compare_mvd3_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
+            ".nrrd": dir_content_diff.voxcell.NrrdComparator(),
+            ".mvd3": dir_content_diff.voxcell.Mvd3Comparator(),
         }
 
 

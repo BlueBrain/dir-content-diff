@@ -19,20 +19,22 @@ class TestRegistry:
 
     def test_pandas_register(self, registry_reseter):
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
         }
 
         dir_content_diff.pandas.register_pandas()
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
-            ".csv": dir_content_diff.pandas.compare_csv_files,
-            ".tsv": dir_content_diff.pandas.compare_csv_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
+            ".csv": dir_content_diff.pandas.CsvComparator(),
+            ".tsv": dir_content_diff.pandas.CsvComparator(),
         }
 
 
@@ -155,7 +157,8 @@ class TestEqualTrees:
         assert len(res) == 1
         res_csv = res["file.csv"]
         match_res = re.match(
-            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n\n"
+            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n"
+            r"Kwargs used: {'replace_pattern': {.*}}\n\n"
             r"Column 'test_path_only_in_ref': The column is missing in the compared DataFrame, "
             r"please fix the 'replace_pattern' argument.\n\n"
             r"Column 'test_path_only_in_res': The column is missing in the reference DataFrame, "
@@ -184,7 +187,8 @@ class TestEqualTrees:
         assert len(res) == 1
         res_csv = res["file.csv"]
         match_res = re.match(
-            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n\n"
+            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n"
+            r"Kwargs used: {'replace_pattern': {.*}}\n\n"
             r"Column 'test_path_only_in_ref': The column is missing in the compared DataFrame, "
             r"please fix the 'replace_pattern' argument.\n\n"
             r"Column 'test_path_only_in_res': The column is missing in the reference DataFrame, "
@@ -204,7 +208,8 @@ class TestEqualTrees:
         assert len(res) == 1
         res_csv = res["file.csv"]
         match_res = re.match(
-            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n\n"
+            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n"
+            r"Kwargs used: {'replace_pattern': {.*}}\n\n"
             r"Column 'test_path_only_in_ref': The column is missing in the compared DataFrame, "
             r"please fix the 'replace_pattern' argument.\n\n"
             r"Column 'test_path_only_in_res': The column is missing in the reference DataFrame, "
@@ -291,7 +296,7 @@ class TestDiffTrees:
     ):
         specific_args = {
             "file.csv": {
-                "kwargs": {"read_csv_kwargs": {"header": None, "skiprows": 1, "prefix": "col_"}}
+                "kwargs": {"load_kwargs": {"header": None, "skiprows": 1, "prefix": "col_"}}
             }
         }
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)

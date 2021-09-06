@@ -23,18 +23,18 @@ def diff_msg_formatter(ref, comp, reason=None, args=None, kwargs=None):
     Args:
         ref (str): The path to the reference file.
         comp (str): The path to the compared file.
-        reason (bool or str): If the reason is True, True is returned. If it is a str, a formatted
+        reason (bool or str): If the reason is False, False is returned. If it is a str, a formatted
             message is returned.
         args (list): (optional) The args used for the comparison.
         kwargs (list): (optional) The kwargs used for the comparison.
 
     Returns:
-        True or the diff message.
+        False or the diff message.
     """
-    if reason is True:
-        return True
+    if not reason:
+        return False
 
-    if reason is not None and reason is not False:
+    if reason is not None and reason is not True:
         reason_used = f"{reason}"
     else:
         reason_used = ""

@@ -1,24 +1,25 @@
 """Module containing the base functions of the dir-content-diff package."""
 import copy
-import filecmp
 import logging
 from pathlib import Path
 
-from dir_content_diff.base_comparators import compare_json_files
-from dir_content_diff.base_comparators import compare_pdf_files
-from dir_content_diff.base_comparators import compare_yaml_files
+from dir_content_diff.base_comparators import DefaultComparator
+from dir_content_diff.base_comparators import JsonComparator
+from dir_content_diff.base_comparators import PdfComparator
+from dir_content_diff.base_comparators import YamlComparator
 from dir_content_diff.util import diff_msg_formatter
 from dir_content_diff.util import format_ext
-from dir_content_diff.version import VERSION as __version__
+from dir_content_diff.version import VERSION as __version__  # noqa
 
 L = logging.getLogger(__name__)
 
 
 _DEFAULT_COMPARATORS = {
-    ".json": compare_json_files,
-    ".pdf": compare_pdf_files,
-    ".yaml": compare_yaml_files,
-    ".yml": compare_yaml_files,
+    None: DefaultComparator(),
+    ".json": JsonComparator(),
+    ".pdf": PdfComparator(),
+    ".yaml": YamlComparator(),
+    ".yml": YamlComparator(),
 }
 
 _COMPARATORS = {}
@@ -43,9 +44,24 @@ def register_comparator(ext, comparator, force=False):
 
     Args:
         ext (str): The extension to register.
-        comparator (str): The comparator that should be associated with the given extension.
+        comparator (callable): The comparator that should be associated with the given extension.
         force (bool): If set to `True`, no exception is raised if the given `ext` is already
             registered.
+
+    .. note::
+        The given comparator should have the following signature:
+
+        .. code-block:: python
+
+            comparator(
+                ref_file: str,
+                comp_file: str,
+                *diff_args: Sequence[Any],
+                return_raw_diffs: bool=False,
+                **diff_kwargs: Mapping[str, Any],
+            ) -> Union[False, str]
+
+        The return type can be Any when used with `return_raw_diffs == True`.
     """
     ext = format_ext(ext)
     if not force and ext in _COMPARATORS:
@@ -73,60 +89,45 @@ def unregister_comparator(ext, quiet=False):
     return _COMPARATORS.pop(ext, None)
 
 
-def compare_files(ref_file, comp_file, comparator, specific_args=None):
+def compare_files(ref_file, comp_file, comparator, *args, return_raw_diffs=False, **kwargs):
     """Compare 2 files and return the difference.
 
     Args:
         ref_file (str): Path to the reference file.
         comp_file (str): Path to the compared file.
-        comparator (callable): The comparator to use.
-        specific_args (dict): A dict with the args/kwargs that should be given to the comparator.
-            This dict should be like the following:
-
-            .. code-block:: Python
-
-                {
-                    args: [arg1, arg2, ...],
-                    kwargs: {
-                        kwarg_name_1: kwarg_value_1,
-                        kwarg_name_2: kwarg_value_2,
-                    }
-                }
+        comparator (callable): The comparator to use (see in :func:`register_comparator` for the
+            comparator signature).
+        return_raw_diffs (bool): If set to True, only the raw differences are returned instead of a
+            formatted report.
+        *args: passed to the comparator.
+        **kwargs: passed to the comparator.
 
     Returns:
-        bool or str: True if the files are equal or a string with a message explaining the
+        bool or str: False if the files are equal or a string with a message explaining the
         differences if they are different.
     """
     # Get the compared file
     L.debug("Compare: %s and %s", ref_file, comp_file)
 
-    # Get specific args and kwargs
-    if specific_args is None:
-        specific_args = {}
-    args = specific_args.get("args", [])
-    kwargs = specific_args.get("kwargs", {})
+    if comparator is None:
+        # If the suffix has no associated comparator, use the default comparator
+        comparator = _COMPARATORS.get(None)
 
-    if comparator is not None:
-        # If the suffix has an associated comparator, use this comparator
-        try:
-            return comparator(ref_file, comp_file, *args, **kwargs)
-        except Exception as exception:  # pylint: disable=broad-except
-            return diff_msg_formatter(
-                ref_file,
-                comp_file,
-                reason="\n".join(exception.args),
-                args=args,
-                kwargs=kwargs,
-            )
-    else:
-        # If no comparator is known for this suffix, test with standard filecmp library
-        if not filecmp.cmp(ref_file, comp_file):
-            msg = diff_msg_formatter(ref_file, comp_file)
-            return msg
-        return True
+    try:
+        return comparator(ref_file, comp_file, *args, return_raw_diffs=return_raw_diffs, **kwargs)
+    except Exception as exception:  # pylint: disable=broad-except
+        return diff_msg_formatter(
+            ref_file,
+            comp_file,
+            reason="Exception raised: " + "\n".join(exception.args),
+            args=args,
+            kwargs=kwargs,
+        )
 
 
-def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
+def compare_trees(
+    ref_path, comp_path, comparators=None, specific_args=None, return_raw_diffs=False
+):
     """Compare all files from 2 different directory trees and return the differences.
 
     .. note::
@@ -154,6 +155,8 @@ def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
                     },
                     <another_file_path>: {...}
                 }
+        return_raw_diffs (bool): If set to True, only the raw differences are returned instead of a
+            formatted report.
 
     Returns:
         dict: A dict in which the keys are the relative file paths and the values are the
@@ -179,13 +182,16 @@ def compare_trees(ref_path, comp_path, comparators=None, specific_args=None):
         comp_file = comp_path / relative_path
 
         if comp_file.exists():
+            specific_file_args = specific_args.get(relative_path, {})
             res = compare_files(
                 ref_file,
                 comp_file,
-                comparator=comparators.get(ref_file.suffix),
-                specific_args=specific_args.get(relative_path),
+                comparators.get(ref_file.suffix),
+                *specific_file_args.get("args", []),
+                return_raw_diffs=return_raw_diffs,
+                **specific_file_args.get("kwargs", {}),
             )
-            if res is not True:
+            if res is not False:
                 different_files[relative_path] = res
         else:
             msg = f"The file '{relative_path}' does not exist in '{comp_path}'."

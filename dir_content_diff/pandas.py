@@ -5,6 +5,7 @@ except ImportError as exception:  # pragma: no cover
     raise ImportError("Could not import pandas package, please install it.") from exception
 
 from dir_content_diff import register_comparator
+from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.util import diff_msg_formatter
 
 
@@ -39,126 +40,96 @@ def format_dataframe(comp, replace_pattern=None, ref=None):
                 elif hasattr(comp[col], "str"):
                     # If all values are NaN, Pandas casts the column dtype to float, so the str
                     # attribute is not available.
-                    comp[col] = comp[col].str.replace(pattern, new_value, flags=flags)
+                    comp[col] = comp[col].str.replace(pattern, new_value, flags=flags, regex=True)
 
     return res
 
 
-def compare_dataframes(ref, comp, *args, ignore_columns=None, replace_pattern=None, **kwargs):
-    """Compare two :class:`Pandas.DataFrames`.
+class DataframeComparator(BaseComparator):
+    """Comparator for :class:`Pandas.DataFrames` objects."""
 
-    This function calls :func:`pandas.testing.assert_series_equal`, read the doc of this function
-    for details on args and kwargs.
+    def diff(self, ref, comp, *args, **kwargs):
+        """Compare two :class:`Pandas.DataFrames`.
 
-    Args:
-        ref (pandas.DataFrame): The reference DataFrame.
-        comp (pandas.DataFrame): The compared DataFrame.
-        ignore_columns (list(str)): The columns that should not be checked.
-        replace_pattern (dict): The columns that contain a given pattern which must be made
-            replaced. The dictionary must be as the following:
+        This function calls :func:`pandas.testing.assert_series_equal`, read the doc of this
+        function for details on args and kwargs.
 
-            .. code-block:: python
+        Args:
+            ref (pandas.DataFrame): The reference DataFrame.
+            comp (pandas.DataFrame): The compared DataFrame.
+            **ignore_columns (list(str)): (Optional) The columns that should not be checked.
+            **replace_pattern (dict): (Optional) The columns that contain a given pattern which
+                must be made replaced.
+                The dictionary must have the following format:
 
-                {
-                    (<pattern>, <new_value>, <optional regex flag>): [col1, col2]
-                }
+                .. code-block:: python
 
-    Returns:
-        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
-        they are not considered as equal.
-    """
-    res = format_dataframe(comp, replace_pattern, ref=ref)
+                    {
+                        (<pattern>, <new_value>, <optional regex flag>): [col1, col2]
+                    }
 
-    if ignore_columns is not None:
-        ref.drop(columns=ignore_columns, inplace=True, errors="ignore")
-        comp.drop(columns=ignore_columns, inplace=True, errors="ignore")
+        Returns:
+            bool or str: ``False`` if the DataFrames are considered as equal or a string explaining
+            why they are not considered equal.
+        """
+        ignore_columns = kwargs.pop("ignore_columns", None)
+        replace_pattern = kwargs.pop("replace_pattern", None)
 
-    if replace_pattern is not None:
-        for pat, cols in replace_pattern.items():
-            pattern = pat[0]
-            new_value = pat[1]
-            if len(pat) > 2:
-                flags = pat[2]
-            else:
-                flags = 0
-            for col in cols:
-                if col not in ref.columns:
-                    res[col] = (
-                        "The column is missing in the reference DataFrame, please fix the "
-                        "'replace_pattern' argument."
-                    )
-                elif col not in comp.columns:
-                    res[col] = (
-                        "The column is missing in the compared DataFrame, please fix the "
-                        "'replace_pattern' argument."
-                    )
-                elif hasattr(comp[col], "str"):
-                    # If all values are NaN, Pandas casts the column dtype to float, so the str
-                    # attribute is not available.
-                    comp[col] = comp[col].str.replace(pattern, new_value, flags=flags)
+        res = format_dataframe(comp, replace_pattern, ref=ref)
 
-    for col in ref.columns:
-        if col in res:
-            continue
-        try:
-            if col not in comp.columns:
-                res[col] = "The column is missing in the compared DataFrame."
-            else:
-                pd.testing.assert_series_equal(ref[col], comp[col], *args, **kwargs)
-                res[col] = True
-        except AssertionError as e:
-            res[col] = e.args[0]
+        if ignore_columns is not None:
+            ref.drop(columns=ignore_columns, inplace=True, errors="ignore")
+            comp.drop(columns=ignore_columns, inplace=True, errors="ignore")
 
-    for col in comp.columns:
-        if col not in res and col not in ref.columns:
-            res[col] = "The column is missing in the reference DataFrame."
+        for col in ref.columns:
+            if col in res:
+                continue
+            try:
+                if col not in comp.columns:
+                    res[col] = "The column is missing in the compared DataFrame."
+                else:
+                    pd.testing.assert_series_equal(ref[col], comp[col], *args, **kwargs)
+                    res[col] = True
+            except AssertionError as e:
+                res[col] = e.args[0]
 
-    not_equals = {k: v for k, v in res.items() if v is not True}
-    if len(not_equals) == 0:
-        return True
-    return "\n".join([f"\nColumn '{k}': {v}" for k, v in not_equals.items()])
+        for col in comp.columns:
+            if col not in res and col not in ref.columns:
+                res[col] = "The column is missing in the reference DataFrame."
+
+        not_equals = {k: v for k, v in res.items() if v is not True}
+        if len(not_equals) == 0:
+            return False
+        return not_equals
+
+    def format(self, difference):
+        """Format one element difference."""
+        k, v = difference
+        return f"\nColumn '{k}': {v}"
+
+    def sort(self, differences):
+        """Do not sort the differences to keep the column order."""
+        return differences
+
+    def report(self, ref_file, comp_file, formatted_differences, diff_args, diff_kwargs):
+        """Create a report from the formatted differences."""
+        # if not isinstance(formatted_differences, bool):
+        #     formatted_differences = "\n".join(formatted_differences)
+        return diff_msg_formatter(
+            ref_file,
+            comp_file,
+            formatted_differences,
+            diff_args,
+            diff_kwargs,
+        )
 
 
-def compare_csv_files(
-    ref_path,
-    comp_path,
-    *args,
-    ignore_columns=None,
-    replace_pattern=None,
-    read_csv_kwargs=None,
-    **kwargs,
-):
-    """Compare data from two CSV / TSV / DAT files.
+class CsvComparator(DataframeComparator):
+    """Comparator for CSV files."""
 
-    This function calls :func:`compare_dataframes`, read the doc of this function for details on
-    args and kwargs.
-
-    Args:
-        ref_path (str): The path to the reference CSV file.
-        comp_path (str): The path to the compared CSV file.
-        ignore_columns (list(str)): See :func:`compare_dataframes`.
-        replace_pattern (list(str)): See :func:`compare_dataframes`.
-        read_csv_kwargs (dict): The kwargs that should be passed to :func:`pandas.read_csv`.
-
-    Returns:
-        bool or str: ``True`` if the DataFrames are considered as equal or a string explaining why
-        they are not considered as equal.
-    """
-    if read_csv_kwargs is None:
-        read_csv_kwargs = {}
-    ref = pd.read_csv(ref_path, **read_csv_kwargs)
-    comp = pd.read_csv(comp_path, **read_csv_kwargs)
-
-    res = compare_dataframes(
-        ref,
-        comp,
-        *args,
-        ignore_columns=ignore_columns,
-        replace_pattern=replace_pattern,
-        **kwargs,
-    )
-
-    return diff_msg_formatter(ref_path, comp_path, res, args, kwargs)
+    def load(self, path, **kwargs):
+        """Load a CSV file into a :class:`Pandas.DataFrames`."""
+        return pd.read_csv(path, **kwargs)
 
 
 def save_csv_file(
@@ -174,7 +145,7 @@ def save_csv_file(
     Args:
         file_path (str): The path to the CSV file.
         file_dest (str): The path to the CSV file in which the formatted data will be exported.
-        replace_pattern (list(str)): See :func:`compare_dataframes`.
+        replace_pattern (list(str)): See :class:`DataframeComparator`.
         read_csv_kwargs (dict): The kwargs that should be passed to :func:`pandas.read_csv`.
         ref_path (str): The path to the reference CSV file if the formatting function needs it.
         to_csv_kwargs (dict): The kwargs that should be passed to :meth:`pandas.DataFrame.to_csv`.
@@ -199,5 +170,5 @@ def save_csv_file(
 
 def register_pandas():
     """Register Pandas extensions."""
-    register_comparator(".csv", compare_csv_files)
-    register_comparator(".tsv", compare_csv_files)
+    register_comparator(".csv", CsvComparator())
+    register_comparator(".tsv", CsvComparator())

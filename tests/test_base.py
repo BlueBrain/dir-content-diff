@@ -3,13 +3,260 @@
 # pylint: disable=no-self-use
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
+import json
 import re
 
+import dictdiffer
 import pytest
 
 import dir_content_diff
 from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
+
+
+class TestBaseComparator:
+    """Test the base comparator."""
+
+    def test_equal(self):
+        assert dir_content_diff.JsonComparator() != dir_content_diff.PdfComparator()
+        assert dir_content_diff.JsonComparator() == dir_content_diff.JsonComparator()
+
+        class ComparatorWithAttributes(dir_content_diff.base_comparators.BaseComparator):
+            """Compare data from two JSON files."""
+
+            def __init__(self, arg1, arg2):
+                super().__init__()
+                self.arg1 = arg1
+                if arg2:
+                    self.arg2 = arg2
+
+            def diff(self, ref, comp, *args, **kwargs):
+                return False
+
+        assert ComparatorWithAttributes(1, 2) == ComparatorWithAttributes(1, 2)
+        assert ComparatorWithAttributes(1, 2) != ComparatorWithAttributes(3, 4)
+        assert ComparatorWithAttributes(1, 2) != ComparatorWithAttributes(1, None)
+
+    def test_load_kwargs(self, ref_tree, res_tree_diff):
+        class ComparatorWithLoader(dir_content_diff.base_comparators.JsonComparator):
+            """Compare data from two JSON files."""
+
+            def load(self, path, load_empty=False):
+                if load_empty:
+                    return {}
+                return super().load(path)
+
+        ref_file = ref_tree / "file.json"
+        res_file = res_tree_diff / "file.json"
+
+        diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithLoader(),
+        )
+
+        no_load_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithLoader(),
+            load_kwargs={"load_empty": False},
+        )
+
+        no_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithLoader(),
+            load_kwargs={"load_empty": True},
+        )
+
+        no_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithLoader(default_load_kwargs={"load_empty": True}),
+        )
+
+        diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithLoader(default_load_kwargs={"load_empty": True}),
+            load_kwargs={"load_empty": False},
+        )
+
+        assert diff == no_load_diff
+        assert diff is not False
+        assert no_diff is False
+        assert no_diff_default is False
+        assert diff_default == diff
+
+    def test_filter_kwargs(self, ref_tree, res_tree_diff):
+        class ComparatorWithFilter(dir_content_diff.base_comparators.JsonComparator):
+            """Compare data from two JSON files."""
+
+            def filter(self, differences, remove_all=False):
+                if remove_all:
+                    return []
+                return differences
+
+        ref_file = ref_tree / "file.json"
+        res_file = res_tree_diff / "file.json"
+
+        diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFilter(),
+        )
+
+        no_filter_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFilter(),
+            filter_kwargs={"remove_all": False},
+        )
+
+        no_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFilter(),
+            filter_kwargs={"remove_all": True},
+        )
+
+        no_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFilter(default_filter_kwargs={"remove_all": True}),
+        )
+
+        diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFilter(default_filter_kwargs={"remove_all": True}),
+            filter_kwargs={"remove_all": False},
+        )
+
+        assert diff == no_filter_diff
+        assert diff is not False
+        assert no_diff is False
+        assert no_diff_default is False
+        assert diff_default == diff
+
+    def test_format_kwargs(self, ref_tree, res_tree_diff):
+        class ComparatorWithFormat(dir_content_diff.base_comparators.JsonComparator):
+            """Compare data from two JSON files."""
+
+            def format(self, difference, mark_formatted=False):
+                """Format one element difference."""
+                difference = super().format(difference)
+                if mark_formatted:
+                    difference += "### FORMATTED"
+                return difference
+
+        ref_file = ref_tree / "file.json"
+        res_file = res_tree_diff / "file.json"
+
+        diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFormat(),
+        )
+
+        no_format_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFormat(),
+            format_kwargs={"mark_formatted": False},
+        )
+
+        formatted_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFormat(),
+            format_kwargs={"mark_formatted": True},
+        )
+
+        formatted_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFormat(default_format_kwargs={"mark_formatted": True}),
+        )
+
+        diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithFormat(default_format_kwargs={"mark_formatted": True}),
+            format_kwargs={"mark_formatted": False},
+        )
+
+        assert diff == no_format_diff
+        assert len(re.findall("### FORMATTED", diff)) == 0
+        assert len(re.findall("### FORMATTED", formatted_diff)) == 25
+        assert len(re.findall("### FORMATTED", formatted_diff_default)) == 25
+        assert diff_default == diff
+
+    def test_report_kwargs(self, ref_tree, res_tree_diff):
+        class ComparatorWithReport(dir_content_diff.base_comparators.JsonComparator):
+            """Compare data from two JSON files."""
+
+            def report(
+                self,
+                ref_file,
+                comp_file,
+                formatted_differences,
+                diff_args,
+                diff_kwargs,
+                mark_report=False,
+            ):
+                report = super().report(
+                    ref_file,
+                    comp_file,
+                    formatted_differences,
+                    diff_args,
+                    diff_kwargs,
+                )
+                if mark_report:
+                    report += "### REPORTED"
+                return report
+
+        ref_file = ref_tree / "file.json"
+        res_file = res_tree_diff / "file.json"
+
+        diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithReport(),
+        )
+
+        no_report_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithReport(),
+            report_kwargs={"mark_report": False},
+        )
+
+        reported_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithReport(),
+            report_kwargs={"mark_report": True},
+        )
+
+        reported_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithReport(default_report_kwargs={"mark_report": True}),
+        )
+
+        no_report_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithReport(default_report_kwargs={"mark_report": True}),
+            report_kwargs={"mark_report": False},
+        )
+
+        assert diff == no_report_diff
+        assert len(re.findall("### REPORTED", diff)) == 0
+        assert len(re.findall("### REPORTED", reported_diff)) == 1
+        assert len(re.findall("### REPORTED", reported_diff_default)) == 1
+        assert no_report_diff_default == diff
 
 
 class TestRegistry:
@@ -18,37 +265,41 @@ class TestRegistry:
     def test_init_register(self, registry_reseter):
         """Test the initial registry with the get_comparators() function."""
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
         }
 
     def test_update_register(self, registry_reseter):
         """Test the functions to update the registry."""
-        dir_content_diff.register_comparator(".test_ext", dir_content_diff.compare_json_files)
+        dir_content_diff.register_comparator(".test_ext", dir_content_diff.JsonComparator())
         assert dir_content_diff.get_comparators() == {
-            ".test_ext": dir_content_diff.compare_json_files,
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".test_ext": dir_content_diff.JsonComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
         }
 
         dir_content_diff.unregister_comparator(".yaml")
         dir_content_diff.unregister_comparator("json")  # Test suffix without dot
         assert dir_content_diff.get_comparators() == {
-            ".test_ext": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yml": dir_content_diff.compare_yaml_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".test_ext": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
         }
 
         dir_content_diff.reset_comparators()
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
         }
 
         with pytest.raises(
@@ -58,29 +309,31 @@ class TestRegistry:
                 "replaced."
             ),
         ):
-            dir_content_diff.register_comparator(".pdf", dir_content_diff.compare_json_files)
+            dir_content_diff.register_comparator(".pdf", dir_content_diff.JsonComparator())
 
         with pytest.raises(ValueError, match=("The '.unknown_ext' extension is not registered.")):
             dir_content_diff.unregister_comparator(".unknown_ext")
 
         dir_content_diff.unregister_comparator(".unknown_ext", quiet=True)
-        dir_content_diff.register_comparator(".new_ext", dir_content_diff.compare_json_files)
+        dir_content_diff.register_comparator(".new_ext", dir_content_diff.JsonComparator())
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
-            ".new_ext": dir_content_diff.compare_json_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
+            ".new_ext": dir_content_diff.JsonComparator(),
         }
         dir_content_diff.register_comparator(
-            ".new_ext", dir_content_diff.compare_pdf_files, force=True
+            ".new_ext", dir_content_diff.PdfComparator(), force=True
         )
         assert dir_content_diff.get_comparators() == {
-            ".json": dir_content_diff.compare_json_files,
-            ".pdf": dir_content_diff.compare_pdf_files,
-            ".yaml": dir_content_diff.compare_yaml_files,
-            ".yml": dir_content_diff.compare_yaml_files,
-            ".new_ext": dir_content_diff.compare_pdf_files,
+            None: dir_content_diff.DefaultComparator(),
+            ".json": dir_content_diff.JsonComparator(),
+            ".pdf": dir_content_diff.PdfComparator(),
+            ".yaml": dir_content_diff.YamlComparator(),
+            ".yml": dir_content_diff.YamlComparator(),
+            ".new_ext": dir_content_diff.PdfComparator(),
         }
 
 
@@ -205,7 +458,7 @@ class TestDiffTrees:
         assert len(res) == 1
         match = re.match(
             r"The files '\S*/ref/file.yaml' and '\S*/res/file.yaml' are different:\n"
-            r"Bad\ncomparator",
+            r"Exception raised: Bad\ncomparator",
             res["file.yaml"],
         )
         assert match is not None
@@ -265,3 +518,41 @@ class TestDiffTrees:
 
         for match_i in [match_res_0, match_res_1, match_res_2]:
             assert match_i is not None
+
+    def test_format_inside_diff(self, ref_tree, res_tree_diff, dict_diff):
+        class JsonComparator(dir_content_diff.base_comparators.BaseComparator):
+            """Compare data from two JSON files."""
+
+            def load(self, path, *args, **kwargs):
+                with open(path) as file:  # pylint: disable=unspecified-encoding
+                    data = json.load(file)
+                return data
+
+            def diff(self, ref, comp, *args, **kwargs):
+                diffs = list(dictdiffer.diff(ref, comp, *args, dot_notation=False, **kwargs))
+
+                # Format here instead of overriding the default format method
+                comparator = dir_content_diff.base_comparators.JsonComparator()
+                formatted = [comparator.format(i) for i in diffs]
+
+                return formatted
+
+        res = compare_trees(ref_tree, res_tree_diff, comparators={".json": JsonComparator()})
+
+        match = re.match(dict_diff, res["file.json"])
+
+        assert match is not None
+
+
+class TestProgrammaticUse:
+    """Test specific comparators that could be use programmatically."""
+
+    def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff):
+        res = compare_trees(ref_tree, res_tree_diff, return_raw_diffs=True)
+
+        res_json = res["file.json"]
+
+        assert len(res_json) == 25
+        assert len(list(filter(lambda x: x[0] == "change", res_json))) == 17
+        assert len(list(filter(lambda x: x[0] == "add", res_json))) == 4
+        assert len(list(filter(lambda x: x[0] == "remove", res_json))) == 4

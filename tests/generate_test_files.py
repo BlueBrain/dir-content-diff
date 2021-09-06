@@ -108,7 +108,7 @@ def create_json(filename, diff=False):
         data = copy.deepcopy(DIFF_DICT)
     else:
         data = copy.deepcopy(REF_DICT)
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f)
 
 
@@ -118,7 +118,7 @@ def create_yaml(filename, diff=False):
         data = copy.deepcopy(DIFF_DICT)
     else:
         data = copy.deepcopy(REF_DICT)
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         yaml.dump(data, f)
 
 
@@ -130,6 +130,6 @@ def create_pdf(filename, diff=False):
         data = copy.deepcopy(REF_RST)
     with tempfile.TemporaryDirectory() as tmp_dir:
         rst_file = Path(tmp_dir) / Path(filename.name).with_suffix(".rst")
-        with open(rst_file, "w") as f:
+        with open(rst_file, "w", encoding="utf-8") as f:
             f.write(data)
         rst2pdf.createpdf.main([str(rst_file), "-o", str(filename)])

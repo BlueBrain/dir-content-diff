@@ -10,7 +10,7 @@ from dir_content_diff.util import diff_msg_formatter
 
 
 def format_dataframe(comp, replace_pattern=None, ref=None):
-    """Format the compared :class:`Pandas.DataFrames`.
+    """Format the compared :class:`pandas.DataFrame`.
 
     Returns:
         A dict in which the keys are the columns with detected issues and the values are the
@@ -46,10 +46,10 @@ def format_dataframe(comp, replace_pattern=None, ref=None):
 
 
 class DataframeComparator(BaseComparator):
-    """Comparator for :class:`Pandas.DataFrames` objects."""
+    """Comparator for :class:`pandas.DataFrame` objects."""
 
     def diff(self, ref, comp, *args, **kwargs):
-        """Compare two :class:`Pandas.DataFrames`.
+        """Compare two :class:`pandas.DataFrame` objects.
 
         This function calls :func:`pandas.testing.assert_series_equal`, read the doc of this
         function for details on args and kwargs.
@@ -128,7 +128,7 @@ class CsvComparator(DataframeComparator):
     """Comparator for CSV files."""
 
     def load(self, path, **kwargs):
-        """Load a CSV file into a :class:`Pandas.DataFrames`."""
+        """Load a CSV file into a :class:`pandas.DataFrame` object."""
         return pd.read_csv(path, **kwargs)
 
 

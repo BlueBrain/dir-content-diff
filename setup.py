@@ -25,6 +25,8 @@ doc_reqs = [
 pandas_reqs = ["pandas"]
 voxcell_reqs = ["voxcell"]
 test_reqs = [
+    "dicttoxml",
+    "matplotlib",
     "rst2pdf",
     "pytest",
     "pytest-cov",

@@ -22,6 +22,7 @@ class TestRegistry:
             None: dir_content_diff.DefaultComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
         }
@@ -31,6 +32,7 @@ class TestRegistry:
             None: dir_content_diff.DefaultComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
             ".csv": dir_content_diff.pandas.CsvComparator(),
@@ -112,7 +114,7 @@ class TestEqualTrees:
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
         # The CSV file is considered as equal thanks to the given kwargs
-        assert len(res) == 3
+        assert len(res) == 4
         assert re.match(".*/file.csv.*", str(res)) is None
 
     def test_replace_pattern(
@@ -286,7 +288,7 @@ class TestDiffTrees:
     ):
         res = compare_trees(ref_tree, res_tree_diff)
 
-        assert len(res) == 4
+        assert len(res) == 5
         res_csv = res["file.csv"]
         match_res = re.match(csv_diff, res_csv)
         assert match_res is not None
@@ -301,7 +303,7 @@ class TestDiffTrees:
         }
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
-        assert len(res) == 4
+        assert len(res) == 5
         res_csv = res["file.csv"]
         match_res = re.match(csv_diff.replace("col_a", "col_1").replace("col_b", "col_2"), res_csv)
         assert match_res is not None

@@ -23,6 +23,7 @@ class TestRegistry:
             None: dir_content_diff.DefaultComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
         }
@@ -32,6 +33,7 @@ class TestRegistry:
             None: dir_content_diff.DefaultComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
             ".nrrd": dir_content_diff.voxcell.NrrdComparator(),
@@ -210,7 +212,7 @@ class TestDiffTrees:
     ):
         res = compare_trees(ref_tree, res_tree_diff)
 
-        assert len(res) == 4
+        assert len(res) == 5
         res_mvd3 = res["file.mvd3"]
         match_res = re.match(mvd3_diff, res_mvd3)
         assert match_res is not None
@@ -220,7 +222,7 @@ class TestDiffTrees:
     ):
         res = compare_trees(ref_tree, res_tree_diff)
 
-        assert len(res) == 4
+        assert len(res) == 5
         res_nrrd = res["file.nrrd"]
         match_res = re.match(nrrd_diff, res_nrrd)
         assert match_res is not None
@@ -237,5 +239,5 @@ class TestDiffTrees:
         }
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
-        assert len(res) == 3
+        assert len(res) == 4
         assert re.match(".*/file.nrrd.*", str(res)) is None

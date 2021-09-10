@@ -68,13 +68,12 @@ class Mvd3Comparator(DataframeComparator):
     Note: MVD3 files can contain their creation date, so their hashes are depends on
     this creation date, even if the data are the same.
 
-    The ``diff`` function of this comparator calls
-    :func:`dir_content_diff.pandas.compare_dataframes`, read the doc of this function for details
-    on args and kwargs.
+    This comparator inherits from the :class:`dir_content_diff.pandas.DataframeComparator`, read
+    the doc of this comparator for details on args and kwargs.
     """
 
     def load(self, path, **kwargs):
-        """Load a MVD3 file into a :class:`Pandas.DataFrames`."""
+        """Load a MVD3 file into a :class:`pandas.DataFrame`."""
         return CellCollection.load_mvd3(path, **kwargs).as_dataframe()
 
 

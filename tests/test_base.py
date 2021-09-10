@@ -258,6 +258,90 @@ class TestBaseComparator:
         assert len(re.findall("### REPORTED", reported_diff_default)) == 1
         assert no_report_diff_default == diff
 
+    class TestXmlComparator:
+        """Test the XML comparator."""
+
+        def test_xmltodict(self):
+            """Test all types of the xmltodict auto cast feature."""
+            comparator = dir_content_diff.XmlComparator()
+
+            # Test empty root
+            res = comparator.xmltodict(
+                # fmt: off
+                """<?xml version="1.0" encoding="UTF-8" ?>"""
+                """<root>"""
+                """</root>"""
+                # fmt: on
+            )
+            assert res == {"root": {}}
+
+            # Test all types
+            res = comparator.xmltodict(
+                """<?xml version="1.0" encoding="UTF-8" ?>"""
+                """<root>"""
+                """    <str_value_no_type>a str value</str_value_no_type>"""
+                """    <str_value type="str">another str value</str_value>"""
+                """    <int_value type="int">1</int_value>"""
+                """    <float_value type="float">1.5</float_value>"""
+                """    <boolean_true type="bool">TrUe</boolean_true>"""
+                """    <boolean_false type="bool">FaLsE</boolean_false>"""
+                """    <simple_list type="list">"""
+                """        <item type="int">1</item>"""
+                """        <item type="float">2.5</item>"""
+                """        <item type="str">str_val</item>"""
+                """    </simple_list>"""
+                """    <simple_dict type="dict">"""
+                """        <key_1 type="int">1</key_1>"""
+                """        <key_2 type="float">2.5</key_2>"""
+                """        <key_3 type="str">str_val</key_3>"""
+                """        <key_4>another str val</key_4>"""
+                """    </simple_dict>"""
+                """    <none type="null">any thing here is not considered</none>"""
+                """</root>"""
+            )
+            assert res["root"]["none"] is None
+            del res["root"]["none"]
+            assert res == {
+                "root": {
+                    "str_value_no_type": "a str value",
+                    "str_value": "another str value",
+                    "int_value": 1,
+                    "float_value": 1.5,
+                    "boolean_true": True,
+                    "boolean_false": False,
+                    "simple_list": [1, 2.5, "str_val"],
+                    "simple_dict": {
+                        "key_1": 1,
+                        "key_2": 2.5,
+                        "key_3": "str_val",
+                        "key_4": "another str val",
+                    },
+                }
+            }
+
+            # Test unknown type
+            with pytest.raises(TypeError, match=r"Unsupported type.*"):
+                comparator.xmltodict(
+                    """<?xml version="1.0" encoding="UTF-8" ?>"""
+                    """<root>"""
+                    """    <bad_type type="UNKNOWN TYPE">1</bad_type>"""
+                    """</root>"""
+                )
+
+            # Test bad value in boolean
+            with pytest.raises(ValueError, match="Bool attributes expect 'true' or 'false'."):
+                comparator.xmltodict(
+                    """<?xml version="1.0" encoding="UTF-8" ?>"""
+                    """<root>"""
+                    """    <bad_bool type="bool">not a bool</bad_bool>"""
+                    """</root>"""
+                )
+
+        def test_add_to_output_with_none(self):
+            """Test wront type for add_to_output() method."""
+            comparator = dir_content_diff.XmlComparator()
+            comparator.add_to_output(None, None)
+
 
 class TestRegistry:
     """Test the internal registry."""
@@ -270,6 +354,7 @@ class TestRegistry:
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
         }
 
     def test_update_register(self, registry_reseter):
@@ -282,6 +367,7 @@ class TestRegistry:
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
         }
 
         dir_content_diff.unregister_comparator(".yaml")
@@ -291,6 +377,7 @@ class TestRegistry:
             ".test_ext": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".yml": dir_content_diff.YamlComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
         }
 
         dir_content_diff.reset_comparators()
@@ -300,6 +387,7 @@ class TestRegistry:
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
         }
 
         with pytest.raises(
@@ -322,6 +410,7 @@ class TestRegistry:
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
             ".new_ext": dir_content_diff.JsonComparator(),
         }
         dir_content_diff.register_comparator(
@@ -333,6 +422,7 @@ class TestRegistry:
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
+            ".xml": dir_content_diff.XmlComparator(),
             ".new_ext": dir_content_diff.PdfComparator(),
         }
 
@@ -409,19 +499,20 @@ class TestEqualTrees:
 class TestDiffTrees:
     """Tests that should return differences."""
 
-    def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff):
+    def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
         res = compare_trees(ref_tree, res_tree_diff)
 
-        assert len(res) == 3
+        assert len(res) == 4
         match_res_0 = re.match(pdf_diff, res["file.pdf"])
         match_res_1 = re.match(dict_diff, res["file.json"])
         match_res_2 = re.match(dict_diff, res["file.yaml"])
+        match_res_3 = re.match(xml_diff, res["file.xml"])
 
-        for match_i in [match_res_0, match_res_1, match_res_2]:
+        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
             assert match_i is not None
 
-    def test_assert_equal_trees(self, ref_tree, res_tree_diff, pdf_diff, dict_diff):
-        pattern = (r"\n\n\n").join([dict_diff, pdf_diff, dict_diff])
+    def test_assert_equal_trees(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
+        pattern = (r"\n\n\n").join([dict_diff, pdf_diff, xml_diff, dict_diff])
         with pytest.raises(AssertionError, match=pattern):
             assert_equal_trees(ref_tree, res_tree_diff)
 
@@ -432,7 +523,7 @@ class TestDiffTrees:
     def test_diff_ref_not_empty_res_empty(self, ref_tree, empty_res_tree):
         res = compare_trees(ref_tree, empty_res_tree)
 
-        assert len(res) == 3
+        assert len(res) == 4
         match_res_0 = re.match(
             r"The file 'file.pdf' does not exist in '\S*/res'\.", res["file.pdf"]
         )
@@ -442,8 +533,11 @@ class TestDiffTrees:
         match_res_2 = re.match(
             r"The file 'file.json' does not exist in '\S*/res'\.", res["file.json"]
         )
+        match_res_3 = re.match(
+            r"The file 'file.xml' does not exist in '\S*/res'\.", res["file.xml"]
+        )
 
-        for match_i in [match_res_0, match_res_1, match_res_2]:
+        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
             assert match_i is not None
 
     def test_exception_in_comparator(self, ref_tree, res_tree_equal, registry_reseter):
@@ -463,7 +557,7 @@ class TestDiffTrees:
         )
         assert match is not None
 
-    def test_specific_args(self, ref_tree, res_tree_diff, dict_diff):
+    def test_specific_args(self, ref_tree, res_tree_diff, dict_diff, xml_diff):
         specific_args = {
             "file.pdf": {"kwargs": {"threshold": 50}},
             "file.json": {"kwargs": {"tolerance": 0}},
@@ -471,7 +565,7 @@ class TestDiffTrees:
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
         # This time the PDF files are considered as equal
-        assert len(res) == 2
+        assert len(res) == 3
         match_res_0 = re.match(dict_diff, res["file.yaml"])
         match_res_1 = re.match(
             dict_diff.replace(
@@ -479,8 +573,9 @@ class TestDiffTrees:
             ),
             res["file.json"],
         )
+        match_res_2 = re.match(xml_diff, res["file.xml"])
 
-        for match_i in [match_res_0, match_res_1]:
+        for match_i in [match_res_0, match_res_1, match_res_2]:
             assert match_i is not None
 
     def test_unknown_comparator(self, ref_tree, res_tree_diff, registry_reseter):
@@ -501,11 +596,11 @@ class TestDiffTrees:
         )
         assert match is not None
 
-    def test_fix_dot_notation(self, ref_tree, res_tree_diff, pdf_diff, dict_diff):
+    def test_fix_dot_notation(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
         specific_args = {"file.yaml": {"args": [None, None, None, False, 0, True]}}
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
-        assert len(res) == 3
+        assert len(res) == 4
         match_res_0 = re.match(pdf_diff, res["file.pdf"])
         match_res_1 = re.match(
             dict_diff.replace(
@@ -515,8 +610,9 @@ class TestDiffTrees:
             res["file.yaml"],
         )
         match_res_2 = re.match(dict_diff, res["file.json"])
+        match_res_3 = re.match(xml_diff, res["file.xml"])
 
-        for match_i in [match_res_0, match_res_1, match_res_2]:
+        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
             assert match_i is not None
 
     def test_format_inside_diff(self, ref_tree, res_tree_diff, dict_diff):

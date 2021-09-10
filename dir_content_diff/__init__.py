@@ -6,6 +6,7 @@ from pathlib import Path
 from dir_content_diff.base_comparators import DefaultComparator
 from dir_content_diff.base_comparators import JsonComparator
 from dir_content_diff.base_comparators import PdfComparator
+from dir_content_diff.base_comparators import XmlComparator
 from dir_content_diff.base_comparators import YamlComparator
 from dir_content_diff.util import diff_msg_formatter
 from dir_content_diff.util import format_ext
@@ -20,6 +21,7 @@ _DEFAULT_COMPARATORS = {
     ".pdf": PdfComparator(),
     ".yaml": YamlComparator(),
     ".yml": YamlComparator(),
+    ".xml": XmlComparator(),
 }
 
 _COMPARATORS = {}

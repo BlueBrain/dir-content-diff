@@ -6,6 +6,7 @@ from pathlib import Path
 
 import rst2pdf.createpdf
 import yaml
+from dicttoxml import dicttoxml
 
 REF_DICT = {
     "int_value": 1,
@@ -39,36 +40,36 @@ REF_DICT = {
 
 DIFF_DICT = {
     "int_value": 2,
-    "simple_list": [2, 2.50001, "#str_val#"],
+    "simple_list": [2, 2.50001, "__str_val__"],
     "nested_list": [
         2,
         2.50001,
-        "#str_val#",
+        "__str_val__",
         [
-            "#nested_list_val#",
+            "__nested_list_val__",
             {
-                "nested_dict_key_1": "#nested_dict_val_1#",
-                "#nested_dict_key_2#": "nested_dict_val_2",
-                "nested_list_key": [2, 2.50001, "#str_val#"],
+                "nested_dict_key_1": "__nested_dict_val_1__",
+                "__nested_dict_key_2__": "nested_dict_val_2",
+                "nested_list_key": [2, 2.50001, "__str_val__"],
             },
         ],
     ],
     "simple_dict": {
         "dict_key_1": [1, 4, 3],
-        "#dict_key_2#": [1, 2, 3],
-        "#dict_key_3#": [1, 2, 3],
-        "#dict_key_4#": [1, 2, 3],
+        "__dict_key_2__": [1, 2, 3],
+        "__dict_key_3__": [1, 2, 3],
+        "__dict_key_4__": [1, 2, 3],
     },
     "simple_list_test": [
         ("dict_key_1", [1, 4, 3]),
-        ("#dict_key_2#", [1, 2, 3]),
+        ("__dict_key_2__", [1, 2, 3]),
     ],
     "nested_dict": {
         "dict_key": [1, 4, 3],
         "sub_nested_dict": {
-            "nested_dict_key_1": "#nested_dict_val_1#",
-            "#nested_dict_key_2#": "nested_dict_val_2",
-            "nested_list_key": [2, 2.50001, "#str_val#"],
+            "nested_dict_key_1": "__nested_dict_val_1__",
+            "__nested_dict_key_2__": "nested_dict_val_2",
+            "nested_list_key": [2, 2.50001, "__str_val__"],
         },
     },
 }
@@ -120,6 +121,20 @@ def create_yaml(filename, diff=False):
         data = copy.deepcopy(REF_DICT)
     with open(filename, "w", encoding="utf-8") as f:
         yaml.dump(data, f)
+
+
+def create_xml(filename, diff=False):
+    """Create a YAML file."""
+    if diff:
+        data = copy.deepcopy(DIFF_DICT)
+    else:
+        data = copy.deepcopy(REF_DICT)
+
+    with open(filename, "w", encoding="utf-8") as f:
+        xml_data = dicttoxml(data).decode("utf-8")
+        # Remove a type attribute for test purpose
+        xml_data = xml_data.replace('nested_dict_key_1 type="str"', "nested_dict_key_1")
+        f.write(xml_data)
 
 
 def create_pdf(filename, diff=False):

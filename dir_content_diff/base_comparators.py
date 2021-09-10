@@ -3,6 +3,7 @@ import filecmp
 import json
 from abc import ABC
 from abc import abstractmethod
+from xml.etree import ElementTree
 
 import dictdiffer
 import yaml
@@ -231,7 +232,7 @@ class DictComparator(BaseComparator):
     def diff(self, ref, comp, *args, **kwargs):
         """Compare 2 dictionnaries.
 
-        This function calls :func:`compare_dicts`, read the doc of this function for details on
+        This function calls :func:`dictdiffer.diff`, read the doc of this function for details on
         args and kwargs.
         """
         if len(args) > 5:
@@ -271,14 +272,99 @@ class YamlComparator(DictComparator):
         return data
 
 
+class XmlComparator(DictComparator):
+    """Comparator for XML files.
+
+    .. warning:: The XML files must have only one root.
+
+    .. note::
+
+        If the type attributes are given in the XML file, the values will be automatically casted
+        to Python types. For the lists, each item must be in an separated entry.
+        Here is an example of such XML data:
+
+        .. code-block:: xml
+
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <root>
+                <int_value type="int">1</int_value>
+                <simple_list type="list">
+                    <item type="int">1</item>
+                    <item type="float">2.5</item>
+                    <item type="str">str_val</item>
+                </simple_list>
+            </root>
+    """
+
+    def load(self, path):  # pylint: disable=arguments-differ
+        """Open a XML file."""
+        with open(path, encoding="utf-8") as file:
+            data = self.xmltodict(file.read())
+        return data
+
+    @staticmethod
+    def _cast_from_attribute(text, attr):
+        """Converts XML text into a Python data format based on the tag attribute."""
+        if "type" not in attr:
+            return text
+        value_type = attr.get("type", "").lower()
+        if value_type == "str":
+            res = str(text)
+        elif value_type == "int":
+            res = int(text)
+        elif value_type == "float":
+            res = float(text)
+        elif value_type == "bool":
+            if str(text).lower() == "true":
+                res = True
+            elif str(text).lower() == "false":
+                res = False
+            else:
+                raise ValueError("Bool attributes expect 'true' or 'false'.")
+        elif value_type == "list":
+            res = []
+        elif value_type == "dict":
+            res = {}
+        elif value_type == "null":
+            res = None
+        else:
+            raise TypeError(
+                "Unsupported type. "
+                "Only 'str', 'int', 'float', 'bool', 'list', 'dict', and 'None' are supported."
+            )
+        return res
+
+    @staticmethod
+    def add_to_output(obj, child):
+        """Add entry from :class:`xml.etree.ElementTree.Element` object into the given object."""
+        if isinstance(obj, dict):
+            obj.update({child.tag: XmlComparator._cast_from_attribute(child.text, child.attrib)})
+            for sub in child:
+                XmlComparator.add_to_output(obj[child.tag], sub)
+        elif isinstance(obj, list):
+            obj.append(XmlComparator._cast_from_attribute(child.text, child.attrib))
+            for sub in child:
+                XmlComparator.add_to_output(obj[-1], sub)
+
+    @staticmethod
+    def xmltodict(obj):
+        """Converts an XML string into a Python object based on each tag's attribute."""
+        root = ElementTree.fromstring(obj)
+        output = {}
+
+        for child in root:
+            XmlComparator.add_to_output(output, child)
+        return {root.tag: output}
+
+
 class PdfComparator(BaseComparator):
     """Compartor for PDF files."""
 
     def diff(self, ref, comp, *args, **kwargs):
         """Compare data from two PDF files.
 
-        This function calls :func:`diff_pdf_visually.pdfdiff`, read the doc of this function for
-        details on args and kwargs here:
-        https://github.com/bgeron/diff-pdf-visually/blob/main/diff_pdf_visually/diff.py
+        This function calls the `diff_pdf_visually.pdfdiff() <https://github.com/bgeron/diff-pdf-
+        visually/blob/21e85f1db1bdaee5c0e8e0b730771d6c4e8c3e44/diff_pdf_visually/diff.py#L83>`_
+        function, read the doc of this function for details on args and kwargs.
         """
         return not pdfdiff(ref, comp, *args, **kwargs)

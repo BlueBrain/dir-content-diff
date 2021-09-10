@@ -31,6 +31,7 @@ def ref_tree(empty_ref_tree):
     generate_test_files.create_pdf(empty_ref_tree / "file.pdf")
     generate_test_files.create_json(empty_ref_tree / "file.json")
     generate_test_files.create_yaml(empty_ref_tree / "file.yaml")
+    generate_test_files.create_xml(empty_ref_tree / "file.xml")
     return empty_ref_tree
 
 
@@ -40,6 +41,7 @@ def res_tree_equal(empty_res_tree):
     generate_test_files.create_pdf(empty_res_tree / "file.pdf")
     generate_test_files.create_json(empty_res_tree / "file.json")
     generate_test_files.create_yaml(empty_res_tree / "file.yaml")
+    generate_test_files.create_xml(empty_res_tree / "file.xml")
     return empty_res_tree
 
 
@@ -49,6 +51,7 @@ def res_tree_diff(empty_res_tree):
     generate_test_files.create_pdf(empty_res_tree / "file.pdf", diff=True)
     generate_test_files.create_json(empty_res_tree / "file.json", diff=True)
     generate_test_files.create_yaml(empty_res_tree / "file.yaml", diff=True)
+    generate_test_files.create_xml(empty_res_tree / "file.xml", diff=True)
     return empty_res_tree
 
 
@@ -63,15 +66,15 @@ def dict_diff():
     """The diff that should be reported for the JSON and YAML files."""
     diff = (
         r"""The files '\S*' and '\S*' are different:\n"""
-        r"""Added the value\(s\) '{"#dict_key_2#": \[1, 2, 3\], "#dict_key_3#": \[1, 2, 3\], """
-        r""""#dict_key_4#": \[1, 2, 3\]}' in the '\[simple_dict\]' key\.\n"""
-        r"""Added the value\(s\) '{"#nested_dict_key_2#": "nested_dict_val_2", """
-        r""""nested_dict_key_1": "#nested_dict_val_1#"}' in the '\[nested_dict\]"""
+        r"""Added the value\(s\) '{"__dict_key_2__": \[1, 2, 3\], "__dict_key_3__": \[1, 2, 3\], """
+        r""""__dict_key_4__": \[1, 2, 3\]}' in the '\[simple_dict\]' key\.\n"""
+        r"""Added the value\(s\) '{"__nested_dict_key_2__": "nested_dict_val_2", """
+        r""""nested_dict_key_1": "__nested_dict_val_1__"}' in the '\[nested_dict\]"""
         r"""\[sub_nested_dict\]' key\.\n"""
-        r"""Added the value\(s\) '{"#nested_dict_key_2#": "nested_dict_val_2"}' in the """
+        r"""Added the value\(s\) '{"__nested_dict_key_2__": "nested_dict_val_2"}' in the """
         r"""'\[nested_list\]\[3\]\[1\]' key\.\n"""
         r"""Added the value\(s\) '{"simple_list_test": \[\["dict_key_1", \[1, 4, 3\]\], """
-        r"""\["#dict_key_2#", \[1, 2, 3\]\]\]}' in the '' key\.\n"""
+        r"""\["__dict_key_2__", \[1, 2, 3\]\]\]}' in the '' key\.\n"""
         r"""Changed the value of '\[int_value\]' from 1 to 2\.\n"""
         r"""Changed the value of '\[nested_dict\]\[dict_key\]\[1\]' from 2 to 4\.\n"""
         r"""Changed the value of '\[nested_dict\]\[sub_nested_dict\]\[nested_list_key\]"""
@@ -79,24 +82,24 @@ def dict_diff():
         r"""Changed the value of '\[nested_dict\]\[sub_nested_dict\]\[nested_list_key\]"""
         r"""\[1\]' from 2.5 to 2.50001\.\n"""
         r"""Changed the value of '\[nested_dict\]\[sub_nested_dict\]\[nested_list_key\]"""
-        r"""\[2\]' from 'str_val' to '#str_val#'\.\n"""
+        r"""\[2\]' from 'str_val' to '__str_val__'\.\n"""
         r"""Changed the value of '\[nested_list\]\[0\]' from 1 to 2\.\n"""
         r"""Changed the value of '\[nested_list\]\[1\]' from 2.5 to 2.50001\.\n"""
-        r"""Changed the value of '\[nested_list\]\[2\]' from 'str_val' to '#str_val#'\.\n"""
+        r"""Changed the value of '\[nested_list\]\[2\]' from 'str_val' to '__str_val__'\.\n"""
         r"""Changed the value of '\[nested_list\]\[3\]\[0\]' from 'nested_list_val' to """
-        r"""'#nested_list_val#'\.\n"""
+        r"""'__nested_list_val__'\.\n"""
         r"""Changed the value of '\[nested_list\]\[3\]\[1\]\[nested_dict_key_1\]' from """
-        r"""'nested_dict_val_1' to '#nested_dict_val_1#'\.\n"""
+        r"""'nested_dict_val_1' to '__nested_dict_val_1__'\.\n"""
         r"""Changed the value of '\[nested_list\]\[3\]\[1\]\[nested_list_key\]\[0\]' from 1 """
         r"""to 2\.\n"""
         r"""Changed the value of '\[nested_list\]\[3\]\[1\]\[nested_list_key\]\[1\]' from """
         r"""2.5 to 2.50001\.\n"""
         r"""Changed the value of '\[nested_list\]\[3\]\[1\]\[nested_list_key\]\[2\]' from """
-        r"""'str_val' to '#str_val#'\.\n"""
+        r"""'str_val' to '__str_val__'\.\n"""
         r"""Changed the value of '\[simple_dict\]\[dict_key_1\]\[1\]' from 2 to 4\.\n"""
         r"""Changed the value of '\[simple_list\]\[0\]' from 1 to 2\.\n"""
         r"""Changed the value of '\[simple_list\]\[1\]' from 2.5 to 2.50001\.\n"""
-        r"""Changed the value of '\[simple_list\]\[2\]' from 'str_val' to '#str_val#'\.\n"""
+        r"""Changed the value of '\[simple_list\]\[2\]' from 'str_val' to '__str_val__'\.\n"""
         r"""Removed the value\(s\) '{"dict_key_2": \[1, 2, 3\]}' from '\[simple_dict\]' """
         r"""key\.\n"""
         r"""Removed the value\(s\) '{"nested_dict_key": "nested_dict_val"}' from '\["""
@@ -105,6 +108,13 @@ def dict_diff():
         r"""'\[nested_list\]\[3\]\[1\]' key\.\n"""
         r"""Removed the value\(s\) '{"nested_dict_test": 0}' from '' key\."""
     )
+    return diff
+
+
+@pytest.fixture
+def xml_diff(dict_diff):
+    """The diff that should be reported for the XML files."""
+    diff = dict_diff.replace("'\\[", "'\\[root\\]\\[").replace(" '' key", " '\\[root\\]' key")
     return diff
 
 

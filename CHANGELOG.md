@@ -1,5 +1,11 @@
 # Changelog
 
+## [dir-content-diff-v0.1.0](https://bbpgitlab.epfl.ch/neuromath/dir-content-diff/compare/dir-content-diff-v0.0.5...dir-content-diff-v0.1.0)
+
+> 11 September 2021
+
+- Add an XML comparator (Adrien Berchet - [5dbbec3](https://bbpgitlab.epfl.ch/neuromath/dir-content-diff/commit/5dbbec3aa73245b24652885fcfd0bbde4adf02c2))
+
 ## [dir-content-diff-v0.0.5](https://bbpgitlab.epfl.ch/neuromath/dir-content-diff/compare/dir-content-diff-v0.0.4...dir-content-diff-v0.0.5)
 
 > 7 September 2021

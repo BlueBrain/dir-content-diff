@@ -32,8 +32,8 @@ class NrrdComparator(BaseComparator):
             precision (int): The desired precision, default is exact precision.
 
         Returns:
-            bool or str: ``False`` if the DataFrames are considered as equal or a string explaining
-            why they are not considered as equal.
+            bool or list(str): ``False`` if the DataFrames are considered as equal or a list of
+            strings explaining why they are not considered as equal.
         """
         try:
             if precision is not None:
@@ -43,10 +43,6 @@ class NrrdComparator(BaseComparator):
             return False
         except AssertionError as exception:
             return exception.args
-
-    def format(self, difference):
-        """Format one element difference."""
-        return difference
 
     def report(self, ref_file, comp_file, formatted_differences, diff_args, diff_kwargs, **kwargs):
         """Create a report from the formatted differences."""

@@ -1,4 +1,4 @@
-"""Test the Voxcell extension of the dir-content-diff package."""
+"""Test the Voxcell extension of the ``dir-content-diff`` package."""
 # pylint: disable=missing-function-docstring
 # pylint: disable=no-self-use
 # pylint: disable=redefined-outer-name
@@ -171,7 +171,7 @@ def res_nrrd_diff(res_tree_diff, ref_nrrd):
 def nrrd_diff():
     return (
         r"""The files '\S*/file.nrrd' and '\S*/file.nrrd' are different:\n"""
-        r"""Kwargs used: {'precision': None}\n"""
+        r"""Kwargs used for computing differences: {'precision': None}\n"""
         r"""\n"""
         r"""Arrays are not equal\n"""
         r"""\n"""
@@ -232,9 +232,7 @@ class TestDiffTrees:
     ):
         specific_args = {
             "file.nrrd": {
-                "kwargs": {
-                    "precision": 2,
-                }
+                "precision": 2,
             }
         }
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)

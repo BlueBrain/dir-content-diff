@@ -73,6 +73,7 @@ autodoc_typehints = "signature"
 autodoc_default_options = {
     "members": True,
     "show-inheritance": True,
+    "special-members": "__call__",
 }
 
 intersphinx_mapping = {

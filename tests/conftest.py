@@ -2,11 +2,22 @@
 # pylint: disable=redefined-outer-name
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 import dir_content_diff
 
 from . import generate_test_files
+
+pytest_plugins = ["pytester"]
+
+
+@pytest.fixture
+def registry_reseter():
+    """Fixture to automatically reset the registry before and after a test."""
+    dir_content_diff.reset_comparators()
+    yield None
+    dir_content_diff.reset_comparators()
 
 
 @pytest.fixture
@@ -119,8 +130,50 @@ def xml_diff(dict_diff):
 
 
 @pytest.fixture
-def registry_reseter():
-    """Fixture to automatically reset the registry before and after a test."""
-    dir_content_diff.reset_comparators()
-    yield None
-    dir_content_diff.reset_comparators()
+def ref_csv(ref_tree):
+    """The reference CSV file."""
+    ref_data = {
+        "col_a": [1, 2, 3],
+        "col_b": ["a", "b", "c"],
+        "col_c": [4, 5, 6],
+    }
+    df = pd.DataFrame(ref_data, index=["idx1", "idx2", "idx3"])
+    filename = ref_tree / "file.csv"
+    df.to_csv(filename, index=True, index_label="index")
+    return filename
+
+
+@pytest.fixture
+def res_csv_equal(ref_csv, res_tree_equal):
+    """The result CSV file equal to the reference."""
+    df = pd.read_csv(ref_csv, index_col="index")
+    filename = res_tree_equal / "file.csv"
+    df.to_csv(filename, index=True, index_label="index")
+    return filename
+
+
+@pytest.fixture
+def res_csv_diff(ref_csv, res_tree_diff):
+    """The result CSV file different from the reference."""
+    df = pd.read_csv(ref_csv, index_col="index")
+    df.loc["idx1", "col_a"] *= 10
+    df.loc["idx2", "col_b"] += "_new"
+    filename = res_tree_diff / "file.csv"
+    df.to_csv(filename, index=True, index_label="index")
+    return filename
+
+
+@pytest.fixture
+def csv_diff():
+    """The diff that should be reported for the CSV files."""
+    return (
+        r"""The files '\S*/file.csv' and '\S*/file.csv' are different:\n\n"""
+        r"""Column 'col_a': Series are different\n\n"""
+        r"""Series values are different \(33.33333 %\)\n"""
+        r"""\[index\]: \[0, 1, 2\]\n"""
+        r"""\[left\]:  \[1, 2, 3\]\n"""
+        r"""\[right\]: \[10, 2, 3\]\n\n"""
+        r"""Column 'col_b': Series are different\n\n"""
+        r"""Series values are different \(33.33333 %\)\n"""
+        r"""\[index\]: \[0, 1, 2\]\n\[left\]:  \[a, b, c\]\n\[right\]: \[a, b_new, c\]"""
+    )

@@ -1,4 +1,4 @@
-"""Test the version of the dir-content-diff package."""
+"""Test the version of the ``dir-content-diff`` package."""
 import pkg_resources
 
 import dir_content_diff

@@ -25,11 +25,11 @@ doc_reqs = [
 pandas_reqs = ["pandas"]
 voxcell_reqs = ["voxcell"]
 test_reqs = [
+    "coverage",
     "dicttoxml",
     "matplotlib",
     "rst2pdf",
     "pytest",
-    "pytest-cov",
     "pytest-html",
 ]
 
@@ -65,4 +65,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
+    entry_points={
+        "pytest11": ["dir-content-diff = dir_content_diff.pytest_plugin"],
+    },
 )

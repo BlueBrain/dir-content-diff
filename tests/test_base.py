@@ -1,4 +1,4 @@
-"""Test the base features of the dir-content-diff package."""
+"""Test the base features of the ``dir-content-diff`` package."""
 # pylint: disable=missing-function-docstring
 # pylint: disable=no-self-use
 # pylint: disable=redefined-outer-name
@@ -82,11 +82,14 @@ class TestBaseComparator:
             load_kwargs={"load_empty": False},
         )
 
-        assert diff == no_load_diff
+        kwargs_msg = "Kwargs used for loading data: {'load_empty': False}\n"
+        assert kwargs_msg in no_load_diff
+        assert diff == no_load_diff.replace(kwargs_msg, "")
         assert diff is not False
         assert no_diff is False
         assert no_diff_default is False
-        assert diff_default == diff
+        assert kwargs_msg in diff_default
+        assert diff_default.replace(kwargs_msg, "") == diff
 
     def test_filter_kwargs(self, ref_tree, res_tree_diff):
         class ComparatorWithFilter(dir_content_diff.base_comparators.JsonComparator):
@@ -133,19 +136,22 @@ class TestBaseComparator:
             filter_kwargs={"remove_all": False},
         )
 
-        assert diff == no_filter_diff
+        kwargs_msg = "Kwargs used for filtering differences: {'remove_all': False}\n"
+        assert kwargs_msg in no_filter_diff
+        assert diff == no_filter_diff.replace(kwargs_msg, "")
         assert diff is not False
         assert no_diff is False
         assert no_diff_default is False
-        assert diff_default == diff
+        assert kwargs_msg in diff_default
+        assert diff_default.replace(kwargs_msg, "") == diff
 
     def test_format_kwargs(self, ref_tree, res_tree_diff):
         class ComparatorWithFormat(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
-            def format(self, difference, mark_formatted=False):
+            def format_diff(self, difference, mark_formatted=False):
                 """Format one element difference."""
-                difference = super().format(difference)
+                difference = super().format_diff(difference)
                 if mark_formatted:
                     difference += "### FORMATTED"
                 return difference
@@ -163,34 +169,163 @@ class TestBaseComparator:
             ref_file,
             res_file,
             ComparatorWithFormat(),
-            format_kwargs={"mark_formatted": False},
+            format_diff_kwargs={"mark_formatted": False},
         )
 
         formatted_diff = dir_content_diff.compare_files(
             ref_file,
             res_file,
             ComparatorWithFormat(),
-            format_kwargs={"mark_formatted": True},
+            format_diff_kwargs={"mark_formatted": True},
         )
 
         formatted_diff_default = dir_content_diff.compare_files(
             ref_file,
             res_file,
-            ComparatorWithFormat(default_format_kwargs={"mark_formatted": True}),
+            ComparatorWithFormat(default_format_diff_kwargs={"mark_formatted": True}),
         )
 
         diff_default = dir_content_diff.compare_files(
             ref_file,
             res_file,
-            ComparatorWithFormat(default_format_kwargs={"mark_formatted": True}),
-            format_kwargs={"mark_formatted": False},
+            ComparatorWithFormat(default_format_diff_kwargs={"mark_formatted": True}),
+            format_diff_kwargs={"mark_formatted": False},
         )
 
-        assert diff == no_format_diff
+        kwargs_msg = "Kwargs used for formatting differences: {'mark_formatted': False}\n"
+        assert kwargs_msg in no_format_diff
+        assert diff == no_format_diff.replace(kwargs_msg, "")
         assert len(re.findall("### FORMATTED", diff)) == 0
         assert len(re.findall("### FORMATTED", formatted_diff)) == 25
         assert len(re.findall("### FORMATTED", formatted_diff_default)) == 25
-        assert diff_default == diff
+        assert kwargs_msg in diff_default
+        assert diff_default.replace(kwargs_msg, "") == diff
+
+    def test_sort_kwargs(self, ref_tree, res_tree_diff):
+        class ComparatorWithSort(dir_content_diff.base_comparators.JsonComparator):
+            """Compare data from two JSON files."""
+
+            def sort(self, differences, reverse=False):
+                """Sort the element differences."""
+                return sorted(differences, reverse=reverse)
+
+        ref_file = ref_tree / "file.json"
+        res_file = res_tree_diff / "file.json"
+
+        diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithSort(),
+        )
+
+        no_reversed_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithSort(),
+            sort_kwargs={"reverse": False},
+        )
+
+        reversed_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithSort(),
+            sort_kwargs={"reverse": True},
+        )
+
+        reversed_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithSort(default_sort_kwargs={"reverse": True}),
+        )
+
+        no_reversed_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithSort(default_sort_kwargs={"reverse": True}),
+            sort_kwargs={"reverse": False},
+        )
+
+        kwargs_msg = "Kwargs used for sorting differences: {'reverse': True}\n"
+        kwargs_msg_false = kwargs_msg.replace("True", "False")
+        expected_reversed_diff = "\n".join(
+            diff.split("\n")[:1] + sorted(diff.split("\n")[1:], reverse=True)
+        )
+
+        assert kwargs_msg not in diff
+        assert kwargs_msg_false not in diff
+        assert kwargs_msg_false in no_reversed_diff
+        assert kwargs_msg in reversed_diff
+        assert kwargs_msg in reversed_diff_default
+        assert kwargs_msg_false in no_reversed_diff_default
+
+        assert diff == no_reversed_diff.replace(kwargs_msg_false, "")
+        assert expected_reversed_diff == reversed_diff.replace(kwargs_msg, "")
+        assert expected_reversed_diff == reversed_diff_default.replace(kwargs_msg, "")
+        assert diff == no_reversed_diff_default.replace(kwargs_msg_false, "")
+
+    def test_concat_kwargs(self, ref_tree, res_tree_diff):
+        class ComparatorWithConcat(dir_content_diff.base_comparators.JsonComparator):
+            """Compare data from two JSON files."""
+
+            def concatenate(self, differences, eol=None):
+                """Concatenate the differences."""
+                if not eol:
+                    eol = "\n"
+                return eol.join(differences)
+
+        ref_file = ref_tree / "file.json"
+        res_file = res_tree_diff / "file.json"
+
+        diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithConcat(),
+        )
+
+        concat_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithConcat(),
+            concat_kwargs={"eol": "\n"},
+        )
+
+        concat_eol_diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithConcat(),
+            concat_kwargs={"eol": "#EOL#"},
+        )
+
+        concat_eol_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithConcat(default_concat_kwargs={"eol": "#EOL#"}),
+        )
+
+        concat_diff_default = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithConcat(default_concat_kwargs={"eol": "#EOL#"}),
+            concat_kwargs={"eol": "\n"},
+        )
+
+        kwargs_msg_eol = "\nKwargs used for concatenating differences: {'eol': '#EOL#'}\n"
+        kwargs_msg_n = kwargs_msg_eol.replace("#EOL#", "\\n")
+        TEST_EOL = "__TEST_EOL__"
+
+        assert kwargs_msg_eol not in diff
+        assert kwargs_msg_n not in diff
+        assert kwargs_msg_n in concat_diff
+        assert kwargs_msg_eol in concat_eol_diff
+        assert kwargs_msg_eol in concat_eol_diff_default
+        assert kwargs_msg_n in concat_diff_default
+
+        assert diff == concat_diff.replace(kwargs_msg_n, "\n")
+        assert concat_diff.replace(kwargs_msg_n, "").replace(
+            "\n", TEST_EOL
+        ) == concat_eol_diff.replace(kwargs_msg_eol, "").replace("#EOL#", TEST_EOL)
+        assert concat_eol_diff == concat_eol_diff_default
+        assert diff == concat_diff_default.replace(kwargs_msg_n, "\n")
 
     def test_report_kwargs(self, ref_tree, res_tree_diff):
         class ComparatorWithReport(dir_content_diff.base_comparators.JsonComparator):
@@ -203,14 +338,13 @@ class TestBaseComparator:
                 formatted_differences,
                 diff_args,
                 diff_kwargs,
-                mark_report=False,
+                mark_report=None,
+                **kwargs,
             ):
+                if mark_report is not None:
+                    kwargs["mark_report"] = mark_report
                 report = super().report(
-                    ref_file,
-                    comp_file,
-                    formatted_differences,
-                    diff_args,
-                    diff_kwargs,
+                    ref_file, comp_file, formatted_differences, diff_args, diff_kwargs, **kwargs
                 )
                 if mark_report:
                     report += "### REPORTED"
@@ -252,11 +386,14 @@ class TestBaseComparator:
             report_kwargs={"mark_report": False},
         )
 
-        assert diff == no_report_diff
+        kwargs_msg = "Kwargs used for reporting differences: {'mark_report': False}\n"
+        assert kwargs_msg in no_report_diff
+        assert diff == no_report_diff.replace(kwargs_msg, "")
         assert len(re.findall("### REPORTED", diff)) == 0
         assert len(re.findall("### REPORTED", reported_diff)) == 1
         assert len(re.findall("### REPORTED", reported_diff_default)) == 1
-        assert no_report_diff_default == diff
+        assert kwargs_msg in no_report_diff_default
+        assert no_report_diff_default.replace(kwargs_msg, "") == diff
 
     class TestXmlComparator:
         """Test the XML comparator."""
@@ -467,6 +604,24 @@ class TestEqualTrees:
     def test_assert_equal_trees(self, ref_tree, res_tree_equal):
         assert_equal_trees(ref_tree, res_tree_equal)
 
+    def test_assert_equal_trees_export(self, ref_tree, res_tree_equal):
+        class JsonComparator(dir_content_diff.base_comparators.JsonComparator):
+            """Compare data from two JSON files."""
+
+            def save(self, data, path):
+                """Save formatted data into a file."""
+                with open(path, "w", encoding="utf-8") as file:
+                    json.dump(data, file)
+
+        comparators = dir_content_diff.get_comparators()
+        comparators[".json"] = JsonComparator()
+        assert_equal_trees(
+            ref_tree, res_tree_equal, export_formatted_files=True, comparators=comparators
+        )
+        assert list(res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED").iterdir()) == [
+            res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED") / "file.json"
+        ]
+
     def test_diff_empty(self, empty_ref_tree, empty_res_tree):
         res = compare_trees(empty_ref_tree, empty_res_tree)
         assert res == {}
@@ -489,7 +644,7 @@ class TestEqualTrees:
     def test_specific_args(self, ref_tree, res_tree_equal):
         specific_args = {
             "file.yaml": {"args": [None, None, None, False, 0, False]},
-            "file.json": {"kwargs": {"tolerance": 0}},
+            "file.json": {"tolerance": 0},
         }
         res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
 
@@ -559,8 +714,8 @@ class TestDiffTrees:
 
     def test_specific_args(self, ref_tree, res_tree_diff, dict_diff, xml_diff):
         specific_args = {
-            "file.pdf": {"kwargs": {"threshold": 50}},
-            "file.json": {"kwargs": {"tolerance": 0}},
+            "file.pdf": {"threshold": 50},
+            "file.json": {"tolerance": 0},
         }
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
@@ -569,7 +724,8 @@ class TestDiffTrees:
         match_res_0 = re.match(dict_diff, res["file.yaml"])
         match_res_1 = re.match(
             dict_diff.replace(
-                r"are different:\n", r"are different:\nKwargs used: \{'tolerance': 0\}\n"
+                r"are different:\n",
+                r"are different:\nKwargs used for computing differences: \{'tolerance': 0\}\n",
             ),
             res["file.json"],
         )
@@ -605,7 +761,8 @@ class TestDiffTrees:
         match_res_1 = re.match(
             dict_diff.replace(
                 r"are different:\n",
-                r"are different:\nArgs used: \[None, None, None, False, 0, True\]\n",
+                r"are different:\nArgs used for computing differences: "
+                r"\[None, None, None, False, 0, True\]\n",
             ),
             res["file.yaml"],
         )
@@ -629,7 +786,7 @@ class TestDiffTrees:
 
                 # Format here instead of overriding the default format method
                 comparator = dir_content_diff.base_comparators.JsonComparator()
-                formatted = [comparator.format(i) for i in diffs]
+                formatted = [comparator.format_diff(i) for i in diffs]
 
                 return formatted
 

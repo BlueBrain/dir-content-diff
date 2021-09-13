@@ -3,7 +3,7 @@
 *.pyc
 *.swp
 ._.DS_Store
-.coverage
+.coverage*
 .DS_Store
 .eggs
 .tox

@@ -1,5 +1,11 @@
 # Changelog
 
+## [dir-content-diff-v0.2.0](https://bbpgitlab.epfl.ch/neuromath/dir-content-diff/compare/dir-content-diff-v0.1.0...dir-content-diff-v0.2.0)
+
+> 15 September 2021
+
+- Add generic export feature and pytest plugin (Adrien Berchet - [23a9298](https://bbpgitlab.epfl.ch/neuromath/dir-content-diff/commit/23a929835d826c2f8fc6ff4c645fea8fffe7c3cc))
+
 ## [dir-content-diff-v0.1.0](https://bbpgitlab.epfl.ch/neuromath/dir-content-diff/compare/dir-content-diff-v0.0.5...dir-content-diff-v0.1.0)
 
 > 11 September 2021

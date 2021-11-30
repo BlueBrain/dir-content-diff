@@ -3,6 +3,7 @@
 # pylint: disable=no-self-use
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
+# pylint: disable=use-implicit-booleaness-not-comparison
 import re
 import shutil
 

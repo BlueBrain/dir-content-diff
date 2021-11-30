@@ -7,21 +7,19 @@ import pytest
 
 @pytest.fixture
 def tmp_conftest(ref_tree, res_tree_equal, ref_csv, res_csv_equal):
-    return """
+    return f"""
         from pathlib import Path
 
         import pytest
 
         @pytest.fixture
         def ref_path():
-            return Path("{}")
+            return Path("{ref_tree}")
 
         @pytest.fixture
         def res_path():
-            return Path("{}")
-        """.format(
-        ref_tree, res_tree_equal
-    )
+            return Path("{res_tree_equal}")
+        """
 
 
 @pytest.mark.parametrize(
@@ -47,21 +45,21 @@ def test_export_formatted_data(
     args = []
     if not do_export:
         expected_dir = """res_path.with_name(res_path.name + "_FORMATTED")"""
-        tester = """assert not {}.exists()""".format(expected_dir)
+        tester = f"""assert not {expected_dir}.exists()"""
     else:
         if export_suffix is None:
             suffix = "_FORMATTED"
         else:
             suffix = export_suffix
 
-        expected_dir = """res_path.with_name(res_path.name + "{suffix}")""".format(suffix=suffix)
+        expected_dir = f"""res_path.with_name(res_path.name + "{suffix}")"""
         args.append("--dcd-export-formatted-data")
         if export_suffix is not None:
             args.append("--dcd-export-suffix")
             args.append(export_suffix)
         tester = """assert list(expected_dir.iterdir()) == [expected_dir / "file.csv"]"""
 
-    expected_dir_str = """expected_dir = {expected_dir}""".format(expected_dir=expected_dir)
+    expected_dir_str = f"""expected_dir = {expected_dir}"""
     remover = """rmtree(expected_dir, ignore_errors=True)"""
 
     # create a temporary conftest.py file
@@ -69,7 +67,7 @@ def test_export_formatted_data(
 
     # create a temporary pytest test file
     pytester.makepyfile(
-        """
+        f"""
         from shutil import rmtree
 
         import dir_content_diff
@@ -102,11 +100,7 @@ def test_export_formatted_data(
             assert_equal_trees(ref_path, res_path, export_formatted_files="_NEW_SUFFIX")
             assert list(expected_dir.iterdir()) == [expected_dir / "file.csv"]
 
-        """.format(
-            expected_dir_str=expected_dir_str,
-            remover=remover,
-            tester=tester,
-        )
+        """
     )
 
     # run all tests with pytest

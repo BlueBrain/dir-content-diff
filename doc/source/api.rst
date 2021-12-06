@@ -8,5 +8,4 @@ API Documentation
     dir_content_diff.base_comparators
     dir_content_diff.util
     dir_content_diff.pandas
-    dir_content_diff.voxcell
     dir_content_diff.pytest_plugin

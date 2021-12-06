@@ -27,7 +27,7 @@ class TestRegistry:
             ".yml": dir_content_diff.YamlComparator(),
         }
 
-        dir_content_diff.pandas.register_pandas()
+        dir_content_diff.pandas.register()
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
             ".json": dir_content_diff.JsonComparator(),
@@ -42,7 +42,7 @@ class TestRegistry:
 
 @pytest.fixture
 def pandas_registry_reseter(registry_reseter):
-    dir_content_diff.pandas.register_pandas()
+    dir_content_diff.pandas.register()
 
 
 class TestEqualTrees:

@@ -75,7 +75,7 @@ def test_export_formatted_data(
         from dir_content_diff import assert_equal_trees
 
         dir_content_diff.reset_comparators()
-        dir_content_diff.pandas.register_pandas()
+        dir_content_diff.pandas.register()
 
 
         def test_export_formatted_data_default(ref_path, res_path):

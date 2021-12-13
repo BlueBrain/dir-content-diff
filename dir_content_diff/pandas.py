@@ -133,7 +133,7 @@ class CsvComparator(DataframeComparator):
         data.to_csv(path, index=index, **kwargs)
 
 
-def register_pandas():
+def register():
     """Register Pandas extensions."""
     register_comparator(".csv", CsvComparator())
     register_comparator(".tsv", CsvComparator())

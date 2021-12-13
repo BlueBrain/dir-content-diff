@@ -3,6 +3,8 @@ import copy
 import logging
 from pathlib import Path
 
+from pkg_resources import get_distribution
+
 from dir_content_diff.base_comparators import DefaultComparator
 from dir_content_diff.base_comparators import JsonComparator
 from dir_content_diff.base_comparators import PdfComparator
@@ -10,7 +12,8 @@ from dir_content_diff.base_comparators import XmlComparator
 from dir_content_diff.base_comparators import YamlComparator
 from dir_content_diff.util import diff_msg_formatter
 from dir_content_diff.util import format_ext
-from dir_content_diff.version import VERSION as __version__  # noqa
+
+__version__ = get_distribution("dir-content-diff").version
 
 L = logging.getLogger(__name__)
 

@@ -1,3 +1,10 @@
+[![Version](https://img.shields.io/pypi/v/dir-content-diff)](https://github.com/BlueBrain/dir-content-diff/releases)
+[![Build status](https://github.com/BlueBrain/dir-content-diff/actions/workflows/run-tox.yml/badge.svg?branch=main)](https://github.com/BlueBrain/dir-content-diff/actions)
+[![Coverage](https://codecov.io/github/BlueBrain/dir-content-diff/coverage.svg?branch=main)](https://codecov.io/github/BlueBrain/dir-content-diff?branch=main)
+[![License](https://img.shields.io/badge/License-Apache%202-blue)](https://github.com/BlueBrain/dir-content-diff/blob/main/LICENSE.txt)
+[![Documentation status](https://readthedocs.org/projects/dir-content-diff/badge/?version=latest)](https://dir-content-diff.readthedocs.io/)
+
+
 # Directory Content Difference
 
 This project provides simple tools to compare the content of a directory against a reference

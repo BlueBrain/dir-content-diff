@@ -1,12 +1,6 @@
 """Setup for the dir-content-diff package."""
-import imp  # pylint: disable=deprecated-module
-import sys
-
 from setuptools import find_packages
 from setuptools import setup
-
-if sys.version_info < (3, 6):
-    sys.exit("Sorry, Python < 3.6 is not supported")
 
 # Read the contents of the README file
 with open("README.md", encoding="utf-8") as f:
@@ -19,11 +13,11 @@ reqs = [
 ]
 doc_reqs = [
     "m2r2",
+    "mistune<2",
     "sphinx",
     "sphinx-bluebrain-theme",
 ]
 pandas_reqs = ["pandas"]
-voxcell_reqs = ["voxcell"]
 test_reqs = [
     "coverage",
     "dicttoxml",
@@ -33,37 +27,39 @@ test_reqs = [
     "pytest-html",
 ]
 
-VERSION = imp.load_source("", "dir_content_diff/version.py").VERSION
-
 setup(
     name="dir-content-diff",
-    author="bbp-ou-nse",
-    author_email="bbp-ou-nse@groupes.epfl.ch",
-    version=VERSION,
+    author="Blue Brain Project, EPFL",
     description="Simple tool to compare directory contents.",
     long_description=README,
     long_description_content_type="text/markdown",
+    license="Apache-2.0",
     url="https://bbpteam.epfl.ch/documentation/projects/dir-content-diff",
     project_urls={
-        "Tracker": "https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
-        "Source": "https://bbpgitlab.epfl.ch/neuromath/dir-content-diff",
+        "Tracker": "https://github.com/BlueBrain/dir-content-diff/issues",
+        "Source": "https://github.com/BlueBrain/dir-content-diff",
     },
-    license="BBP-internal-confidential",
-    packages=find_packages(exclude=["tests"]),
-    python_requires=">=3.6",
+    packages=find_packages(include=["dir_content_diff"]),
+    python_requires=">=3.8",
+    use_scm_version=True,
+    setup_requires=[
+        "setuptools_scm",
+    ],
     install_requires=reqs,
     extras_require={
         "pandas": pandas_reqs,
-        "voxcell": voxcell_reqs,
-        "docs": doc_reqs + pandas_reqs + voxcell_reqs,
-        "test": test_reqs + pandas_reqs + voxcell_reqs,
+        "docs": doc_reqs + pandas_reqs,
+        "test": test_reqs + pandas_reqs,
     },
     classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     entry_points={
         "pytest11": ["dir-content-diff = dir_content_diff.pytest_plugin"],

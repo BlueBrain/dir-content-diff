@@ -16,7 +16,7 @@ from pkg_resources import get_distribution
 project = "dir-content-diff"
 
 # The short X.Y version
-version = get_distribution("dir_content_diff").version
+version = get_distribution(project).version
 
 # The full version, including alpha/beta/rc tags
 release = version
@@ -57,7 +57,7 @@ html_theme = "sphinx-bluebrain-theme"
 # html_static_path = ['_static']
 
 html_theme_options = {
-    "metadata_distribution": "dir-content-diff",
+    "metadata_distribution": project,
 }
 
 html_title = "Directory Content Difference"

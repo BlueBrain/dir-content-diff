@@ -10,7 +10,7 @@
 This project provides simple tools to compare the content of a directory against a reference
 directory.
 
-This is usefull to check the results of a process that generate several files, like a luigi
+This is useful to check the results of a process that generate several files, like a luigi
 workflow for example.
 
 
@@ -36,7 +36,7 @@ the files, so it is not able to report which values are different.
 
 ### Compare two directories
 
-If one wants to compare two direcories with the following structures:
+If one wants to compare two directories with the following structures:
 
 ```bash
 └── reference_dir
@@ -63,7 +63,7 @@ import dir_content_diff
 dir_content_diff.compare_trees("reference_dir", "compared_dir")
 ```
 
-This code will return an empty dictionnary because no difference was detected.
+This code will return an empty dictionary because no difference was detected.
 
 If ``reference_dir/file_1.c`` is the following JSON-like file:
 
@@ -93,7 +93,7 @@ dir_content_diff.register_comparator(".c", dir_content_diff.JsonComparator())
 dir_content_diff.compare_trees("reference_dir", "compared_dir")
 ```
 
-The previous code will output the following dictionnary:
+The previous code will output the following dictionary:
 
 ```python
 {

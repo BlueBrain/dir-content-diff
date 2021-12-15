@@ -34,7 +34,7 @@ setup(
     long_description=README,
     long_description_content_type="text/markdown",
     license="Apache-2.0",
-    url="https://bbpteam.epfl.ch/documentation/projects/dir-content-diff",
+    url="https://github.com/BlueBrain/dir-content-diff",
     project_urls={
         "Tracker": "https://github.com/BlueBrain/dir-content-diff/issues",
         "Source": "https://github.com/BlueBrain/dir-content-diff",

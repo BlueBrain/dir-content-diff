@@ -321,8 +321,16 @@ class DictComparator(BaseComparator):
     def diff(self, ref, comp, *args, **kwargs):
         """Compare 2 dictionnaries.
 
-        This function calls :func:`dictdiffer.diff`, read the doc of this function for details on
-        args and kwargs.
+        This function calls :func:`dictdiffer.diff` to compare the dictionaries, read the doc of
+        this function for details on args and kwargs.
+
+        Keyword Args:
+            tolerance: Relative threshold to consider when comparing two float numbers.
+            absolute_tolerance: Absolute threshold to consider when comparing
+                two float numbers.
+            ignore: Set of keys that should not be checked.
+            path_limit: List of path limit tuples or :class:`dictdiffer.utils.Pathlimit`
+                object to limit the diff recursion depth.
         """
         if len(args) > 5:
             dot_notation = args[5]
@@ -342,7 +350,10 @@ class DictComparator(BaseComparator):
 
 
 class JsonComparator(DictComparator):
-    """Comparator for JSON files."""
+    """Comparator for JSON files.
+
+    This comparator is based on the :class:`DictComparator` and uses the same parameters.
+    """
 
     def load(self, path):
         """Open a JSON file."""
@@ -352,7 +363,10 @@ class JsonComparator(DictComparator):
 
 
 class YamlComparator(DictComparator):
-    """Comparator for YAML files."""
+    """Comparator for YAML files.
+
+    This comparator is based on the :class:`DictComparator` and uses the same parameters.
+    """
 
     def load(self, path):
         """Open a YAML file."""
@@ -363,6 +377,8 @@ class YamlComparator(DictComparator):
 
 class XmlComparator(DictComparator):
     """Comparator for XML files.
+
+    This comparator is based on the :class:`DictComparator` and uses the same parameters.
 
     .. warning:: The XML files must have only one root.
 
@@ -447,7 +463,7 @@ class XmlComparator(DictComparator):
 
 
 class PdfComparator(BaseComparator):
-    """Compartor for PDF files."""
+    """Comparator for PDF files."""
 
     def diff(self, ref, comp, *args, **kwargs):
         """Compare data from two PDF files.
@@ -455,5 +471,18 @@ class PdfComparator(BaseComparator):
         This function calls the `diff_pdf_visually.pdfdiff() <https://github.com/bgeron/diff-pdf-
         visually/blob/21e85f1db1bdaee5c0e8e0b730771d6c4e8c3e44/diff_pdf_visually/diff.py#L83>`_
         function, read the doc of this function for details on args and kwargs.
+        It compares the visual aspects of the PDF files, ignoring the invisible content (e.g. file
+        header or invisible things like white font on white background). The PDF files are converted
+        into images using ``ImageMagick`` and then these images are compared.
+
+        Keyword Args:
+            threshold (int): The threshold used to compare the images.
+            tempdir (pathlib.Path): Empty directory where the temporary images will be exported.
+            dpi (int): The resolution used to convert the PDF files into images.
+            verbosity (int): The log verbosity.
+            max_report_pagenos (int): Only this number of the different pages will be logged (only
+                used if the verbosity is greater than 1).
+            num_threads (int): If set to 2 (the default), the image conversion are processed in
+                parallel. If set to 1 it is processed sequentially.
         """
         return not pdfdiff(ref, comp, *args, **kwargs)

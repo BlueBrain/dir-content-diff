@@ -47,12 +47,12 @@ If one wants to compare two directories with the following structures:
 ```
 
 ```bash
-    └── compared_dir
-        ├── sub_dir_1
-        |   ├── sub_file_1.a
-        |   └── sub_file_2.b
-        |   └── sub_file_3.b
-        └── file_1.c
+└── compared_dir
+    ├── sub_dir_1
+    |   ├── sub_file_1.a
+    |   └── sub_file_2.b
+    |   └── sub_file_3.b
+    └── file_1.c
 ```
 
 These two directories can be compared with the following code:
@@ -123,6 +123,34 @@ Added the value(s) '{"2": 0}' in the '[b]' key.
 Changed the value of '[a]' from 1 to 2.
 Changed the value of '[b][0]' from 1 to 10.
 ```
+
+Finally, the comparators have parameters that can be passed either to be used for all files of a
+given extension or only for a specific file:
+
+```python
+import dir_content_diff
+
+# Get the default comparators
+comparators = dir_content_diff.get_comparators()
+
+# Replace the comparators for JSON files to perform the comparison with a given tolerance
+comparators[".json"] = dir_content_diff.JsonComparator(default_diff_kwargs={"tolerance": 0.1})
+
+# Use a specific tolerance for the file ``sub_dir_1/sub_file_1.a``
+# In this case, the kwargs are used to compute the difference by default, except the following
+# specific kwargs: ``return_raw_diffs``, ``load_kwargs``, ``format_data_kwargs``, ``filter_kwargs``,
+# ``format_diff_kwargs``, ``sort_kwargs``, ``concat_kwargs`` and ``report_kwargs``.
+specific_args = {"sub_dir_1/sub_file_1.a": {"tolerance": 0.5}}
+
+dir_content_diff.assert_equal_trees(
+    "reference_dir",
+    "compared_dir",
+    comparators=comparators,
+    specific_args=specific_args,
+)
+```
+
+Each comparator has different arguments that are detailed in the documentation.
 
 
 ### Export formatted data

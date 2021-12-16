@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1](https://github.com/BlueBrain/dir-content-diff/compare/1.0.0..1.0.1)
+
+> 16 December 2021
+
+- Improve documentation [#6](https://github.com/BlueBrain/dir-content-diff/pull/6)
+
 ## [1.0.0](https://github.com/BlueBrain/dir-content-diff/compare/0.2.0..1.0.0)
 
 > 15 December 2021

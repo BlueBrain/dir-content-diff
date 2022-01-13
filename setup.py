@@ -22,7 +22,7 @@ test_reqs = [
     "coverage",
     "dicttoxml",
     "matplotlib",
-    "rst2pdf",
+    "rst2pdf>=0.99",
     "pytest",
     "pytest-html",
 ]

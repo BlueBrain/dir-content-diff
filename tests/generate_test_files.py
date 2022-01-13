@@ -147,4 +147,9 @@ def create_pdf(filename, diff=False):
         rst_file = Path(tmp_dir) / Path(filename.name).with_suffix(".rst")
         with open(rst_file, "w", encoding="utf-8") as f:
             f.write(data)
-        rst2pdf.createpdf.main([str(rst_file), "-o", str(filename)])
+
+        try:
+            rst2pdf.createpdf.main([str(rst_file), "-o", str(filename)])
+        except SystemExit as exc:
+            if exc.code != 0:
+                raise exc

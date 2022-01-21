@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/BlueBrain/dir-content-diff/compare/1.0.1..1.1.0)
+
+> 21 January 2022
+
+- Require changes for CodeCov [#11](https://github.com/BlueBrain/dir-content-diff/pull/11)
+- Add pandas HDF capability [#10](https://github.com/BlueBrain/dir-content-diff/pull/10)
+- Fix tests for rst2pdf&gt;0.99 [#9](https://github.com/BlueBrain/dir-content-diff/pull/9)
+- Setup Codecov (#8) (Adrien Berchet - [fab0946](https://github.com/BlueBrain/dir-content-diff/commit/fab09468795dd1620f5b60047a3b780359634842))
+
 ## [1.0.1](https://github.com/BlueBrain/dir-content-diff/compare/1.0.0..1.0.1)
 
 > 16 December 2021

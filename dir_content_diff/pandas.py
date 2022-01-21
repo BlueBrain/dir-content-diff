@@ -125,6 +125,7 @@ class CsvComparator(DataframeComparator):
 
     def load(self, path, **kwargs):
         """Load a CSV file into a :class:`pandas.DataFrame` object."""
+        print(path)
         return pd.read_csv(path, **kwargs)
 
     def save(self, data, path, **kwargs):

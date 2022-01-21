@@ -37,6 +37,7 @@ class TestRegistry:
             ".yml": dir_content_diff.YamlComparator(),
             ".csv": dir_content_diff.pandas.CsvComparator(),
             ".tsv": dir_content_diff.pandas.CsvComparator(),
+            ".h5": dir_content_diff.pandas.Hdf5Comparator(),
         }
 
 

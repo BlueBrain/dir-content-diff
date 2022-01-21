@@ -324,7 +324,6 @@ def assert_equal_trees(*args, export_formatted_files=False, **kwargs):
 
     # Sort the files according to their relative paths
     sorted_items = sorted(different_files.items(), key=lambda x: x[0])
-
     # Test that all files are equal and raise the formatted messages if there are differences
     if len(sorted_items) > 0:
         raise AssertionError("\n\n\n".join([i[1] for i in sorted_items]))

@@ -133,7 +133,26 @@ class CsvComparator(DataframeComparator):
         data.to_csv(path, index=index, **kwargs)
 
 
+class HdfComparator(DataframeComparator):
+    """Comparator for HDF files."""
+
+    def load(self, path, **kwargs):
+        """Load a HDF file into a :class:`pandas.DataFrame` object."""
+        return pd.read_hdf(path, **kwargs)
+
+    def save(self, data, path, **kwargs):
+        """Save data to a HDF file."""
+        index = kwargs.pop("index", False)
+        key = kwargs.pop("key", "data")
+        data.to_hdf(path, index=index, key=key, **kwargs)
+
+
 def register():
     """Register Pandas extensions."""
     register_comparator(".csv", CsvComparator())
     register_comparator(".tsv", CsvComparator())
+    register_comparator(".h4", HdfComparator())
+    register_comparator(".h5", HdfComparator())
+    register_comparator(".hdf", HdfComparator())
+    register_comparator(".hdf4", HdfComparator())
+    register_comparator(".hdf5", HdfComparator())

@@ -17,7 +17,10 @@ doc_reqs = [
     "sphinx",
     "sphinx-bluebrain-theme",
 ]
-pandas_reqs = ["pandas"]
+pandas_reqs = [
+    "pandas",
+    "tables",
+]
 test_reqs = [
     "coverage",
     "dicttoxml",

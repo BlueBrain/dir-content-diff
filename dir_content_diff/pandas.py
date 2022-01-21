@@ -125,7 +125,6 @@ class CsvComparator(DataframeComparator):
 
     def load(self, path, **kwargs):
         """Load a CSV file into a :class:`pandas.DataFrame` object."""
-        print(path)
         return pd.read_csv(path, **kwargs)
 
     def save(self, data, path, **kwargs):
@@ -139,12 +138,12 @@ class Hdf5Comparator(DataframeComparator):
 
     def load(self, path, **kwargs):
         """Load a Hdf5 file into a :class:`pandas.DataFrame` object."""
-        return pd.read_hdf5(path, **kwargs)
+        return pd.read_hdf(path, **kwargs)
 
     def save(self, data, path, **kwargs):
         """Save data to a Hdf5 file."""
         index = kwargs.pop("index", False)
-        data.to_hdf5(path, index=index, **kwargs)
+        data.to_hdf(path, index=index, **kwargs)
 
 
 def register():

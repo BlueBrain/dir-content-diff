@@ -11,6 +11,7 @@ import pytest
 
 import dir_content_diff
 import dir_content_diff.pandas
+from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
 
 
@@ -37,13 +38,51 @@ class TestRegistry:
             ".yml": dir_content_diff.YamlComparator(),
             ".csv": dir_content_diff.pandas.CsvComparator(),
             ".tsv": dir_content_diff.pandas.CsvComparator(),
-            ".h5": dir_content_diff.pandas.Hdf5Comparator(),
+            ".h4": dir_content_diff.pandas.HdfComparator(),
+            ".h5": dir_content_diff.pandas.HdfComparator(),
+            ".hdf": dir_content_diff.pandas.HdfComparator(),
+            ".hdf4": dir_content_diff.pandas.HdfComparator(),
+            ".hdf5": dir_content_diff.pandas.HdfComparator(),
         }
 
 
 @pytest.fixture
 def pandas_registry_reseter(registry_reseter):
     dir_content_diff.pandas.register()
+
+
+@pytest.fixture
+def ref_hdf5(empty_ref_tree):
+    """The reference HDF5 file."""
+    ref_data = {
+        "col_a": [1, 2, 3],
+        "col_b": ["a", "b", "c"],
+        "col_c": [4, 5, 6],
+    }
+    df = pd.DataFrame(ref_data, index=["idx1", "idx2", "idx3"])
+    filename = empty_ref_tree / "file.h5"
+    df.to_hdf(filename, key="data", index=True)
+    return filename
+
+
+@pytest.fixture
+def res_hdf5_equal(ref_hdf5, empty_res_tree):
+    """The result hdf5 file equal to the reference."""
+    df = pd.read_hdf(ref_hdf5, index_col="index")
+    filename = empty_res_tree / "file.h5"
+    df.to_hdf(filename, key="data", index=True)
+    return filename
+
+
+@pytest.fixture
+def res_hdf5_diff(ref_hdf5, empty_res_tree):
+    """The result hdf5 file different from the reference."""
+    df = pd.read_hdf(ref_hdf5, index_col="index")
+    df.loc["idx1", "col_a"] *= 10
+    df.loc["idx2", "col_b"] += "_new"
+    filename = empty_res_tree / "file.h5"
+    df.to_hdf(filename, key="data", index=True)
+    return filename
 
 
 class TestEqualTrees:
@@ -173,6 +212,16 @@ class TestEqualTrees:
         )
         assert match_res is not None
 
+    def test_hdf5_comparator(
+        self, empty_ref_tree, empty_res_tree, res_hdf5_equal, pandas_registry_reseter
+    ):
+        assert_equal_trees(empty_ref_tree, empty_res_tree, export_formatted_files=True)
+        ref_files = list(empty_ref_tree.rglob("*"))
+        res_files = list(empty_res_tree.rglob("*"))
+        assert len(ref_files) == len(res_files)
+        for i, j in zip(ref_files, res_files):
+            assert pd.read_hdf(i).equals(pd.read_hdf(j))
+
 
 class TestDiffTrees:
     """Tests that should return differences."""
@@ -225,5 +274,26 @@ class TestDiffTrees:
             r"Column 'col_c': The column is missing in the compared DataFrame.\n\n"
             r"Column 'new_col_c': The column is missing in the reference DataFrame.",
             res_csv,
+        )
+        assert match_res is not None
+
+    def test_hdf5_comparator(
+        self, empty_ref_tree, empty_res_tree, res_hdf5_diff, pandas_registry_reseter
+    ):
+        res = compare_trees(empty_ref_tree, empty_res_tree)
+
+        assert len(res) == 1
+        res_hdf = res["file.h5"]
+        match_res = re.match(
+            r"The files '\S*/ref/file.h5' and '\S*/res/file.h5' are different:\n\n"
+            r"Column 'col_a': Series are different\n\n"
+            r"Series values are different \(33\.33333 %\)\n"
+            r"\[index\]: \[idx1, idx2, idx3\]\n"
+            r"\[left\]:  \[1, 2, 3\]\n\[right\]: \[10, 2, 3\]\n\n"
+            r"Column 'col_b': Series are different\n\n"
+            r"Series values are different \(33\.33333 %\)\n"
+            r"\[index\]: \[idx1, idx2, idx3\]\n"
+            r"\[left\]:  \[a, b, c\]\n\[right\]: \[a, b_new, c\]",
+            res_hdf,
         )
         assert match_res is not None

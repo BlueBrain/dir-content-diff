@@ -325,11 +325,11 @@ class DictComparator(BaseComparator):
         this function for details on args and kwargs.
 
         Keyword Args:
-            tolerance: Relative threshold to consider when comparing two float numbers.
-            absolute_tolerance: Absolute threshold to consider when comparing
+            tolerance (float): Relative threshold to consider when comparing two float numbers.
+            absolute_tolerance (float): Absolute threshold to consider when comparing
                 two float numbers.
-            ignore: Set of keys that should not be checked.
-            path_limit: List of path limit tuples or :class:`dictdiffer.utils.Pathlimit`
+            ignore (set[list]): Set of keys that should not be checked.
+            path_limit (list[str]): List of path limit tuples or :class:`dictdiffer.utils.PathLimit`
                 object to limit the diff recursion depth.
         """
         if len(args) > 5:

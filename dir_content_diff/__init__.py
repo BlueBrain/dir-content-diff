@@ -152,7 +152,7 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
         formatted_file (str): Path to the formatted file.
         comparator (callable): The comparator to use (see in :func:`register_comparator` for the
             comparator signature).
-        **kwargs: Can contain the following dictionnaries: 'load_kwargs', 'format_data_kwargs' and
+        **kwargs: Can contain the following dictionaries: 'load_kwargs', 'format_data_kwargs' and
             'save_kwargs'.
     """
     if hasattr(comparator, "save_capability") and comparator.save_capability:

@@ -276,7 +276,7 @@ class DefaultComparator(BaseComparator):
 
 
 class DictComparator(BaseComparator):
-    """Comparator for dictionnaries."""
+    """Comparator for dictionaries."""
 
     _ACTION_MAPPING = {
         "add": "Added the value(s) '{value}' in the '{key}' key.",
@@ -319,7 +319,7 @@ class DictComparator(BaseComparator):
         return value
 
     def diff(self, ref, comp, *args, **kwargs):
-        """Compare 2 dictionnaries.
+        """Compare 2 dictionaries.
 
         This function calls :func:`dictdiffer.diff` to compare the dictionaries, read the doc of
         this function for details on args and kwargs.

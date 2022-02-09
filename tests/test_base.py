@@ -476,7 +476,7 @@ class TestBaseComparator:
                 )
 
         def test_add_to_output_with_none(self):
-            """Test wront type for add_to_output() method."""
+            """Test wrong type for add_to_output() method."""
             comparator = dir_content_diff.XmlComparator()
             comparator.add_to_output(None, None)
 

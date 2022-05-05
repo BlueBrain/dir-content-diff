@@ -11,11 +11,11 @@ from dir_content_diff.base_comparators import BaseComparator
 class DataframeComparator(BaseComparator):
     """Comparator for :class:`pandas.DataFrame` objects."""
 
-    def format_data(self, comp, ref=None, replace_pattern=None):
+    def format_data(self, data, ref=None, replace_pattern=None):
         """Format the compared :class:`pandas.DataFrame`.
 
         Args:
-            comp (pandas.DataFrame): The compared DataFrame.
+            data (pandas.DataFrame): The DataFrame to format.
             ref (pandas.DataFrame): (Optional) The reference DataFrame.
             **replace_pattern (dict): (Optional) The columns that contain a given pattern which
                 must be made replaced.
@@ -51,22 +51,22 @@ class DataframeComparator(BaseComparator):
                             "The column is missing in the reference DataFrame, please fix the "
                             "'replace_pattern' argument."
                         )
-                    elif col not in comp.columns:
+                    elif col not in data.columns:
                         errors[col] = (
                             "The column is missing in the compared DataFrame, please fix the "
                             "'replace_pattern' argument."
                         )
-                    elif hasattr(comp[col], "str"):
+                    elif hasattr(data[col], "str"):
                         # If all values are NaN, Pandas casts the column dtype to float, so the str
                         # attribute is not available.
-                        comp[col] = comp[col].str.replace(
+                        data[col] = data[col].str.replace(
                             pattern,
                             new_value,
                             flags=flags,
                             regex=True,
                         )
 
-        return comp
+        return data
 
     def diff(self, ref, comp, *args, ignore_columns=None, **kwargs):
         """Compare two :class:`pandas.DataFrame` objects.

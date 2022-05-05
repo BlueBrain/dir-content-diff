@@ -7,6 +7,7 @@ import pytest
 
 @pytest.fixture
 def tmp_conftest(ref_tree, res_tree_equal, ref_csv, res_csv_equal):
+    """Create a temporary conftest file."""
     return f"""
         from pathlib import Path
 
@@ -42,6 +43,7 @@ def test_export_formatted_data(
     export_suffix,
     registry_reseter,
 ):
+    """Test that the formatted files are properly exported."""
     args = []
     if not do_export:
         expected_dir = """res_path.with_name(res_path.name + "_FORMATTED")"""

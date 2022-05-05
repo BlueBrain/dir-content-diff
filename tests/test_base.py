@@ -19,6 +19,7 @@ class TestBaseComparator:
     """Test the base comparator."""
 
     def test_equal(self):
+        """Test equal."""
         assert dir_content_diff.JsonComparator() != dir_content_diff.PdfComparator()
         assert dir_content_diff.JsonComparator() == dir_content_diff.JsonComparator()
 
@@ -39,6 +40,8 @@ class TestBaseComparator:
         assert ComparatorWithAttributes(1, 2) != ComparatorWithAttributes(1, None)
 
     def test_load_kwargs(self, ref_tree, res_tree_diff):
+        """Test the load_kwargs method."""
+
         class ComparatorWithLoader(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
@@ -93,6 +96,8 @@ class TestBaseComparator:
         assert diff_default.replace(kwargs_msg, "") == diff
 
     def test_filter_kwargs(self, ref_tree, res_tree_diff):
+        """Test the filter_kwargs method."""
+
         class ComparatorWithFilter(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
@@ -147,6 +152,8 @@ class TestBaseComparator:
         assert diff_default.replace(kwargs_msg, "") == diff
 
     def test_format_kwargs(self, ref_tree, res_tree_diff):
+        """Test the format_kwargs method."""
+
         class ComparatorWithFormat(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
@@ -203,6 +210,8 @@ class TestBaseComparator:
         assert diff_default.replace(kwargs_msg, "") == diff
 
     def test_sort_kwargs(self, ref_tree, res_tree_diff):
+        """Test the sort_kwargs method."""
+
         class ComparatorWithSort(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
@@ -265,6 +274,8 @@ class TestBaseComparator:
         assert diff == no_reversed_diff_default.replace(kwargs_msg_false, "")
 
     def test_concat_kwargs(self, ref_tree, res_tree_diff):
+        """Test the concat_kwargs method."""
+
         class ComparatorWithConcat(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
@@ -329,6 +340,8 @@ class TestBaseComparator:
         assert diff == concat_diff_default.replace(kwargs_msg_n, "\n")
 
     def test_report_kwargs(self, ref_tree, res_tree_diff):
+        """Test the report_kwargs method."""
+
         class ComparatorWithReport(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
@@ -599,13 +612,17 @@ class TestEqualTrees:
     """Tests that should return no difference."""
 
     def test_diff_tree(self, ref_tree, res_tree_equal):
+        """Test that no difference is returned."""
         res = compare_trees(ref_tree, res_tree_equal)
         assert res == {}
 
     def test_assert_equal_trees(self, ref_tree, res_tree_equal):
+        """Test that no exception is raised."""
         assert_equal_trees(ref_tree, res_tree_equal)
 
     def test_assert_equal_trees_export(self, ref_tree, res_tree_equal):
+        """Test that the formatted files are properly exported."""
+
         class JsonComparator(dir_content_diff.base_comparators.JsonComparator):
             """Compare data from two JSON files."""
 
@@ -624,25 +641,30 @@ class TestEqualTrees:
         ]
 
     def test_diff_empty(self, empty_ref_tree, empty_res_tree):
+        """Test with empty trees."""
         res = compare_trees(empty_ref_tree, empty_res_tree)
         assert res == {}
 
     def test_pass_register(self, empty_ref_tree, empty_res_tree):
+        """Test with empty trees and with an explicit set of comparators."""
         res = compare_trees(
             empty_ref_tree, empty_res_tree, comparators=dir_content_diff.get_comparators()
         )
         assert res == {}
 
     def test_unknown_comparator(self, ref_tree, res_tree_equal, registry_reseter):
+        """Test with an unknown extension."""
         dir_content_diff.unregister_comparator(".yaml")
         res = compare_trees(ref_tree, res_tree_equal)
         assert res == {}
 
     def test_nested_files(self, ref_with_nested_file, res_equal_with_nested_file):
+        """Test with nested files."""
         res = compare_trees(ref_with_nested_file, res_equal_with_nested_file)
         assert res == {}
 
     def test_specific_args(self, ref_tree, res_tree_equal):
+        """Test specific args."""
         specific_args = {
             "file.yaml": {"args": [None, None, None, False, 0, False]},
             "file.json": {"tolerance": 0},
@@ -656,6 +678,7 @@ class TestDiffTrees:
     """Tests that should return differences."""
 
     def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
+        """Test that the returned differences are correct."""
         res = compare_trees(ref_tree, res_tree_diff)
 
         assert len(res) == 4
@@ -668,15 +691,18 @@ class TestDiffTrees:
             assert match_i is not None
 
     def test_assert_equal_trees(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
+        """Test that the exception raised is correct."""
         pattern = (r"\n\n\n").join([dict_diff, pdf_diff, xml_diff, dict_diff])
         with pytest.raises(AssertionError, match=pattern):
             assert_equal_trees(ref_tree, res_tree_diff)
 
     def test_diff_ref_empty_res_not_empty(self, empty_ref_tree, res_tree_equal):
+        """Test with empty ref tree."""
         res = compare_trees(empty_ref_tree, res_tree_equal)
         assert res == {}
 
     def test_diff_ref_not_empty_res_empty(self, ref_tree, empty_res_tree):
+        """Test with empty compared tree."""
         res = compare_trees(ref_tree, empty_res_tree)
 
         assert len(res) == 4
@@ -697,6 +723,8 @@ class TestDiffTrees:
             assert match_i is not None
 
     def test_exception_in_comparator(self, ref_tree, res_tree_equal, registry_reseter):
+        """Test with a comparator raising an exception."""
+
         def bad_comparator(ref_path, test_path, *args, **kwargs):
             raise RuntimeError("Bad\ncomparator")
 
@@ -714,6 +742,7 @@ class TestDiffTrees:
         assert match is not None
 
     def test_specific_args(self, ref_tree, res_tree_diff, dict_diff, xml_diff):
+        """Test specific args."""
         specific_args = {
             "file.pdf": {"threshold": 50},
             "file.json": {"tolerance": 0},
@@ -736,6 +765,7 @@ class TestDiffTrees:
             assert match_i is not None
 
     def test_unknown_comparator(self, ref_tree, res_tree_diff, registry_reseter):
+        """Test with an unknown extension."""
         dir_content_diff.unregister_comparator(".yaml")
         res = compare_trees(ref_tree, res_tree_diff)
         match = re.match(
@@ -745,6 +775,7 @@ class TestDiffTrees:
         assert match is not None
 
     def test_nested_files(self, ref_with_nested_file, res_diff_with_nested_file):
+        """Test with nested files."""
         res = compare_trees(ref_with_nested_file, res_diff_with_nested_file)
         match = re.match(
             r"The files '\S*/ref/level1/level2/level3/file.pdf' and "
@@ -754,6 +785,7 @@ class TestDiffTrees:
         assert match is not None
 
     def test_fix_dot_notation(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
+        """Test that the dot notation is properly fixed."""
         specific_args = {"file.yaml": {"args": [None, None, None, False, 0, True]}}
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
@@ -774,6 +806,8 @@ class TestDiffTrees:
             assert match_i is not None
 
     def test_format_inside_diff(self, ref_tree, res_tree_diff, dict_diff):
+        """Test formatting the result inside the diff method."""
+
         class JsonComparator(dir_content_diff.base_comparators.BaseComparator):
             """Compare data from two JSON files."""
 
@@ -802,6 +836,7 @@ class TestProgrammaticUse:
     """Test specific comparators that could be use programmatically."""
 
     def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff):
+        """Test with different trees."""
         res = compare_trees(ref_tree, res_tree_diff, return_raw_diffs=True)
 
         res_json = res["file.json"]

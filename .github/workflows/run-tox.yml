@@ -33,4 +33,3 @@ jobs:
         files: ./reports/coverage-py38.xml
         flags: pytest
         name: "dir-content-diff-py38"
-

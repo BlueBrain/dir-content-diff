@@ -1,28 +1,42 @@
 # Changelog
 
+## [1.1.1](https://github.com/BlueBrain/dir-content-diff/compare/1.1.0..1.1.1)
+
+> 5 May 2022
+
+### Uncategorized Changes
+
+- Updating copyright year (bbpgithubaudit - [#15](https://github.com/BlueBrain/dir-content-diff/pull/15))
+- Bump black (Adrien Berchet - [#16](https://github.com/BlueBrain/dir-content-diff/pull/16))
+- Add codespell in lint (Adrien Berchet - [#14](https://github.com/BlueBrain/dir-content-diff/pull/14))
+- Add missing types in doc of DictComparator.diff (Adrien Berchet - [#13](https://github.com/BlueBrain/dir-content-diff/pull/13))
+
 ## [1.1.0](https://github.com/BlueBrain/dir-content-diff/compare/1.0.1..1.1.0)
 
 > 21 January 2022
 
-- Require changes for CodeCov [#11](https://github.com/BlueBrain/dir-content-diff/pull/11)
-- Add pandas HDF capability [#10](https://github.com/BlueBrain/dir-content-diff/pull/10)
-- Fix tests for rst2pdf&gt;0.99 [#9](https://github.com/BlueBrain/dir-content-diff/pull/9)
-- Setup Codecov (#8) (Adrien Berchet - [fab0946](https://github.com/BlueBrain/dir-content-diff/commit/fab09468795dd1620f5b60047a3b780359634842))
+### Uncategorized Changes
+
+- Require changes for CodeCov (Adrien Berchet - [#11](https://github.com/BlueBrain/dir-content-diff/pull/11))
+- Add pandas HDF capability (Alexis Arnaudon - [#10](https://github.com/BlueBrain/dir-content-diff/pull/10))
+- Fix tests for rst2pdf&gt;0.99 (Adrien Berchet - [#9](https://github.com/BlueBrain/dir-content-diff/pull/9))
+- Setup Codecov (Adrien Berchet - [#8](https://github.com/BlueBrain/dir-content-diff/pull/8))
+
+<!-- auto-changelog-above -->
 
 ## [1.0.1](https://github.com/BlueBrain/dir-content-diff/compare/1.0.0..1.0.1)
 
 > 16 December 2021
 
-- Improve documentation [#6](https://github.com/BlueBrain/dir-content-diff/pull/6)
+- Improve documentation (Adrien Berchet - [#6](https://github.com/BlueBrain/dir-content-diff/pull/6))
 
 ## [1.0.0](https://github.com/BlueBrain/dir-content-diff/compare/0.2.0..1.0.0)
 
 > 15 December 2021
 
-- Fix URL [#3](https://github.com/BlueBrain/dir-content-diff/pull/3)
-- README.md spelling update [#2](https://github.com/BlueBrain/dir-content-diff/pull/2)
-- Change license and open the sources [#1](https://github.com/BlueBrain/dir-content-diff/pull/1)
-- Update README (Adrien Berchet - [e72b25a](https://github.com/BlueBrain/dir-content-diff/commit/e72b25ae91ce68e860b65f43c0d19dbaa36d4f20))
+- Fix URL (Adrien Berchet - [#3](https://github.com/BlueBrain/dir-content-diff/pull/3))
+- README.md spelling update (alex4200 - [#2](https://github.com/BlueBrain/dir-content-diff/pull/2))
+- Change license and open the sources (Adrien Berchet - [#1](https://github.com/BlueBrain/dir-content-diff/pull/1))
 
 ## [0.2.0](https://github.com/BlueBrain/dir-content-diff/compare/0.1.0..0.2.0)
 

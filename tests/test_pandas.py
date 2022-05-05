@@ -19,6 +19,7 @@ class TestRegistry:
     """Test the internal registry."""
 
     def test_pandas_register(self, registry_reseter):
+        """Test registering the pandas plugin."""
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
             ".json": dir_content_diff.JsonComparator(),
@@ -48,6 +49,7 @@ class TestRegistry:
 
 @pytest.fixture
 def pandas_registry_reseter(registry_reseter):
+    """Register the pandas plugin and then reset the registry after the test."""
     dir_content_diff.pandas.register()
 
 
@@ -91,12 +93,14 @@ class TestEqualTrees:
     def test_diff_tree(
         self, ref_tree, ref_csv, res_tree_equal, res_csv_equal, pandas_registry_reseter
     ):
+        """Test that no difference is returned."""
         res = compare_trees(ref_tree, res_tree_equal)
         assert res == {}
 
     def test_specific_args(
         self, ref_tree, ref_csv, res_tree_diff, res_csv_diff, pandas_registry_reseter
     ):
+        """Test specific args."""
         specific_args = {
             "file.csv": {
                 "atol": 100000,
@@ -112,6 +116,7 @@ class TestEqualTrees:
     def test_replace_pattern(
         self, ref_tree, ref_csv, res_tree_equal, res_csv_equal, pandas_registry_reseter
     ):
+        """Test the feature to replace a given pattern in files."""
         # Add a column with paths in the CSV file
         ref_df = pd.read_csv(ref_csv, index_col="index")
         ref_df["test_path"] = "relative_path/test.file"
@@ -215,6 +220,7 @@ class TestEqualTrees:
     def test_hdf5_comparator(
         self, empty_ref_tree, empty_res_tree, res_hdf5_equal, pandas_registry_reseter
     ):
+        """Test the comparator for HDF5 files."""
         assert_equal_trees(empty_ref_tree, empty_res_tree, export_formatted_files=True)
         ref_files = list(empty_ref_tree.rglob("*"))
         res_files = list(empty_res_tree.rglob("*"))
@@ -229,6 +235,7 @@ class TestDiffTrees:
     def test_diff_tree(
         self, ref_tree, ref_csv, res_tree_diff, res_csv_diff, csv_diff, pandas_registry_reseter
     ):
+        """Test that the returned differences are correct."""
         res = compare_trees(ref_tree, res_tree_diff)
 
         assert len(res) == 5
@@ -239,6 +246,7 @@ class TestDiffTrees:
     def test_read_csv_kwargs(
         self, ref_tree, ref_csv, res_tree_diff, res_csv_diff, csv_diff, pandas_registry_reseter
     ):
+        """Test specific args for the CSV reader."""
         specific_args = {
             "file.csv": {"load_kwargs": {"header": None, "skiprows": 1, "prefix": "col_"}}
         }
@@ -259,6 +267,7 @@ class TestDiffTrees:
     def test_missing_column(
         self, ref_tree, ref_csv, res_tree_diff, res_csv_equal, csv_diff, pandas_registry_reseter
     ):
+        """Test the behavior with missing columns in CSV files."""
         # Rename a column from the CSV file
         df = pd.read_csv(res_csv_equal, index_col="index")
         df.rename(columns={"col_c": "new_col_c"}, inplace=True)
@@ -280,6 +289,7 @@ class TestDiffTrees:
     def test_hdf5_comparator(
         self, empty_ref_tree, empty_res_tree, res_hdf5_diff, pandas_registry_reseter
     ):
+        """Test the comparator for HDF5 files."""
         res = compare_trees(empty_ref_tree, empty_res_tree)
 
         assert len(res) == 1

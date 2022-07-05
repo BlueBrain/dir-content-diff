@@ -1,6 +1,5 @@
 """Test the Pandas extension of the ``dir-content-diff`` package."""
 # pylint: disable=missing-function-docstring
-# pylint: disable=no-self-use
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 # pylint: disable=use-implicit-booleaness-not-comparison

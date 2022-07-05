@@ -21,8 +21,6 @@ _ACTION_MAPPING = {
 class BaseComparator(ABC):
     """Base Comparator class."""
 
-    # pylint: disable=no-self-use
-
     def __init__(
         self,
         default_load_kwargs=None,

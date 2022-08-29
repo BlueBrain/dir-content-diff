@@ -1,9 +1,11 @@
-"""Module containing the base functions of the ``dir-content-diff`` package."""
+"""dir-content-diff package.
+
+Simple tool to compare directory contents.
+"""
 import copy
+import importlib.metadata
 import logging
 from pathlib import Path
-
-from pkg_resources import get_distribution
 
 from dir_content_diff.base_comparators import DefaultComparator
 from dir_content_diff.base_comparators import JsonComparator
@@ -13,7 +15,7 @@ from dir_content_diff.base_comparators import YamlComparator
 from dir_content_diff.util import diff_msg_formatter
 from dir_content_diff.util import format_ext
 
-__version__ = get_distribution("dir-content-diff").version
+__version__ = importlib.metadata.version("dir-content-diff")
 
 L = logging.getLogger(__name__)
 

@@ -1,10 +1,8 @@
 """Setup for the dir-content-diff package."""
+from pathlib import Path
+
 from setuptools import find_packages
 from setuptools import setup
-
-# Read the contents of the README file
-with open("README.md", encoding="utf-8") as f:
-    README = f.read()
 
 reqs = [
     "dictdiffer",
@@ -34,14 +32,14 @@ setup(
     name="dir-content-diff",
     author="Blue Brain Project, EPFL",
     description="Simple tool to compare directory contents.",
-    long_description=README,
+    long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
-    license="Apache-2.0",
-    url="https://github.com/BlueBrain/dir-content-diff",
+    url="https://dir-content-diff.readthedocs.io",
     project_urls={
         "Tracker": "https://github.com/BlueBrain/dir-content-diff/issues",
         "Source": "https://github.com/BlueBrain/dir-content-diff",
     },
+    license="Apache License 2.0",
     packages=find_packages(include=["dir_content_diff"]),
     python_requires=">=3.8",
     use_scm_version=True,
@@ -64,6 +62,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
+    include_package_data=True,
     entry_points={
         "pytest11": ["dir-content-diff = dir_content_diff.pytest_plugin"],
     },

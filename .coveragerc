@@ -1,5 +1,6 @@
 [paths]
-sources =
+source_paths =
 	dir_content_diff
 	*/site-packages/dir_content_diff
+	*/dir_content_diff/dir_content_diff
 	*/dir-content-diff/dir_content_diff

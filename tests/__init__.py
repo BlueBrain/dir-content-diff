@@ -1,1 +1,1 @@
-"""Tests of the ``dir-content-diff`` package."""
+"""Tests suite for the dir-content-diff package."""

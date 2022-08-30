@@ -1,8 +1,17 @@
 # Changelog
 
-## [1.1.1](https://github.com/BlueBrain/dir-content-diff/compare/1.1.0..1.1.1)
+## [1.2.0](https://github.com/BlueBrain/dir-content-diff/compare/1.1.0..1.2.0)
 
-> 5 May 2022
+> 30 August 2022
+
+### Refactoring and Updates
+
+- Apply Copier template (Adrien Berchet - [#19](https://github.com/BlueBrain/dir-content-diff/pull/19))
+
+### CI Improvements
+
+- Use commitlint to check PR titles (Adrien Berchet - [#18](https://github.com/BlueBrain/dir-content-diff/pull/18))
+- Setup pre-commit and format the files accordingly (Adrien Berchet - [#17](https://github.com/BlueBrain/dir-content-diff/pull/17))
 
 ### Uncategorized Changes
 
@@ -11,18 +20,16 @@
 - Add codespell in lint (Adrien Berchet - [#14](https://github.com/BlueBrain/dir-content-diff/pull/14))
 - Add missing types in doc of DictComparator.diff (Adrien Berchet - [#13](https://github.com/BlueBrain/dir-content-diff/pull/13))
 
+<!-- auto-changelog-above -->
+
 ## [1.1.0](https://github.com/BlueBrain/dir-content-diff/compare/1.0.1..1.1.0)
 
 > 21 January 2022
-
-### Uncategorized Changes
 
 - Require changes for CodeCov (Adrien Berchet - [#11](https://github.com/BlueBrain/dir-content-diff/pull/11))
 - Add pandas HDF capability (Alexis Arnaudon - [#10](https://github.com/BlueBrain/dir-content-diff/pull/10))
 - Fix tests for rst2pdf&gt;0.99 (Adrien Berchet - [#9](https://github.com/BlueBrain/dir-content-diff/pull/9))
 - Setup Codecov (Adrien Berchet - [#8](https://github.com/BlueBrain/dir-content-diff/pull/8))
-
-<!-- auto-changelog-above -->
 
 ## [1.0.1](https://github.com/BlueBrain/dir-content-diff/compare/1.0.0..1.0.1)
 

@@ -8,5 +8,5 @@
     "issueUrl": "https://github.com/BlueBrain/dir-content-diff/issues/{id}",
     "mergeUrl": "https://github.com/BlueBrain/dir-content-diff/pull/{id}",
     "compareUrl": "https://github.com/BlueBrain/dir-content-diff/compare/{from}..{to}",
-    "startingVersion": "1.1.0"
+    "startingVersion": "1.2.0"
 }

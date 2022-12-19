@@ -21,7 +21,7 @@ pandas_reqs = [
 ]
 test_reqs = [
     "coverage",
-    "dicttoxml",
+    "dicttoxml<=1.7.12",
     "matplotlib",
     "rst2pdf>=0.99",
     "pytest",

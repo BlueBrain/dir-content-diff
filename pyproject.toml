@@ -15,7 +15,6 @@ target-version = [
     "py38",
     "py39",
 ]
-include = 'dir_content_diff\/.*\.py$|tests\/.*\.py$|docs\/source\/conf\.py$|setup\.py$'
 
 # PYDOCSTYLE
 [tool.pydocstyle]
@@ -25,7 +24,6 @@ add-ignore = [
     "D107",
 ]
 convention = "google"
-match = "[dir_content_diff, tests, docs/source/conf.py, setup.py]"
 
 # ISORT
 [tool.isort]

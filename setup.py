@@ -1,7 +1,7 @@
 """Setup for the dir-content-diff package."""
 from pathlib import Path
 
-from setuptools import find_packages
+from setuptools import find_namespace_packages
 from setuptools import setup
 
 reqs = [
@@ -40,7 +40,7 @@ setup(
         "Source": "https://github.com/BlueBrain/dir-content-diff",
     },
     license="Apache License 2.0",
-    packages=find_packages(include=["dir_content_diff"]),
+    packages=find_namespace_packages(include=["dir_content_diff*"]),
     python_requires=">=3.8",
     use_scm_version=True,
     setup_requires=[
@@ -52,6 +52,10 @@ setup(
         "docs": doc_reqs + pandas_reqs,
         "test": test_reqs + pandas_reqs,
     },
+    entry_points={
+        "pytest11": ["dir-content-diff = dir_content_diff.pytest_plugin"],
+    },
+    include_package_data=True,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -62,8 +66,4 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    include_package_data=True,
-    entry_points={
-        "pytest11": ["dir-content-diff = dir_content_diff.pytest_plugin"],
-    },
 )

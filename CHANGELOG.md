@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/BlueBrain/dir-content-diff/compare/1.2.0..1.3.0)
+
+> 19 December 2022
+
+### Chores And Housekeeping
+
+- Use pdf_similar from diff_pdf_visually instead of pdfdiff (Adrien Berchet - [#22](https://github.com/BlueBrain/dir-content-diff/pull/22))
+
+### CI Improvements
+
+- Apply Copier template (Adrien Berchet - [#23](https://github.com/BlueBrain/dir-content-diff/pull/23))
+
 ## [1.2.0](https://github.com/BlueBrain/dir-content-diff/compare/1.1.0..1.2.0)
 
 > 30 August 2022

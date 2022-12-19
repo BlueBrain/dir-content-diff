@@ -7,7 +7,7 @@ from xml.etree import ElementTree
 
 import dictdiffer
 import yaml
-from diff_pdf_visually import pdfdiff
+from diff_pdf_visually import pdf_similar
 
 from dir_content_diff.util import diff_msg_formatter
 
@@ -466,8 +466,8 @@ class PdfComparator(BaseComparator):
     def diff(self, ref, comp, *args, **kwargs):
         """Compare data from two PDF files.
 
-        This function calls the `diff_pdf_visually.pdfdiff() <https://github.com/bgeron/diff-pdf-
-        visually/blob/21e85f1db1bdaee5c0e8e0b730771d6c4e8c3e44/diff_pdf_visually/diff.py#L83>`_
+        This function calls the `diff_pdf_visually.pdf_similar() <https://github.com/bgeron/diff-
+        pdf-visually/blob/b5298cfaa6d74a3bf1c043817d1239678519ed71/diff_pdf_visually/diff.py#L85>`_
         function, read the doc of this function for details on args and kwargs.
         It compares the visual aspects of the PDF files, ignoring the invisible content (e.g. file
         header or invisible things like white font on white background). The PDF files are converted
@@ -483,4 +483,4 @@ class PdfComparator(BaseComparator):
             num_threads (int): If set to 2 (the default), the image conversion are processed in
                 parallel. If set to 1 it is processed sequentially.
         """
-        return not pdfdiff(ref, comp, *args, **kwargs)
+        return not pdf_similar(ref, comp, *args, **kwargs)

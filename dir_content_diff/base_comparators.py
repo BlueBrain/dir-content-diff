@@ -433,7 +433,7 @@ class XmlComparator(DictComparator):
         else:
             raise TypeError(
                 "Unsupported type. "
-                "Only 'str', 'int', 'float', 'bool', 'list', 'dict', and 'None' are supported."
+                "Only 'str', 'int', 'float', 'bool', 'list', 'dict', and 'null' are supported."
             )
         return res
 

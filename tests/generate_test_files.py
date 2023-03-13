@@ -143,20 +143,14 @@ REF_INI = {
         "attr1": "val1",
         "attr2": 1,
     },
-    "section2": {
-        "attr3": [1, 2, "a", "b"],
-        "attr4": {"a": 1, "b": [1, 2]}
-    },
+    "section2": {"attr3": [1, 2, "a", "b"], "attr4": {"a": 1, "b": [1, 2]}},
 }
 DIFF_INI = {
     "section1": {
         "attr1": "val2",
         "attr2": 2,
     },
-    "section2": {
-        "attr3": [1, 3, "a", "c"],
-        "attr4": {"a": 4, "b": [1, 3]}
-    },
+    "section2": {"attr3": [1, 3, "a", "c"], "attr4": {"a": 4, "b": [1, 3]}},
 }
 
 

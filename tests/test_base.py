@@ -503,7 +503,10 @@ class TestBaseComparator:
 
             comparator = dir_content_diff.IniComparator()
             res = comparator.configparser_to_dict(data)
-            assert res == {'section1': {'attr1': 'val1', 'attr2': 1}, 'section2': {'attr3': [1, 2, 'a', 'b'], 'attr4': {'a': 1, 'b': [1, 2]}}}
+            assert res == {
+                "section1": {"attr1": "val1", "attr2": 1},
+                "section2": {"attr3": [1, 2, "a", "b"], "attr4": {"a": 1, "b": [1, 2]}},
+            }
 
 
 class TestRegistry:
@@ -819,7 +822,9 @@ class TestDiffTrees:
         )
         assert match is not None
 
-    def test_fix_dot_notation(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff):
+    def test_fix_dot_notation(
+        self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff
+    ):
         """Test that the dot notation is properly fixed."""
         specific_args = {"file.yaml": {"args": [None, None, None, False, 0, True]}}
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)

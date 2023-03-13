@@ -133,7 +133,7 @@ def xml_diff(dict_diff):
 
 
 @pytest.fixture
-def ini_diff(dict_diff):
+def ini_diff():
     """The diff that should be reported for the INI files."""
     diff = (
         r"The files '\S*/file\.ini' and '\S*/file\.ini' are different:\n"

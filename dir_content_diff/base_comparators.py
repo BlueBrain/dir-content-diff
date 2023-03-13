@@ -488,7 +488,7 @@ class IniComparator(DictComparator):
                 try:
                     # Try to load JSON strings if possible
                     val = json.loads(val)
-                except json.JSONDecodeError as exc:
+                except json.JSONDecodeError:
                     pass
                 dict_config[section][option] = val
         return dict_config

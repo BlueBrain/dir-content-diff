@@ -3,6 +3,7 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 # pylint: disable=use-implicit-booleaness-not-comparison
+import configparser
 import json
 import re
 
@@ -492,6 +493,18 @@ class TestBaseComparator:
             comparator = dir_content_diff.XmlComparator()
             comparator.add_to_output(None, None)
 
+    class TestIniComparator:
+        """Test the INI comparator."""
+
+        def test_initodict(self, ref_tree):
+            """Test conversion of INI files into dict."""
+            data = configparser.ConfigParser()
+            data.read(ref_tree / "file.ini")
+
+            comparator = dir_content_diff.IniComparator()
+            res = comparator.configparser_to_dict(data)
+            assert res == {'section1': {'attr1': 'val1', 'attr2': 1}, 'section2': {'attr3': [1, 2, 'a', 'b'], 'attr4': {'a': 1, 'b': [1, 2]}}}
+
 
 class TestRegistry:
     """Test the internal registry."""
@@ -500,6 +513,9 @@ class TestRegistry:
         """Test the initial registry with the get_comparators() function."""
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
@@ -512,6 +528,9 @@ class TestRegistry:
         dir_content_diff.register_comparator(".test_ext", dir_content_diff.JsonComparator())
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".test_ext": dir_content_diff.JsonComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
@@ -524,6 +543,9 @@ class TestRegistry:
         dir_content_diff.unregister_comparator("json")  # Test suffix without dot
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".test_ext": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".yml": dir_content_diff.YamlComparator(),
@@ -533,6 +555,9 @@ class TestRegistry:
         dir_content_diff.reset_comparators()
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
@@ -556,6 +581,9 @@ class TestRegistry:
         dir_content_diff.register_comparator(".new_ext", dir_content_diff.JsonComparator())
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
@@ -568,6 +596,9 @@ class TestRegistry:
         )
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
@@ -676,17 +707,18 @@ class TestEqualTrees:
 class TestDiffTrees:
     """Tests that should return differences."""
 
-    def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
+    def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff):
         """Test that the returned differences are correct."""
         res = compare_trees(ref_tree, res_tree_diff)
 
-        assert len(res) == 4
+        assert len(res) == 5
         match_res_0 = re.match(pdf_diff, res["file.pdf"])
         match_res_1 = re.match(dict_diff, res["file.json"])
         match_res_2 = re.match(dict_diff, res["file.yaml"])
         match_res_3 = re.match(xml_diff, res["file.xml"])
+        match_res_4 = re.match(ini_diff, res["file.ini"])
 
-        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
+        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3, match_res_4]:
             assert match_i is not None
 
     def test_assert_equal_trees(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
@@ -704,7 +736,7 @@ class TestDiffTrees:
         """Test with empty compared tree."""
         res = compare_trees(ref_tree, empty_res_tree)
 
-        assert len(res) == 4
+        assert len(res) == 5
         match_res_0 = re.match(
             r"The file 'file.pdf' does not exist in '\S*/res'\.", res["file.pdf"]
         )
@@ -717,8 +749,11 @@ class TestDiffTrees:
         match_res_3 = re.match(
             r"The file 'file.xml' does not exist in '\S*/res'\.", res["file.xml"]
         )
+        match_res_4 = re.match(
+            r"The file 'file.ini' does not exist in '\S*/res'\.", res["file.ini"]
+        )
 
-        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
+        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3, match_res_4]:
             assert match_i is not None
 
     def test_exception_in_comparator(self, ref_tree, res_tree_equal, registry_reseter):
@@ -740,7 +775,7 @@ class TestDiffTrees:
         )
         assert match is not None
 
-    def test_specific_args(self, ref_tree, res_tree_diff, dict_diff, xml_diff):
+    def test_specific_args(self, ref_tree, res_tree_diff, dict_diff, xml_diff, ini_diff):
         """Test specific args."""
         specific_args = {
             "file.pdf": {"threshold": 50},
@@ -749,7 +784,7 @@ class TestDiffTrees:
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
         # This time the PDF files are considered as equal
-        assert len(res) == 3
+        assert len(res) == 4
         match_res_0 = re.match(dict_diff, res["file.yaml"])
         match_res_1 = re.match(
             dict_diff.replace(
@@ -759,8 +794,9 @@ class TestDiffTrees:
             res["file.json"],
         )
         match_res_2 = re.match(xml_diff, res["file.xml"])
+        match_res_3 = re.match(ini_diff, res["file.ini"])
 
-        for match_i in [match_res_0, match_res_1, match_res_2]:
+        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
             assert match_i is not None
 
     def test_unknown_comparator(self, ref_tree, res_tree_diff, registry_reseter):
@@ -783,12 +819,12 @@ class TestDiffTrees:
         )
         assert match is not None
 
-    def test_fix_dot_notation(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
+    def test_fix_dot_notation(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff):
         """Test that the dot notation is properly fixed."""
         specific_args = {"file.yaml": {"args": [None, None, None, False, 0, True]}}
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
-        assert len(res) == 4
+        assert len(res) == 5
         match_res_0 = re.match(pdf_diff, res["file.pdf"])
         match_res_1 = re.match(
             dict_diff.replace(
@@ -800,8 +836,9 @@ class TestDiffTrees:
         )
         match_res_2 = re.match(dict_diff, res["file.json"])
         match_res_3 = re.match(xml_diff, res["file.xml"])
+        match_res_4 = re.match(ini_diff, res["file.ini"])
 
-        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
+        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3, match_res_4]:
             assert match_i is not None
 
     def test_format_inside_diff(self, ref_tree, res_tree_diff, dict_diff):

@@ -1,4 +1,5 @@
 """Function to create base files used for tests."""
+import configparser
 import copy
 import json
 import tempfile
@@ -135,6 +136,42 @@ def create_xml(filename, diff=False):
         # Remove a type attribute for test purpose
         xml_data = xml_data.replace('nested_dict_key_1 type="str"', "nested_dict_key_1")
         f.write(xml_data)
+
+
+REF_INI = {
+    "section1": {
+        "attr1": "val1",
+        "attr2": 1,
+    },
+    "section2": {
+        "attr3": [1, 2, "a", "b"],
+        "attr4": {"a": 1, "b": [1, 2]}
+    },
+}
+DIFF_INI = {
+    "section1": {
+        "attr1": "val2",
+        "attr2": 2,
+    },
+    "section2": {
+        "attr3": [1, 3, "a", "c"],
+        "attr4": {"a": 4, "b": [1, 3]}
+    },
+}
+
+
+def create_ini(filename, diff=False):
+    """Create a INI file."""
+    ini_data = configparser.ConfigParser()
+    if diff:
+        data = copy.deepcopy(DIFF_INI)
+    else:
+        data = copy.deepcopy(REF_INI)
+    data["section2"]["attr3"] = json.dumps(data["section2"]["attr3"])
+    data["section2"]["attr4"] = json.dumps(data["section2"]["attr4"])
+    ini_data.read_dict(data)
+    with open(filename, "w", encoding="utf-8") as f:
+        ini_data.write(f)
 
 
 def create_pdf(filename, diff=False):

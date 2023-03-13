@@ -43,6 +43,7 @@ def ref_tree(empty_ref_tree):
     generate_test_files.create_json(empty_ref_tree / "file.json")
     generate_test_files.create_yaml(empty_ref_tree / "file.yaml")
     generate_test_files.create_xml(empty_ref_tree / "file.xml")
+    generate_test_files.create_ini(empty_ref_tree / "file.ini")
     return empty_ref_tree
 
 
@@ -53,6 +54,7 @@ def res_tree_equal(empty_res_tree):
     generate_test_files.create_json(empty_res_tree / "file.json")
     generate_test_files.create_yaml(empty_res_tree / "file.yaml")
     generate_test_files.create_xml(empty_res_tree / "file.xml")
+    generate_test_files.create_ini(empty_res_tree / "file.ini")
     return empty_res_tree
 
 
@@ -63,6 +65,7 @@ def res_tree_diff(empty_res_tree):
     generate_test_files.create_json(empty_res_tree / "file.json", diff=True)
     generate_test_files.create_yaml(empty_res_tree / "file.yaml", diff=True)
     generate_test_files.create_xml(empty_res_tree / "file.xml", diff=True)
+    generate_test_files.create_ini(empty_res_tree / "file.ini", diff=True)
     return empty_res_tree
 
 
@@ -126,6 +129,21 @@ def dict_diff():
 def xml_diff(dict_diff):
     """The diff that should be reported for the XML files."""
     diff = dict_diff.replace("'\\[", "'\\[root\\]\\[").replace(" '' key", " '\\[root\\]' key")
+    return diff
+
+
+@pytest.fixture
+def ini_diff(dict_diff):
+    """The diff that should be reported for the INI files."""
+    diff = (
+        r"The files '\S*/file\.ini' and '\S*/file\.ini' are different:\n"
+        r"Changed the value of '\[section1\]\[attr1\]' from 'val1' to 'val2'\.\n"
+        r"Changed the value of '\[section1\]\[attr2\]' from 1 to 2.\n"
+        r"Changed the value of '\[section2\]\[attr3\]\[1\]' from 2 to 3.\n"
+        r"Changed the value of '\[section2\]\[attr3\]\[3\]' from 'b' to 'c'.\n"
+        r"Changed the value of '\[section2\]\[attr4\]\[a\]' from 1 to 4.\n"
+        r"Changed the value of '\[section2\]\[attr4\]\[b\]\[1\]' from 2 to 3."
+    )
     return diff
 
 

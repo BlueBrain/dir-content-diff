@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from dir_content_diff.base_comparators import DefaultComparator
+from dir_content_diff.base_comparators import IniComparator
 from dir_content_diff.base_comparators import JsonComparator
 from dir_content_diff.base_comparators import PdfComparator
 from dir_content_diff.base_comparators import XmlComparator
@@ -22,6 +23,9 @@ L = logging.getLogger(__name__)
 
 _DEFAULT_COMPARATORS = {
     None: DefaultComparator(),
+    ".cfg": IniComparator(),  # luigi config files
+    ".conf": IniComparator(),  # logging config files
+    ".ini": IniComparator(),
     ".json": JsonComparator(),
     ".pdf": PdfComparator(),
     ".yaml": YamlComparator(),

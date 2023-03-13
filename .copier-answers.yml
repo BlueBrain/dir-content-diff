@@ -1,6 +1,6 @@
 # Changes here will be overwritten by Copier
 
-_commit: 0.1.26
+_commit: 0.1.40
 _src_path: git@bbpgitlab.epfl.ch:neuromath/python-template.git
 author_email: ''
 author_name: Blue Brain Project, EPFL
@@ -21,6 +21,7 @@ ssh_url: git@github.com:BlueBrain/dir-content-diff.git
 support_py37: false
 team_name: ''
 tracker_url: https://github.com/BlueBrain/dir-content-diff/issues
+use_pyproject_toml: false
 version: 1.1.0
 
 # End of Copier answers

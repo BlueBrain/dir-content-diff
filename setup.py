@@ -5,27 +5,29 @@ from setuptools import find_namespace_packages
 from setuptools import setup
 
 reqs = [
-    "dictdiffer",
-    "diff_pdf_visually>=1.5.1",
-    "PyYaml",
+    "dictdiffer>=0.8",
+    "diff_pdf_visually>=1.7",
+    "PyYaml>=5.3",
 ]
+
 doc_reqs = [
     "m2r2",
-    "mistune<2",
-    "sphinx",
+    "sphinx<6",
     "sphinx-bluebrain-theme",
 ]
+
 pandas_reqs = [
-    "pandas",
-    "tables",
+    "pandas>=1.4",
+    "tables>=3.7",
 ]
+
 test_reqs = [
-    "coverage",
+    "coverage>=6",
     "dicttoxml>=1.7.16",
-    "matplotlib",
+    "matplotlib>=3",
     "rst2pdf>=0.99",
-    "pytest",
-    "pytest-html",
+    "pytest>=6.2",
+    "pytest-html>=2",
 ]
 
 setup(
@@ -65,6 +67,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
 )

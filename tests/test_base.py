@@ -549,7 +549,7 @@ class TestRegistry:
         ):
             dir_content_diff.register_comparator(".pdf", dir_content_diff.JsonComparator())
 
-        with pytest.raises(ValueError, match=("The '.unknown_ext' extension is not registered.")):
+        with pytest.raises(ValueError, match="The '.unknown_ext' extension is not registered."):
             dir_content_diff.unregister_comparator(".unknown_ext")
 
         dir_content_diff.unregister_comparator(".unknown_ext", quiet=True)

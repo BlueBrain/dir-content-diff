@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.4.0](https://github.com/BlueBrain/dir-content-diff/compare/1.3.0..1.4.0)
+
+> 13 March 2023
+
+### Build
+
+- Bump dicttoxml (Adrien Berchet - [#26](https://github.com/BlueBrain/dir-content-diff/pull/26))
+
+### New Features
+
+- Add comparator for INI files (Adrien Berchet - [#28](https://github.com/BlueBrain/dir-content-diff/pull/28))
+
+### Fixes
+
+- Fix supported types reported in the exception when the type is unknown (Adrien Berchet - [#25](https://github.com/BlueBrain/dir-content-diff/pull/25))
+
+### CI Improvements
+
+- Setup min_versions job (Adrien Berchet - [#27](https://github.com/BlueBrain/dir-content-diff/pull/27))
+
 ## [1.3.0](https://github.com/BlueBrain/dir-content-diff/compare/1.2.0..1.3.0)
 
 > 19 December 2022
@@ -25,7 +45,7 @@
 - Use commitlint to check PR titles (Adrien Berchet - [#18](https://github.com/BlueBrain/dir-content-diff/pull/18))
 - Setup pre-commit and format the files accordingly (Adrien Berchet - [#17](https://github.com/BlueBrain/dir-content-diff/pull/17))
 
-### Uncategorized Changes
+### General Changes
 
 - Updating copyright year (bbpgithubaudit - [#15](https://github.com/BlueBrain/dir-content-diff/pull/15))
 - Bump black (Adrien Berchet - [#16](https://github.com/BlueBrain/dir-content-diff/pull/16))

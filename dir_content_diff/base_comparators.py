@@ -1,4 +1,5 @@
 """Module containing the base comparators."""
+import configparser
 import filecmp
 import json
 from abc import ABC
@@ -458,6 +459,39 @@ class XmlComparator(DictComparator):
         for child in root:
             XmlComparator.add_to_output(output, child)
         return {root.tag: output}
+
+
+class IniComparator(DictComparator):
+    """Comparator for INI files.
+
+    This comparator is based on the :class:`DictComparator` and uses the same parameters.
+
+    .. note::
+
+        The ``load_kwargs`` are passed to the ``configparser.ConfigParser``.
+    """
+
+    def load(self, path, **kwargs):  # pylint: disable=arguments-differ
+        """Open a XML file."""
+        data = configparser.ConfigParser(**kwargs)
+        data.read(path)
+        return self.configparser_to_dict(data)
+
+    @staticmethod
+    def configparser_to_dict(config):
+        """Transform a ConfigParser object into a dict."""
+        dict_config = {}
+        for section in config.sections():
+            dict_config[section] = {}
+            for option in config.options(section):
+                val = config.get(section, option)
+                try:
+                    # Try to load JSON strings if possible
+                    val = json.loads(val)
+                except json.JSONDecodeError:
+                    pass
+                dict_config[section][option] = val
+        return dict_config
 
 
 class PdfComparator(BaseComparator):

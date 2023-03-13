@@ -21,6 +21,9 @@ class TestRegistry:
         """Test registering the pandas plugin."""
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".xml": dir_content_diff.XmlComparator(),
@@ -31,6 +34,9 @@ class TestRegistry:
         dir_content_diff.pandas.register()
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
+            ".cfg": dir_content_diff.IniComparator(),
+            ".conf": dir_content_diff.IniComparator(),
+            ".ini": dir_content_diff.IniComparator(),
             ".json": dir_content_diff.JsonComparator(),
             ".pdf": dir_content_diff.PdfComparator(),
             ".xml": dir_content_diff.XmlComparator(),
@@ -109,7 +115,7 @@ class TestEqualTrees:
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
         # The CSV file is considered as equal thanks to the given kwargs
-        assert len(res) == 4
+        assert len(res) == 5
         assert re.match(".*/file.csv.*", str(res)) is None
 
     def test_replace_pattern(
@@ -237,7 +243,7 @@ class TestDiffTrees:
         """Test that the returned differences are correct."""
         res = compare_trees(ref_tree, res_tree_diff)
 
-        assert len(res) == 5
+        assert len(res) == 6
         res_csv = res["file.csv"]
         match_res = re.match(csv_diff, res_csv)
         assert match_res is not None
@@ -251,7 +257,7 @@ class TestDiffTrees:
         }
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
-        assert len(res) == 5
+        assert len(res) == 6
         res_csv = res["file.csv"]
         kwargs_msg = (
             "Kwargs used for loading data: {'header': None, 'skiprows': 1, 'prefix': 'col_'}\n"

@@ -136,10 +136,11 @@ def compare_files(ref_file, comp_file, comparator, *args, return_raw_diffs=False
             exception_args = "\n".join(str(i) for i in exception.args)
         except Exception:  # pylint: disable=broad-exception-caught
             exception_args = "UNKNOWN ERROR: Could not get information from the exception"
+        exc_type = type(exception).__name__
         return diff_msg_formatter(
             ref_file,
             comp_file,
-            reason="Exception raised: " + exception_args,
+            reason=f"Exception raised: ({exc_type}) {exception_args}",
             diff_args=args,
             diff_kwargs=kwargs,
             load_kwargs=load_kwargs,

@@ -773,7 +773,7 @@ class TestDiffTrees:
         assert len(res) == 1
         match = re.match(
             r"The files '\S*/ref/file\.yaml' and '\S*/res/file\.yaml' are different:\n"
-            r"Exception raised: Bad\ncomparator",
+            r"Exception raised: \(RuntimeError\) Bad\ncomparator",
             res["file.yaml"],
         )
         assert match is not None
@@ -787,10 +787,9 @@ class TestDiffTrees:
         res = compare_trees(ref_tree, res_tree_equal)
 
         assert len(res) == 1
-        print(res["file.yaml"])
         match = re.match(
             r"The files '\S*/ref/file\.yaml' and '\S*/res/file\.yaml' are different:\n"
-            r"Exception raised: \(1, \('Bad\\ncomparator', 2\)\)",
+            r"Exception raised: \(RuntimeError\) \(1, \('Bad\\ncomparator', 2\)\)",
             res["file.yaml"],
         )
         assert match is not None
@@ -810,10 +809,10 @@ class TestDiffTrees:
         res = compare_trees(ref_tree, res_tree_equal)
 
         assert len(res) == 1
-        print(res["file.yaml"])
         match = re.match(
             r"The files '\S*/ref/file\.yaml' and '\S*/res/file\.yaml' are different:\n"
-            r"Exception raised: UNKNOWN ERROR: Could not get information from the exception",
+            r"Exception raised: \(RuntimeError\) UNKNOWN ERROR: Could not get information from "
+            r"the exception",
             res["file.yaml"],
         )
         assert match is not None

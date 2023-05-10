@@ -190,8 +190,10 @@ def csv_diff():
         r"""Series values are different \(33.33333 %\)\n"""
         r"""\[index\]: \[0, 1, 2\]\n"""
         r"""\[left\]:  \[1, 2, 3\]\n"""
-        r"""\[right\]: \[10, 2, 3\]\n\n"""
+        r"""\[right\]: \[10, 2, 3\]\n"""
+        r"""(At positional index 0, first diff: 1 != 10\n)?\n"""
         r"""Column 'col_b': Series are different\n\n"""
         r"""Series values are different \(33.33333 %\)\n"""
         r"""\[index\]: \[0, 1, 2\]\n\[left\]:  \[a, b, c\]\n\[right\]: \[a, b_new, c\]"""
+        r"""(\nAt positional index 1, first diff: b != b_new)?"""
     )

@@ -772,8 +772,48 @@ class TestDiffTrees:
 
         assert len(res) == 1
         match = re.match(
-            r"The files '\S*/ref/file.yaml' and '\S*/res/file.yaml' are different:\n"
+            r"The files '\S*/ref/file\.yaml' and '\S*/res/file\.yaml' are different:\n"
             r"Exception raised: Bad\ncomparator",
+            res["file.yaml"],
+        )
+        assert match is not None
+
+        def bad_comparator_no_str(ref_path, test_path, *args, **kwargs):
+            raise RuntimeError((1, ("Bad\ncomparator", 2)))
+
+        dir_content_diff.unregister_comparator(".yaml")
+        dir_content_diff.register_comparator(".yaml", bad_comparator_no_str)
+
+        res = compare_trees(ref_tree, res_tree_equal)
+
+        assert len(res) == 1
+        print(res["file.yaml"])
+        match = re.match(
+            r"The files '\S*/ref/file\.yaml' and '\S*/res/file\.yaml' are different:\n"
+            r"Exception raised: \(1, \('Bad\\ncomparator', 2\)\)",
+            res["file.yaml"],
+        )
+        assert match is not None
+
+        class NoRepr:
+            """A class to test exception handling failure."""
+
+            def __repr__(self):
+                raise ValueError("This object can not be represented")
+
+        def bad_comparator_exception_failing(ref_path, test_path, *args, **kwargs):
+            raise RuntimeError((NoRepr(), ("Bad\ncomparator", NoRepr())))
+
+        dir_content_diff.unregister_comparator(".yaml")
+        dir_content_diff.register_comparator(".yaml", bad_comparator_exception_failing)
+
+        res = compare_trees(ref_tree, res_tree_equal)
+
+        assert len(res) == 1
+        print(res["file.yaml"])
+        match = re.match(
+            r"The files '\S*/ref/file\.yaml' and '\S*/res/file\.yaml' are different:\n"
+            r"Exception raised: UNKNOWN ERROR: Could not get information from the exception",
             res["file.yaml"],
         )
         assert match is not None
@@ -807,7 +847,7 @@ class TestDiffTrees:
         dir_content_diff.unregister_comparator(".yaml")
         res = compare_trees(ref_tree, res_tree_diff)
         match = re.match(
-            r"The files '\S*/ref/file.yaml' and '\S*/res/file.yaml' are different.",
+            r"The files '\S*/ref/file\.yaml' and '\S*/res/file\.yaml' are different.",
             res["file.yaml"],
         )
         assert match is not None
@@ -816,8 +856,8 @@ class TestDiffTrees:
         """Test with nested files."""
         res = compare_trees(ref_with_nested_file, res_diff_with_nested_file)
         match = re.match(
-            r"The files '\S*/ref/level1/level2/level3/file.pdf' and "
-            r"'\S*/res/level1/level2/level3/file.pdf' are different\.",
+            r"The files '\S*/ref/level1/level2/level3/file\.pdf' and "
+            r"'\S*/res/level1/level2/level3/file\.pdf' are different\.",
             res["level1/level2/level3/file.pdf"],
         )
         assert match is not None

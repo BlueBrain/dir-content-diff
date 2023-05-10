@@ -132,10 +132,14 @@ def compare_files(ref_file, comp_file, comparator, *args, return_raw_diffs=False
         sort_kwargs = kwargs.pop("sort_kwargs", None)
         concat_kwargs = kwargs.pop("concat_kwargs", None)
         report_kwargs = kwargs.pop("report_kwargs", None)
+        try:
+            exception_args = "\n".join(str(i) for i in exception.args)
+        except Exception:  # pylint: disable=broad-exception-caught
+            exception_args = "UNKNOWN ERROR: Could not get information from the exception"
         return diff_msg_formatter(
             ref_file,
             comp_file,
-            reason="Exception raised: " + "\n".join(exception.args),
+            reason="Exception raised: " + exception_args,
             diff_args=args,
             diff_kwargs=kwargs,
             load_kwargs=load_kwargs,

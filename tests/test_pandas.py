@@ -252,19 +252,15 @@ class TestDiffTrees:
         self, ref_tree, ref_csv, res_tree_diff, res_csv_diff, csv_diff, pandas_registry_reseter
     ):
         """Test specific args for the CSV reader."""
-        specific_args = {
-            "file.csv": {"load_kwargs": {"header": None, "skiprows": 1, "prefix": "col_"}}
-        }
+        specific_args = {"file.csv": {"load_kwargs": {"header": None, "skiprows": 1}}}
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
         assert len(res) == 6
         res_csv = res["file.csv"]
-        kwargs_msg = (
-            "Kwargs used for loading data: {'header': None, 'skiprows': 1, 'prefix': 'col_'}\n"
-        )
+        kwargs_msg = "Kwargs used for loading data: {'header': None, 'skiprows': 1}\n"
         assert kwargs_msg in res_csv
         match_res = re.match(
-            csv_diff.replace("col_a", "col_1").replace("col_b", "col_2"),
+            csv_diff.replace("col_a", "1").replace("col_b", "2"),
             res_csv.replace(kwargs_msg, ""),
         )
         assert match_res is not None
@@ -304,11 +300,13 @@ class TestDiffTrees:
             r"Column 'col_a': Series are different\n\n"
             r"Series values are different \(33\.33333 %\)\n"
             r"\[index\]: \[idx1, idx2, idx3\]\n"
-            r"\[left\]:  \[1, 2, 3\]\n\[right\]: \[10, 2, 3\]\n\n"
+            r"\[left\]:  \[1, 2, 3\]\n\[right\]: \[10, 2, 3\]\n"
+            r"""(At positional index 0, first diff: 1 != 10\n)?\n"""
             r"Column 'col_b': Series are different\n\n"
             r"Series values are different \(33\.33333 %\)\n"
             r"\[index\]: \[idx1, idx2, idx3\]\n"
-            r"\[left\]:  \[a, b, c\]\n\[right\]: \[a, b_new, c\]",
+            r"\[left\]:  \[a, b, c\]\n\[right\]: \[a, b_new, c\]"
+            r"""(\nAt positional index 1, first diff: b != b_new)?""",
             res_hdf,
         )
         assert match_res is not None

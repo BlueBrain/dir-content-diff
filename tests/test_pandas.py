@@ -161,7 +161,7 @@ class TestEqualTrees:
         assert len(res) == 1
         res_csv = res["file.csv"]
         match_res = re.match(
-            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n"
+            r"The files '\S*/ref/file\.csv' and '\S*/res/file\.csv' are different:\n"
             r"Kwargs used for formatting data: {'replace_pattern': {.*}}\n\n"
             r"Column 'test_path_only_in_ref': The column is missing in the compared DataFrame, "
             r"please fix the 'replace_pattern' argument.\n\n"
@@ -191,12 +191,12 @@ class TestEqualTrees:
         assert len(res) == 1
         res_csv = res["file.csv"]
         match_res = re.match(
-            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n"
+            r"The files '\S*/ref/file\.csv' and '\S*/res/file\.csv' are different:\n"
             r"Kwargs used for formatting data: {'replace_pattern': {.*}}\n\n"
             r"Column 'test_path_only_in_ref': The column is missing in the compared DataFrame, "
-            r"please fix the 'replace_pattern' argument.\n\n"
+            r"please fix the 'replace_pattern' argument\.\n\n"
             r"Column 'test_path_only_in_res': The column is missing in the reference DataFrame, "
-            r"please fix the 'replace_pattern' argument.",
+            r"please fix the 'replace_pattern' argument\.",
             res_csv,
         )
         assert match_res is not None
@@ -212,12 +212,12 @@ class TestEqualTrees:
         assert len(res) == 1
         res_csv = res["file.csv"]
         match_res = re.match(
-            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n"
+            r"The files '\S*/ref/file\.csv' and '\S*/res/file\.csv' are different:\n"
             r"Kwargs used for formatting data: {'replace_pattern': {.*}}\n\n"
             r"Column 'test_path_only_in_ref': The column is missing in the compared DataFrame, "
-            r"please fix the 'replace_pattern' argument.\n\n"
+            r"please fix the 'replace_pattern' argument\.\n\n"
             r"Column 'test_path_only_in_res': The column is missing in the reference DataFrame, "
-            r"please fix the 'replace_pattern' argument.",
+            r"please fix the 'replace_pattern' argument\.",
             res_csv,
         )
         assert match_res is not None
@@ -280,7 +280,7 @@ class TestDiffTrees:
         assert len(res) == 1
         res_csv = res["file.csv"]
         match_res = re.match(
-            r"The files '\S*/ref/file.csv' and '\S*/res/file.csv' are different:\n\n"
+            r"The files '\S*/ref/file\.csv' and '\S*/res/file\.csv' are different:\n\n"
             r"Column 'col_c': The column is missing in the compared DataFrame.\n\n"
             r"Column 'new_col_c': The column is missing in the reference DataFrame.",
             res_csv,
@@ -296,7 +296,7 @@ class TestDiffTrees:
         assert len(res) == 1
         res_hdf = res["file.h5"]
         match_res = re.match(
-            r"The files '\S*/ref/file.h5' and '\S*/res/file.h5' are different:\n\n"
+            r"The files '\S*/ref/file\.h5' and '\S*/res/file\.h5' are different:\n\n"
             r"Column 'col_a': Series are different\n\n"
             r"Series values are different \(33\.33333 %\)\n"
             r"\[index\]: \[idx1, idx2, idx3\]\n"

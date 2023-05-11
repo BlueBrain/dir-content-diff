@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.5.0](https://github.com/BlueBrain/dir-content-diff/compare/1.4.0..1.5.0)
+
+> 11 May 2023
+
+### New Features
+
+- Add exception type before arguments (Adrien Berchet - [#36](https://github.com/BlueBrain/dir-content-diff/pull/36))
+
+### Fixes
+
+- Cast exception args to str before joining them (Adrien Berchet - [#35](https://github.com/BlueBrain/dir-content-diff/pull/35))
+
+### Changes to Test Assests
+
+- Fix for Pandas&gt;=2 (Adrien Berchet - [#33](https://github.com/BlueBrain/dir-content-diff/pull/33))
+
+### CI Improvements
+
+- Add template for issues and pull requests (Adrien Berchet - [#34](https://github.com/BlueBrain/dir-content-diff/pull/34))
+
 ## [1.4.0](https://github.com/BlueBrain/dir-content-diff/compare/1.3.0..1.4.0)
 
 > 13 March 2023

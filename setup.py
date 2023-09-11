@@ -7,7 +7,7 @@ from setuptools import setup
 reqs = [
     "dictdiffer>=0.8",
     "diff_pdf_visually>=1.7",
-    "PyYaml>=5.3",
+    "PyYaml>=6",
 ]
 
 doc_reqs = [
@@ -27,7 +27,7 @@ test_reqs = [
     "matplotlib>=3",
     "rst2pdf>=0.99",
     "pytest>=6.2",
-    "pytest-html>=2",
+    "pytest-html>=2,<4",
 ]
 
 setup(

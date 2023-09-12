@@ -67,7 +67,7 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         fail_ci_if_error: false
-        files: ./reports/coverage-*.xml
+        directory: ./reports
         flags: pytest
         name: "dir-content-diff-py${{ matrix.python-version }}"
     - name: Upload test artifacts

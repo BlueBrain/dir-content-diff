@@ -69,12 +69,12 @@ jobs:
         fail_ci_if_error: false
         directory: ./reports
         flags: pytest
-        name: "dir-content-diff-py${{ matrix.python-version }}"
+        name: "dir-content-diff-py${{ matrix.python-version }}-${{ matrix.min_versions }}"
     - name: Upload test artifacts
       uses: actions/upload-artifact@v3
       if: always()
       with:
-        name: tests-${{ matrix.python-version }}
+        name: tests-${{ matrix.python-version }}-${{ matrix.min_versions }}
         retention-days: 4
         path: |
           .tox/py*/tmp

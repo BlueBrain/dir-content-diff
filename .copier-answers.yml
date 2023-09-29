@@ -1,11 +1,11 @@
 # Changes here will be overwritten by Copier
 
-_commit: 0.1.50
+_commit: 0.1.52
 _src_path: git@bbpgitlab.epfl.ch:neuromath/python-template.git
 author_email: ''
 author_name: Blue Brain Project, EPFL
 copyright_license: Apache License 2.0
-copyright_year: '2022'
+copyright_year: '2023'
 distribution_name: dir-content-diff
 download_url: https://github.com/BlueBrain/dir-content-diff
 init_git: false

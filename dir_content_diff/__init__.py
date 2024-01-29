@@ -62,7 +62,10 @@ def register_comparator(ext, comparator, force=False):
             registered and the comparator is replaced.
 
     .. note::
-        The given comparator should have the following signature:
+        It is possible to create and register custom comparators. The easiest way to do it is to
+        derive a class from :class:`dir_content_diff.BaseComparator`.
+
+        Otherwise, the given comparator should be a callable with the following signature:
 
         .. code-block:: python
 
@@ -74,7 +77,8 @@ def register_comparator(ext, comparator, force=False):
                 **diff_kwargs: Mapping[str, Any],
             ) -> Union[False, str]
 
-        The return type can be Any when used with `return_raw_diffs == True`.
+        The return type can be Any when used with `return_raw_diffs == True`, else it should be a
+        string object.
     """
     ext = format_ext(ext)
     if not force and ext in _COMPARATORS:
@@ -229,6 +233,7 @@ def compare_trees(
 
                 {
                     <relative_file_path>: {
+                        comparator: ComparatorInstance,
                         args: [arg1, arg2, ...],
                         kwargs: {
                             kwarg_name_1: kwarg_value_1,
@@ -237,6 +242,8 @@ def compare_trees(
                     },
                     <another_file_path>: {...}
                 }
+
+            Note that all entries in this ``dict`` are optional.
         return_raw_diffs (bool): If set to ``True``, only the raw differences are returned instead
             of a formatted report.
         export_formatted_files (bool or str): If set to ``True`` or a not empty string, create a
@@ -265,6 +272,8 @@ def compare_trees(
 
     if specific_args is None:
         specific_args = {}
+    else:
+        specific_args = copy.deepcopy(specific_args)
 
     # Loop over all files and call the correct comparator
     different_files = {}
@@ -277,15 +286,21 @@ def compare_trees(
 
         if comp_file.exists():
             specific_file_args = specific_args.get(relative_path, {})
-            comparator = comparators.get(ref_file.suffix, _COMPARATORS.get(None))
-            comparator_kwargs = {k: v for k, v in specific_file_args.items() if k != "args"}
+            comparator = specific_file_args.pop(
+                "comparator",
+                comparators.get(
+                    ref_file.suffix,
+                    _COMPARATORS.get(None),
+                ),
+            )
+            comparator_args = specific_file_args.pop("args", [])
             res = compare_files(
                 ref_file,
                 comp_file,
                 comparator,
-                *specific_file_args.get("args", []),
+                *comparator_args,
                 return_raw_diffs=return_raw_diffs,
-                **comparator_kwargs,
+                **specific_file_args,
             )
             if res is not False:
                 different_files[relative_path] = res
@@ -294,7 +309,7 @@ def compare_trees(
                     comp_file,
                     formatted_data_path / relative_path,
                     comparator,
-                    **comparator_kwargs,
+                    **specific_file_args,
                 )
         else:
             msg = f"The file '{relative_path}' does not exist in '{comp_path}'."

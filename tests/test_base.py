@@ -706,6 +706,16 @@ class TestEqualTrees:
 
         assert res == {}
 
+    def test_specific_comparator(self, ref_tree, res_tree_equal):
+        """Test specific args."""
+        specific_args = {
+            "file.yaml": {"args": [None, None, None, False, 0, False]},
+            "file.json": {"comparator": dir_content_diff.DefaultComparator()},
+        }
+        res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
+
+        assert res == {}
+
 
 class TestDiffTrees:
     """Tests that should return differences."""

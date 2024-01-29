@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.0](https://github.com/BlueBrain/dir-content-diff/compare/1.5.0..1.6.0)
+
+> 29 January 2024
+
+### New Features
+
+- The specific_args can support a 'comparator' entry (Adrien Berchet - [#48](https://github.com/BlueBrain/dir-content-diff/pull/48))
+
+### CI Improvements
+
+- (deps) Bump mikepenz/action-junit-report from 3 to 4 (dependabot[bot] - [#39](https://github.com/BlueBrain/dir-content-diff/pull/39))
+- (deps) Bump actions/checkout from 3 to 4 (dependabot[bot] - [#38](https://github.com/BlueBrain/dir-content-diff/pull/38))
+- Improve Dependabot config (Adrien Berchet - [#40](https://github.com/BlueBrain/dir-content-diff/pull/40))
+
 ## [1.5.0](https://github.com/BlueBrain/dir-content-diff/compare/1.4.0..1.5.0)
 
 > 11 May 2023

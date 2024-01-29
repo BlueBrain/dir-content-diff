@@ -152,6 +152,17 @@ dir_content_diff.assert_equal_trees(
 
 Each comparator has different arguments that are detailed in the documentation.
 
+It's also possible to specify a arbitrary comparator for a specific file:
+
+```python
+specific_args = {
+    "sub_dir_1/sub_file_1.a": {
+        "comparator": dir_content_diff.JsonComparator(),
+        "tolerance": 0.5,
+    }
+}
+```
+
 
 ### Export formatted data
 

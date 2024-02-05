@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.0](https://github.com/BlueBrain/dir-content-diff/compare/1.6.0..1.7.0)
+
+> 5 February 2024
+
+### New Features
+
+- Add 'replace_pattern' entry for DictComparator and several related save capabilities (Adrien Berchet - [#53](https://github.com/BlueBrain/dir-content-diff/pull/53))
+- Add 'patterns' entry in specific_args (Adrien Berchet - [#52](https://github.com/BlueBrain/dir-content-diff/pull/52))
+
 ## [1.6.0](https://github.com/BlueBrain/dir-content-diff/compare/1.5.0..1.6.0)
 
 > 29 January 2024

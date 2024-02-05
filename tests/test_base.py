@@ -716,6 +716,29 @@ class TestEqualTrees:
 
         assert res == {}
 
+    def test_specific_patterns(self, ref_tree, res_tree_equal):
+        """Test specific args."""
+        specific_args = {
+            "all yaml files": {
+                "args": [None, None, None, False, 0, False],
+                "patterns": [r".*\.yaml"],
+            },
+            "all json files": {
+                "comparator": dir_content_diff.DefaultComparator(),
+                "patterns": [r".*\.json"],
+            },
+        }
+        res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
+
+        assert res == {}
+
+        # Test pattern override
+        specific_args["all json files"]["comparator"] = dir_content_diff.PdfComparator()
+        specific_args["file.json"] = {"comparator": dir_content_diff.DefaultComparator()}
+        res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
+
+        assert res == {}
+
 
 class TestDiffTrees:
     """Tests that should return differences."""
@@ -850,6 +873,29 @@ class TestDiffTrees:
 
         for match_i in [match_res_0, match_res_1, match_res_2, match_res_3]:
             assert match_i is not None
+
+    def test_specific_patterns(self, ref_tree, res_tree_diff, base_diff, dict_diff):
+        """Test specific args."""
+        specific_args = {
+            "all yaml files": {
+                "args": [None, None, None, False, 0, False],
+                "patterns": [r".*\.yaml"],
+            },
+            "all json files": {
+                "comparator": dir_content_diff.DefaultComparator(),
+                "patterns": [r".*\.json"],
+            },
+        }
+        res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
+
+        assert re.match(base_diff, res["file.json"]) is not None
+
+        # Test pattern override
+        specific_args["all json files"]["comparator"] = dir_content_diff.DefaultComparator()
+        specific_args["file.json"] = {"comparator": dir_content_diff.JsonComparator()}
+        res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
+
+        assert re.match(dict_diff, res["file.json"]) is not None
 
     def test_unknown_comparator(self, ref_tree, res_tree_diff, registry_reseter):
         """Test with an unknown extension."""

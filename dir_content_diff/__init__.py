@@ -5,6 +5,7 @@ Simple tool to compare directory contents.
 import copy
 import importlib.metadata
 import logging
+import re
 from pathlib import Path
 
 from dir_content_diff.base_comparators import DefaultComparator
@@ -240,8 +241,18 @@ def compare_trees(
                             kwarg_name_2: kwarg_value_2,
                         }
                     },
-                    <another_file_path>: {...}
+                    <another_file_path>: {...},
+                    <a name for this category>: {
+                        "patterns": ["regex1", "regex2", ...],
+                        ... (other arguments)
+                    }
                 }
+
+            If the "patterns" entry is present, then the name is not considered and is only used as
+            a helper for the user. When a "patterns" entry is detected, the other arguments are
+            applied to all files whose relative name matches one of the given regular expression
+            patterns. If a file could match multiple patterns of different groups, only the first
+            one is considered.
 
             Note that all entries in this ``dict`` are optional.
         return_raw_diffs (bool): If set to ``True``, only the raw differences are returned instead
@@ -275,6 +286,11 @@ def compare_trees(
     else:
         specific_args = copy.deepcopy(specific_args)
 
+    pattern_specific_args = {}
+    for k, v in specific_args.items():
+        for pattern in v.pop("patterns", []):
+            pattern_specific_args[re.compile(pattern)] = v
+
     # Loop over all files and call the correct comparator
     different_files = {}
     for ref_file in ref_path.glob("**/*"):
@@ -285,7 +301,14 @@ def compare_trees(
         comp_file = comp_path / relative_path
 
         if comp_file.exists():
-            specific_file_args = specific_args.get(relative_path, {})
+            specific_file_args = specific_args.get(relative_path, None)
+            if specific_file_args is None:
+                for pattern, pattern_args in pattern_specific_args.items():
+                    if pattern.match(relative_path):
+                        specific_file_args = pattern_args
+                        break
+            if specific_file_args is None:
+                specific_file_args = {}
             comparator = specific_file_args.pop(
                 "comparator",
                 comparators.get(

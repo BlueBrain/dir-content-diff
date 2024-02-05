@@ -925,7 +925,7 @@ class TestDiffTrees:
             "file.xml",
             "file.yaml",
         ]
-        for k, v in res.items():
+        for v in res.values():
             assert re.match(base_diff, v)
 
     def test_unknown_comparator(self, ref_tree, res_tree_diff, registry_reseter):

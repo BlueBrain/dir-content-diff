@@ -4,6 +4,7 @@
 # pylint: disable=unused-argument
 # pylint: disable=use-implicit-booleaness-not-comparison
 import configparser
+import copy
 import json
 import re
 
@@ -409,6 +410,83 @@ class TestBaseComparator:
         assert kwargs_msg in no_report_diff_default
         assert no_report_diff_default.replace(kwargs_msg, "") == diff
 
+    class TestJsonComparator:
+        """Test the JSON comparator."""
+
+        def test_format_data(self):
+            """Test data formatting."""
+            data = {
+                "a": 1,
+                "b": {
+                    "c": "a string",
+                },
+                "d": [
+                    {"d1": "the d1 string"},
+                    {"d2": "the d2 string"},
+                ],
+                "e": {
+                    "nested_e": {
+                        "nested_e_a": "the nested_e_a string",
+                        "nested_e_b": "the nested_e_b string",
+                    }
+                },
+            }
+            initial_data = copy.deepcopy(data)
+
+            expected_data = {
+                "a": 1,
+                "b": {
+                    "c": "a NEW VALUE",
+                },
+                "d": [
+                    {"d1": "the d1 NEW VALUE"},
+                    {"d2": "the d2 NEW VALUE"},
+                ],
+                "e": {
+                    "nested_e": {
+                        "nested_e_a": "the nested_e_a NEW VALUE",
+                        "nested_e_b": "the nested_e_b NEW VALUE",
+                    }
+                },
+            }
+
+            patterns = {
+                ("string", "NEW VALUE"): [
+                    "b.c",
+                    "d[*].*",
+                    "e.*.*",
+                ]
+            }
+
+            comparator = dir_content_diff.JsonComparator()
+            comparator.format_data(data)
+            assert data == initial_data
+
+            data = copy.deepcopy(initial_data)
+            comparator = dir_content_diff.JsonComparator()
+            comparator.format_data(data, replace_pattern=patterns)
+            assert data == expected_data
+
+            # Missing key in ref
+            comparator = dir_content_diff.JsonComparator()
+            data = copy.deepcopy(initial_data)
+            ref = {"a": 1}
+            comparator.format_data(data, ref, replace_pattern=patterns)
+            assert data == initial_data
+            assert comparator.current_state["format_errors"] == [
+                ("missing_ref_entry", i, None) for i in patterns[("string", "NEW VALUE")]
+            ]
+
+            # Missing key in data
+            comparator = dir_content_diff.JsonComparator()
+            ref = copy.deepcopy(initial_data)
+            data = {"a": 1}
+            comparator.format_data(data, ref, replace_pattern=patterns)
+            assert data == {"a": 1}
+            assert comparator.current_state["format_errors"] == [
+                ("missing_comp_entry", i, None) for i in patterns[("string", "NEW VALUE")]
+            ]
+
     class TestXmlComparator:
         """Test the XML comparator."""
 
@@ -655,22 +733,16 @@ class TestEqualTrees:
 
     def test_assert_equal_trees_export(self, ref_tree, res_tree_equal):
         """Test that the formatted files are properly exported."""
-
-        class JsonComparator(dir_content_diff.base_comparators.JsonComparator):
-            """Compare data from two JSON files."""
-
-            def save(self, data, path):
-                """Save formatted data into a file."""
-                with open(path, "w", encoding="utf-8") as file:
-                    json.dump(data, file)
-
-        comparators = dir_content_diff.get_comparators()
-        comparators[".json"] = JsonComparator()
         assert_equal_trees(
-            ref_tree, res_tree_equal, export_formatted_files=True, comparators=comparators
+            ref_tree,
+            res_tree_equal,
+            export_formatted_files=True,
         )
-        assert list(res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED").iterdir()) == [
-            res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED") / "file.json"
+        assert sorted(res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED").iterdir()) == [
+            (res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED") / "file").with_suffix(
+                suffix
+            )
+            for suffix in [".ini", ".json", ".xml", ".yaml"]
         ]
 
     def test_diff_empty(self, empty_ref_tree, empty_res_tree):
@@ -705,6 +777,30 @@ class TestEqualTrees:
         res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
 
         assert res == {}
+
+    def test_replace_pattern(self, ref_tree, res_tree_equal):
+        """Test specific args."""
+        specific_args = {
+            "file.yaml": {"args": [None, None, None, False, 0, False]},
+            "file.json": {
+                "format_data_kwargs": {
+                    "replace_pattern": {(".*val.*", "NEW_VAL"): ["*.[*]"]},
+                },
+            },
+        }
+        res = compare_trees(
+            ref_tree, res_tree_equal, specific_args=specific_args, export_formatted_files=True
+        )
+
+        pat = (
+            r"""The files '\S*/ref/file\.json' and '\S*/res/file\.json' are different:\n"""
+            r"""Kwargs used for formatting data: """
+            r"""{'replace_pattern': {\('\.\*val\.\*', 'NEW_VAL'\): \['\*\.\[\*\]'\]}}\n"""
+            r"""Changed the value of '\[nested_list\]\[2\]' from 'str_val' to 'NEW_VAL'\.\n"""
+            r"""Changed the value of '\[simple_list\]\[2\]' from 'str_val' to 'NEW_VAL'\."""
+        )
+
+        assert re.match(pat, res["file.json"]) is not None
 
     def test_specific_comparator(self, ref_tree, res_tree_equal):
         """Test specific args."""

@@ -45,21 +45,24 @@ def test_export_formatted_data(
 ):
     """Test that the formatted files are properly exported."""
     args = []
+
+    if export_suffix is None:
+        suffix = "_FORMATTED"
+    else:
+        suffix = export_suffix
+    expected_dir = f"""res_path.with_name(res_path.name + "{suffix}")"""
+
     if not do_export:
-        expected_dir = """res_path.with_name(res_path.name + "_FORMATTED")"""
         tester = f"""assert not {expected_dir}.exists()"""
     else:
-        if export_suffix is None:
-            suffix = "_FORMATTED"
-        else:
-            suffix = export_suffix
-
-        expected_dir = f"""res_path.with_name(res_path.name + "{suffix}")"""
         args.append("--dcd-export-formatted-data")
         if export_suffix is not None:
             args.append("--dcd-export-suffix")
             args.append(export_suffix)
-        tester = """assert list(expected_dir.iterdir()) == [expected_dir / "file.csv"]"""
+        tester = """assert sorted(expected_dir.iterdir()) == [
+            (expected_dir / "file").with_suffix(ext)
+            for ext in [".csv", ".ini", ".json", ".xml", ".yaml"]
+        ]"""
 
     expected_dir_str = f"""expected_dir = {expected_dir}"""
     remover = """rmtree(expected_dir, ignore_errors=True)"""
@@ -89,18 +92,22 @@ def test_export_formatted_data(
 
         def test_export_formatted_data_no_suffix(ref_path, res_path):
             expected_dir = res_path.with_name(res_path.name + "_FORMATTED")
-            rmtree(expected_dir, ignore_errors=True)
+            {remover}
 
-            assert_equal_trees(ref_path, res_path, export_formatted_files=True)
-            assert list(expected_dir.iterdir()) == [expected_dir / "file.csv"]
+            assert_equal_trees(ref_path, res_path, export_formatted_files={do_export})
+            {tester}
 
 
         def test_export_formatted_data_suffix(ref_path, res_path):
-            expected_dir = res_path.with_name(res_path.name + "_NEW_SUFFIX")
-            rmtree(expected_dir, ignore_errors=True)
+            expected_dir = res_path.with_name(res_path.name + "{suffix}")
+            {remover}
 
-            assert_equal_trees(ref_path, res_path, export_formatted_files="_NEW_SUFFIX")
-            assert list(expected_dir.iterdir()) == [expected_dir / "file.csv"]
+            assert_equal_trees(
+                ref_path,
+                res_path,
+                export_formatted_files="{suffix if do_export else False}",
+            )
+            {tester}
 
         """
     )

@@ -2,12 +2,15 @@
 import configparser
 import filecmp
 import json
+import re
 from abc import ABC
 from abc import abstractmethod
 from xml.etree import ElementTree
 
 import dictdiffer
+import jsonpath_ng
 import yaml
+from dicttoxml import dicttoxml
 from diff_pdf_visually import pdf_similar
 
 from dir_content_diff.util import diff_msg_formatter
@@ -282,6 +285,14 @@ class DictComparator(BaseComparator):
         "add": "Added the value(s) '{value}' in the '{key}' key.",
         "change": "Changed the value of '{key}' from {value[0]} to {value[1]}.",
         "remove": "Removed the value(s) '{value}' from '{key}' key.",
+        "missing_ref_entry": (
+            "The path '{key}' is missing in the reference dictionary, please fix the "
+            "'replace_pattern' argument."
+        ),
+        "missing_comp_entry": (
+            "The path '{key}' is missing in the compared dictionary, please fix the "
+            "'replace_pattern' argument."
+        ),
     }
 
     def __init__(self, *args, **kwargs):
@@ -318,6 +329,43 @@ class DictComparator(BaseComparator):
                 value[num] = str(i)
         return value
 
+    def format_data(self, data, ref=None, replace_pattern=None, **kwargs):
+        """Format the loaded data."""
+        # pylint: disable=too-many-nested-blocks
+        self.current_state["format_errors"] = errors = []
+
+        if replace_pattern is not None:
+            for pat, paths in replace_pattern.items():
+                pattern = pat[0]
+                new_value = pat[1]
+                count = pat[2] if len(pat) > 2 else 0
+                flags = pat[3] if len(pat) > 3 else 0
+                for raw_path in paths:
+                    path = jsonpath_ng.parse(raw_path)
+                    if ref is not None and len(path.find(ref)) == 0:
+                        errors.append(
+                            (
+                                "missing_ref_entry",
+                                raw_path,
+                                None,
+                            )
+                        )
+                    elif len(path.find(data)) == 0:
+                        errors.append(
+                            (
+                                "missing_comp_entry",
+                                raw_path,
+                                None,
+                            )
+                        )
+                    else:
+                        for i in path.find(data):
+                            if isinstance(i.value, str):
+                                i.full_path.update(
+                                    data, re.sub(pattern, new_value, i.value, count, flags)
+                                )
+        return data
+
     def diff(self, ref, comp, *args, **kwargs):
         """Compare 2 dictionaries.
 
@@ -332,13 +380,16 @@ class DictComparator(BaseComparator):
             path_limit (list[str]): List of path limit tuples or :class:`dictdiffer.utils.PathLimit`
                 object to limit the diff recursion depth.
         """
+        errors = self.current_state.get("format_errors", [])
+
         if len(args) > 5:
             dot_notation = args[5]
             args = args[:5] + args[6:]
         else:
             dot_notation = kwargs.pop("dot_notation", False)
         kwargs["dot_notation"] = dot_notation
-        return list(dictdiffer.diff(ref, comp, *args, **kwargs))
+        errors.extend(list(dictdiffer.diff(ref, comp, *args, **kwargs)))
+        return errors
 
     def format_diff(self, difference):
         """Format one element difference."""
@@ -361,6 +412,11 @@ class JsonComparator(DictComparator):
             data = json.load(file)
         return data
 
+    def save(self, data, path):
+        """Save formatted data into a JSON file."""
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(data, file)
+
 
 class YamlComparator(DictComparator):
     """Comparator for YAML files.
@@ -373,6 +429,11 @@ class YamlComparator(DictComparator):
         with open(path) as file:  # pylint: disable=unspecified-encoding
             data = yaml.full_load(file)
         return data
+
+    def save(self, data, path):
+        """Save formatted data into a YAML file."""
+        with open(path, "w", encoding="utf-8") as file:
+            yaml.dump(data, file)
 
 
 class XmlComparator(DictComparator):
@@ -407,9 +468,14 @@ class XmlComparator(DictComparator):
             data = self.xmltodict(file.read())
         return data
 
+    def save(self, data, path):
+        """Save formatted data into a XML file."""
+        with open(path, "w", encoding="utf-8") as file:
+            file.write(dicttoxml(data["root"]).decode())
+
     @staticmethod
     def _cast_from_attribute(text, attr):
-        """Converts XML text into a Python data format based on the tag attribute."""
+        """Convert XML text into a Python data format based on the tag attribute."""
         if "type" not in attr:
             return text
         value_type = attr.get("type", "").lower()
@@ -453,7 +519,7 @@ class XmlComparator(DictComparator):
 
     @staticmethod
     def xmltodict(obj):
-        """Converts an XML string into a Python object based on each tag's attribute."""
+        """Convert an XML string into a Python object based on each tag's attribute."""
         root = ElementTree.fromstring(obj)
         output = {}
 
@@ -473,10 +539,15 @@ class IniComparator(DictComparator):
     """
 
     def load(self, path, **kwargs):  # pylint: disable=arguments-differ
-        """Open a XML file."""
+        """Open a INI file."""
         data = configparser.ConfigParser(**kwargs)
         data.read(path)
         return self.configparser_to_dict(data)
+
+    def save(self, data, path):
+        """Save formatted data into a INI file."""
+        with open(path, "w", encoding="utf-8") as file:
+            self.dict_to_configparser(data).write(file)
 
     @staticmethod
     def configparser_to_dict(config):
@@ -493,6 +564,16 @@ class IniComparator(DictComparator):
                     pass
                 dict_config[section][option] = val
         return dict_config
+
+    @staticmethod
+    def dict_to_configparser(data, **kwargs):
+        """Transform a dict object into a ConfigParser."""
+        config = configparser.ConfigParser(**kwargs)
+        for k, v in data.items():
+            config.add_section(k)
+            for opt, val in v.items():
+                config[k][opt] = json.dumps(val)
+        return config
 
 
 class PdfComparator(BaseComparator):

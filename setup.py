@@ -6,7 +6,9 @@ from setuptools import setup
 
 reqs = [
     "dictdiffer>=0.8",
+    "dicttoxml>=1.7.12",
     "diff_pdf_visually>=1.7",
+    "jsonpath-ng>=1.5",
     "PyYaml>=6",
 ]
 

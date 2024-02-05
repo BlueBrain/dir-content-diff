@@ -163,6 +163,18 @@ specific_args = {
 }
 ```
 
+And last but not least, it's possible to use regular expressions to associate specific arguments to
+a set of files:
+
+```python
+specific_args = {
+    "all files with *.a of *.b extensions": {
+        "patterns": [r".*\.[a,b]$"],
+        "comparator": dir_content_diff.BaseComparator(),
+    }
+}
+```
+
 
 ### Export formatted data
 

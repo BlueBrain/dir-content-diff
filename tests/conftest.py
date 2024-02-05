@@ -126,6 +126,12 @@ def dict_diff():
 
 
 @pytest.fixture
+def base_diff():
+    """The diff that should be reported for the XML files."""
+    return r"The files '\S*/file\..{3,4}' and '\S*/file\..{3,4}' are different\."
+
+
+@pytest.fixture
 def xml_diff(dict_diff):
     """The diff that should be reported for the XML files."""
     diff = dict_diff.replace("'\\[", "'\\[root\\]\\[").replace(" '' key", " '\\[root\\]' key")

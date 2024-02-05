@@ -287,7 +287,7 @@ def compare_trees(
         specific_args = copy.deepcopy(specific_args)
 
     pattern_specific_args = {}
-    for k, v in specific_args.items():
+    for v in specific_args.values():
         for pattern in v.pop("patterns", []):
             pattern_specific_args[re.compile(pattern)] = v
 

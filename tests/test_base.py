@@ -716,7 +716,7 @@ class TestEqualTrees:
 
         assert res == {}
 
-    def test_specific_patterns(self, ref_tree, res_tree_equal):
+    def test_specific_patterns(self, ref_tree, res_tree_equal, base_diff):
         """Test specific args."""
         specific_args = {
             "all yaml files": {
@@ -738,6 +738,18 @@ class TestEqualTrees:
         res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
 
         assert res == {}
+
+        # Test pattern multiple matches
+        specific_args = {
+            "all files": {
+                "comparator": dir_content_diff.DefaultComparator(),
+                "patterns": [r"file\..*"],
+            },
+        }
+        res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
+
+        assert list(res.keys()) == ["file.pdf"]
+        assert re.match(base_diff, res["file.pdf"]) is not None
 
 
 class TestDiffTrees:
@@ -896,6 +908,25 @@ class TestDiffTrees:
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
         assert re.match(dict_diff, res["file.json"]) is not None
+
+        # Test pattern multiple matches
+        specific_args = {
+            "all files": {
+                "comparator": dir_content_diff.DefaultComparator(),
+                "patterns": [r"file\..*"],
+            },
+        }
+        res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
+
+        assert sorted(res.keys()) == [
+            "file.ini",
+            "file.json",
+            "file.pdf",
+            "file.xml",
+            "file.yaml",
+        ]
+        for k, v in res.items():
+            assert re.match(base_diff, v)
 
     def test_unknown_comparator(self, ref_tree, res_tree_diff, registry_reseter):
         """Test with an unknown extension."""

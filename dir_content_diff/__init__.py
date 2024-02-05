@@ -305,7 +305,7 @@ def compare_trees(
             if specific_file_args is None:
                 for pattern, pattern_args in pattern_specific_args.items():
                     if pattern.match(relative_path):
-                        specific_file_args = pattern_args
+                        specific_file_args = copy.deepcopy(pattern_args)
                         break
             if specific_file_args is None:
                 specific_file_args = {}

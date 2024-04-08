@@ -147,6 +147,42 @@ class HdfComparator(DataframeComparator):
         data.to_hdf(path, index=index, key=key, **kwargs)
 
 
+class FeatherComparator(DataframeComparator):
+    """Comparator for Feather files."""
+
+    def load(self, path, **kwargs):
+        """Load a Feather file into a :class:`pandas.DataFrame` object."""
+        return pd.read_feather(path, **kwargs)
+
+    def save(self, data, path, **kwargs):
+        """Save data to a Feather file."""
+        data.to_feather(path, **kwargs)
+
+
+class ParquetComparator(DataframeComparator):
+    """Comparator for Parquet files."""
+
+    def load(self, path, **kwargs):
+        """Load a Parquet file into a :class:`pandas.DataFrame` object."""
+        return pd.read_parquet(path, **kwargs)
+
+    def save(self, data, path, **kwargs):
+        """Save data to a Parquet file."""
+        data.to_parquet(path, **kwargs)
+
+
+class StataComparator(DataframeComparator):
+    """Comparator for Stata files."""
+
+    def load(self, path, **kwargs):
+        """Load a Stata file into a :class:`pandas.DataFrame` object."""
+        return pd.read_stata(path, **kwargs)
+
+    def save(self, data, path, **kwargs):
+        """Save data to a Stata file."""
+        data.to_stata(path, **kwargs)
+
+
 def register():
     """Register Pandas extensions."""
     register_comparator(".csv", CsvComparator())
@@ -156,3 +192,6 @@ def register():
     register_comparator(".hdf", HdfComparator())
     register_comparator(".hdf4", HdfComparator())
     register_comparator(".hdf5", HdfComparator())
+    register_comparator(".feather", FeatherComparator())
+    register_comparator(".parquet", ParquetComparator())
+    register_comparator(".dta", StataComparator())

@@ -4,6 +4,7 @@
 # pylint: disable=unused-argument
 # pylint: disable=use-implicit-booleaness-not-comparison
 import re
+import sys
 
 import pandas as pd
 import pytest
@@ -49,6 +50,9 @@ class TestRegistry:
             ".hdf": dir_content_diff.pandas.HdfComparator(),
             ".hdf4": dir_content_diff.pandas.HdfComparator(),
             ".hdf5": dir_content_diff.pandas.HdfComparator(),
+            ".feather": dir_content_diff.pandas.FeatherComparator(),
+            ".parquet": dir_content_diff.pandas.ParquetComparator(),
+            ".dta": dir_content_diff.pandas.StataComparator(),
         }
 
 
@@ -59,17 +63,69 @@ def pandas_registry_reseter(registry_reseter):
 
 
 @pytest.fixture
-def ref_hdf5(empty_ref_tree):
-    """The reference HDF5 file."""
+def ref_data(empty_ref_tree):
     ref_data = {
         "col_a": [1, 2, 3],
         "col_b": ["a", "b", "c"],
         "col_c": [4, 5, 6],
     }
     df = pd.DataFrame(ref_data, index=["idx1", "idx2", "idx3"])
+    return df
+
+
+@pytest.fixture
+def ref_hdf5(ref_data, empty_ref_tree):
+    """The reference HDF5 file."""
     filename = empty_ref_tree / "file.h5"
-    df.to_hdf(filename, key="data", index=True)
+    ref_data.to_hdf(filename, key="data", index=True)
     return filename
+
+
+@pytest.fixture
+def ref_feather(ref_data, empty_ref_tree):
+    """The reference Feather file."""
+    filename = empty_ref_tree / "file.feather"
+    ref_data.to_feather(filename)
+    return filename
+
+
+@pytest.fixture
+def ref_parquet(ref_data, empty_ref_tree):
+    """The reference Parquet file."""
+    filename = empty_ref_tree / "file.parquet"
+    ref_data.to_parquet(filename)
+    return filename
+
+
+@pytest.fixture
+def ref_stata(ref_data, empty_ref_tree):
+    """The reference Stata file."""
+    filename = empty_ref_tree / "file.dta"
+    ref_data.to_stata(filename)
+    return filename
+
+
+def _update_df(df):
+    df.loc["idx1", "col_a"] *= 10
+    df.loc["idx2", "col_b"] += "_new"
+
+
+@pytest.fixture
+def res_diff_checker():
+    """The regex used to check the diff result."""
+    return (
+        r"The files '\S*/ref/file\.\S*' and '\S*/res/file\.\S*' are different:\n\n"
+        r"Column 'col_a': Series are different\n\n"
+        r"Series values are different \(33\.33333 %\)\n"
+        r"\[index\]: \[idx1, idx2, idx3\]\n"
+        r"\[left\]:  \[1, 2, 3\]\n\[right\]: \[10, 2, 3\]\n"
+        r"""(At positional index 0, first diff: 1 != 10\n)?\n"""
+        r"Column 'col_b': Series are different\n\n"
+        r"Series values are different \(33\.33333 %\)\n"
+        r"\[index\]: \[idx1, idx2, idx3\]\n"
+        r"\[left\]:  \[a, b, c\]\n\[right\]: \[a, b_new, c\]"
+        r"""(\nAt positional index 1, first diff: b != b_new)?"""
+    )
 
 
 @pytest.fixture
@@ -85,10 +141,66 @@ def res_hdf5_equal(ref_hdf5, empty_res_tree):
 def res_hdf5_diff(ref_hdf5, empty_res_tree):
     """The result hdf5 file different from the reference."""
     df = pd.read_hdf(ref_hdf5, index_col="index")
-    df.loc["idx1", "col_a"] *= 10
-    df.loc["idx2", "col_b"] += "_new"
+    _update_df(df)
     filename = empty_res_tree / "file.h5"
     df.to_hdf(filename, key="data", index=True)
+    return filename
+
+
+@pytest.fixture
+def res_feather_equal(ref_feather, empty_res_tree):
+    """The result feather file equal to the reference."""
+    df = pd.read_feather(ref_feather)
+    filename = empty_res_tree / "file.feather"
+    df.to_feather(filename)
+    return filename
+
+
+@pytest.fixture
+def res_feather_diff(ref_feather, empty_res_tree):
+    """The result feather file different from the reference."""
+    df = pd.read_feather(ref_feather)
+    _update_df(df)
+    filename = empty_res_tree / "file.feather"
+    df.to_feather(filename)
+    return filename
+
+
+@pytest.fixture
+def res_parquet_equal(ref_parquet, empty_res_tree):
+    """The result parquet file equal to the reference."""
+    df = pd.read_parquet(ref_parquet)
+    filename = empty_res_tree / "file.parquet"
+    df.to_parquet(filename)
+    return filename
+
+
+@pytest.fixture
+def res_parquet_diff(ref_parquet, empty_res_tree):
+    """The result parquet file different from the reference."""
+    df = pd.read_parquet(ref_parquet)
+    _update_df(df)
+    filename = empty_res_tree / "file.parquet"
+    df.to_parquet(filename)
+    return filename
+
+
+@pytest.fixture
+def res_stata_equal(ref_stata, empty_res_tree):
+    """The result stata file equal to the reference."""
+    df = pd.read_stata(ref_stata, index_col="index")
+    filename = empty_res_tree / "file.dta"
+    df.to_stata(filename)
+    return filename
+
+
+@pytest.fixture
+def res_stata_diff(ref_stata, empty_res_tree):
+    """The result stata file different from the reference."""
+    df = pd.read_stata(ref_stata, index_col="index")
+    _update_df(df)
+    filename = empty_res_tree / "file.dta"
+    df.to_stata(filename)
     return filename
 
 
@@ -222,16 +334,45 @@ class TestEqualTrees:
         )
         assert match_res is not None
 
-    def test_hdf5_comparator(
-        self, empty_ref_tree, empty_res_tree, res_hdf5_equal, pandas_registry_reseter
-    ):
-        """Test the comparator for HDF5 files."""
+    def _check_equal(self, empty_ref_tree, empty_res_tree):
         assert_equal_trees(empty_ref_tree, empty_res_tree, export_formatted_files=True)
         ref_files = list(empty_ref_tree.rglob("*"))
         res_files = list(empty_res_tree.rglob("*"))
         assert len(ref_files) == len(res_files)
+        return ref_files, res_files
+
+    def test_hdf5_comparator(
+        self, empty_ref_tree, empty_res_tree, res_hdf5_equal, pandas_registry_reseter
+    ):
+        """Test the comparator for HDF5 files."""
+        ref_files, res_files = self._check_equal(empty_ref_tree, empty_res_tree)
         for i, j in zip(ref_files, res_files):
             assert pd.read_hdf(i).equals(pd.read_hdf(j))
+
+    @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
+    def test_feather_comparator(
+        self, empty_ref_tree, empty_res_tree, res_feather_equal, pandas_registry_reseter
+    ):
+        """Test the comparator for Feather files."""
+        ref_files, res_files = self._check_equal(empty_ref_tree, empty_res_tree)
+        for i, j in zip(ref_files, res_files):
+            assert pd.read_feather(i).equals(pd.read_feather(j))
+
+    def test_parquet_comparator(
+        self, empty_ref_tree, empty_res_tree, res_parquet_equal, pandas_registry_reseter
+    ):
+        """Test the comparator for Parquet files."""
+        ref_files, res_files = self._check_equal(empty_ref_tree, empty_res_tree)
+        for i, j in zip(ref_files, res_files):
+            assert pd.read_parquet(i).equals(pd.read_parquet(j))
+
+    def test_stata_comparator(
+        self, empty_ref_tree, empty_res_tree, res_stata_equal, pandas_registry_reseter
+    ):
+        """Test the comparator for Stata files."""
+        ref_files, res_files = self._check_equal(empty_ref_tree, empty_res_tree)
+        for i, j in zip(ref_files, res_files):
+            assert pd.read_stata(i).equals(pd.read_stata(j))
 
 
 class TestDiffTrees:
@@ -287,26 +428,70 @@ class TestDiffTrees:
         )
         assert match_res is not None
 
-    def test_hdf5_comparator(
-        self, empty_ref_tree, empty_res_tree, res_hdf5_diff, pandas_registry_reseter
+    def _check_diff_comparator(
+        self, empty_ref_tree, empty_res_tree, res_diff_checker, ext, specific_args=None
     ):
-        """Test the comparator for HDF5 files."""
-        res = compare_trees(empty_ref_tree, empty_res_tree)
+        res = compare_trees(empty_ref_tree, empty_res_tree, specific_args=specific_args)
 
         assert len(res) == 1
-        res_hdf = res["file.h5"]
+        filename = f"file.{ext}"
+        res_ext = res[filename]
+        if specific_args is not None and filename in specific_args:
+            res_diff_checker = res_diff_checker.replace(
+                "' are different:",
+                "' are different:\nKwargs used for loading data: "
+                f"{specific_args[filename]['load_kwargs']}",
+            )
         match_res = re.match(
-            r"The files '\S*/ref/file\.h5' and '\S*/res/file\.h5' are different:\n\n"
-            r"Column 'col_a': Series are different\n\n"
-            r"Series values are different \(33\.33333 %\)\n"
-            r"\[index\]: \[idx1, idx2, idx3\]\n"
-            r"\[left\]:  \[1, 2, 3\]\n\[right\]: \[10, 2, 3\]\n"
-            r"""(At positional index 0, first diff: 1 != 10\n)?\n"""
-            r"Column 'col_b': Series are different\n\n"
-            r"Series values are different \(33\.33333 %\)\n"
-            r"\[index\]: \[idx1, idx2, idx3\]\n"
-            r"\[left\]:  \[a, b, c\]\n\[right\]: \[a, b_new, c\]"
-            r"""(\nAt positional index 1, first diff: b != b_new)?""",
-            res_hdf,
+            res_diff_checker,
+            res_ext,
         )
         assert match_res is not None
+
+    def test_hdf5_comparator(
+        self,
+        empty_ref_tree,
+        empty_res_tree,
+        res_hdf5_diff,
+        res_diff_checker,
+        pandas_registry_reseter,
+    ):
+        """Test the comparator for HDF5 files."""
+        self._check_diff_comparator(empty_ref_tree, empty_res_tree, res_diff_checker, "h5")
+
+    @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
+    def test_feather_comparator(
+        self,
+        empty_ref_tree,
+        empty_res_tree,
+        res_feather_diff,
+        res_diff_checker,
+        pandas_registry_reseter,
+    ):
+        """Test the comparator for feather files."""
+        self._check_diff_comparator(empty_ref_tree, empty_res_tree, res_diff_checker, "feather")
+
+    def test_parquet_comparator(
+        self,
+        empty_ref_tree,
+        empty_res_tree,
+        res_parquet_diff,
+        res_diff_checker,
+        pandas_registry_reseter,
+    ):
+        """Test the comparator for parquet files."""
+        self._check_diff_comparator(empty_ref_tree, empty_res_tree, res_diff_checker, "parquet")
+
+    def test_stata_comparator(
+        self,
+        empty_ref_tree,
+        empty_res_tree,
+        res_stata_diff,
+        res_diff_checker,
+        pandas_registry_reseter,
+    ):
+        """Test the comparator for stata files."""
+        specific_args = {"file.dta": {"load_kwargs": {"index_col": "index"}}}
+        self._check_diff_comparator(
+            empty_ref_tree, empty_res_tree, res_diff_checker, "dta", specific_args=specific_args
+        )

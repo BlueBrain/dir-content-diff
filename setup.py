@@ -20,6 +20,7 @@ doc_reqs = [
 
 pandas_reqs = [
     "pandas>=1.4",
+    "pyarrow>=11",
     "tables>=3.7",
 ]
 

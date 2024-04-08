@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/BlueBrain/dir-content-diff/compare/1.7.0..1.8.0)
+
+> 8 April 2024
+
+### New Features
+
+- Add new comparators for Feather, Parquet and Stata files (Adrien Berchet - [#56](https://github.com/BlueBrain/dir-content-diff/pull/56))
+
 ## [1.7.0](https://github.com/BlueBrain/dir-content-diff/compare/1.6.0..1.7.0)
 
 > 5 February 2024

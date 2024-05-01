@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.1](https://github.com/BlueBrain/dir-content-diff/compare/1.8.0..1.8.1)
+
+> 26 April 2024
+
+### Build
+
+- Freeze docutils version to be compatible with m2r2 (Adrien Berchet - [#58](https://github.com/BlueBrain/dir-content-diff/pull/58))
+
 ## [1.8.0](https://github.com/BlueBrain/dir-content-diff/compare/1.7.0..1.8.0)
 
 > 8 April 2024

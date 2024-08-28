@@ -115,7 +115,7 @@ def _retrieve_dependencies():
     try:
         # Package is installed or the cwd is the root of the project
         root_dir = importlib.resources.files("dir_content_diff")  # pylint: disable=no-member
-    except ModuleNotFoundError:
+    except ModuleNotFoundError:  # pragma: no cover
         # Package is not installed and the cwd is not the root of the project
         root_dir = Path(__file__).parent / "dir_content_diff"
     deps_file = root_dir / "comparators" / "dependencies.json"

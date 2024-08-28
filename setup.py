@@ -28,7 +28,7 @@ with (Path(__file__).parent / "dir_content_diff" / "comparators" / "dependencies
 test_reqs = [
     "coverage>=7.2",
     "dicttoxml>=1.7.16",
-    "matplotlib>=3",
+    "matplotlib>=3.4",
     "rst2pdf>=0.99",
     "packaging>=20",
     "pandas>=1.4",

@@ -33,3 +33,6 @@ force_single_line = true
 testpaths = [
     "tests",
 ]
+markers = [
+    "comparators_missing_deps: marks tests for missing dependencies",
+]

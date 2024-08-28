@@ -1,11 +1,12 @@
 """Extension module to process files with Pandas."""
-try:
-    import pandas as pd
-except ImportError as exception:  # pragma: no cover
-    raise ImportError("Could not import pandas package, please install it.") from exception
-
 from dir_content_diff import register_comparator
 from dir_content_diff.base_comparators import BaseComparator
+from dir_content_diff.util import import_error_message
+
+try:
+    import pandas as pd
+except ImportError:  # pragma: no cover
+    import_error_message(__name__)
 
 
 class DataframeComparator(BaseComparator):

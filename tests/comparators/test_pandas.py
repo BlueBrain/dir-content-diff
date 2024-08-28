@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 
 import dir_content_diff
-import dir_content_diff.pandas
+import dir_content_diff.comparators.pandas
 from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
 
@@ -32,7 +32,7 @@ class TestRegistry:
             ".yml": dir_content_diff.YamlComparator(),
         }
 
-        dir_content_diff.pandas.register()
+        dir_content_diff.comparators.pandas.register()
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
             ".cfg": dir_content_diff.IniComparator(),
@@ -43,23 +43,23 @@ class TestRegistry:
             ".xml": dir_content_diff.XmlComparator(),
             ".yaml": dir_content_diff.YamlComparator(),
             ".yml": dir_content_diff.YamlComparator(),
-            ".csv": dir_content_diff.pandas.CsvComparator(),
-            ".tsv": dir_content_diff.pandas.CsvComparator(),
-            ".h4": dir_content_diff.pandas.HdfComparator(),
-            ".h5": dir_content_diff.pandas.HdfComparator(),
-            ".hdf": dir_content_diff.pandas.HdfComparator(),
-            ".hdf4": dir_content_diff.pandas.HdfComparator(),
-            ".hdf5": dir_content_diff.pandas.HdfComparator(),
-            ".feather": dir_content_diff.pandas.FeatherComparator(),
-            ".parquet": dir_content_diff.pandas.ParquetComparator(),
-            ".dta": dir_content_diff.pandas.StataComparator(),
+            ".csv": dir_content_diff.comparators.pandas.CsvComparator(),
+            ".tsv": dir_content_diff.comparators.pandas.CsvComparator(),
+            ".h4": dir_content_diff.comparators.pandas.HdfComparator(),
+            ".h5": dir_content_diff.comparators.pandas.HdfComparator(),
+            ".hdf": dir_content_diff.comparators.pandas.HdfComparator(),
+            ".hdf4": dir_content_diff.comparators.pandas.HdfComparator(),
+            ".hdf5": dir_content_diff.comparators.pandas.HdfComparator(),
+            ".feather": dir_content_diff.comparators.pandas.FeatherComparator(),
+            ".parquet": dir_content_diff.comparators.pandas.ParquetComparator(),
+            ".dta": dir_content_diff.comparators.pandas.StataComparator(),
         }
 
 
 @pytest.fixture
 def pandas_registry_reseter(registry_reseter):
     """Register the pandas plugin and then reset the registry after the test."""
-    dir_content_diff.pandas.register()
+    dir_content_diff.comparators.pandas.register()
 
 
 @pytest.fixture

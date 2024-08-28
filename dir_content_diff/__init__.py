@@ -4,7 +4,6 @@ Simple tool to compare directory contents.
 """
 import copy
 import importlib.metadata
-import logging
 import re
 from pathlib import Path
 
@@ -14,12 +13,11 @@ from dir_content_diff.base_comparators import JsonComparator
 from dir_content_diff.base_comparators import PdfComparator
 from dir_content_diff.base_comparators import XmlComparator
 from dir_content_diff.base_comparators import YamlComparator
+from dir_content_diff.util import LOGGER
 from dir_content_diff.util import diff_msg_formatter
 from dir_content_diff.util import format_ext
 
 __version__ = importlib.metadata.version("dir-content-diff")
-
-L = logging.getLogger(__name__)
 
 
 _DEFAULT_COMPARATORS = {
@@ -125,7 +123,7 @@ def compare_files(ref_file, comp_file, comparator, *args, return_raw_diffs=False
         differences if they are different.
     """
     # Get the compared file
-    L.debug("Compare: %s and %s", ref_file, comp_file)
+    LOGGER.debug("Compare: %s and %s", ref_file, comp_file)
 
     try:
         return comparator(ref_file, comp_file, *args, return_raw_diffs=return_raw_diffs, **kwargs)
@@ -173,7 +171,7 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
     """
     if hasattr(comparator, "save_capability") and comparator.save_capability:
         # pylint: disable=protected-access
-        L.debug("Format: %s into %s", file, formatted_file)
+        LOGGER.debug("Format: %s into %s", file, formatted_file)
         data = comparator.load(
             file,
             **kwargs.get(
@@ -204,7 +202,9 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
             ),
         )
     else:
-        L.info("Skip formatting for '%s' because the comparator has no saving capability.", file)
+        LOGGER.info(
+            "Skip formatting for '%s' because the comparator has no saving capability.", file
+        )
 
 
 def compare_trees(

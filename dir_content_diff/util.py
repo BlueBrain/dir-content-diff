@@ -1,6 +1,11 @@
 """Some utils used by the ``dir-content-diff`` package."""
+import importlib.resources
+import json
+import logging
 import re
+from pathlib import Path
 
+LOGGER = logging.getLogger("dir-content-diff")
 _ext_pattern = re.compile(r"\.?(.*)")
 
 
@@ -103,3 +108,48 @@ def diff_msg_formatter(
         f"{kwargs_used}"
         f"{reason_used}"
     )
+
+
+def _retrieve_dependencies():
+    """Get the comparator dependencies."""
+    try:
+        # Package is installed or the cwd is the root of the project
+        root_dir = importlib.resources.files("dir_content_diff")  # pylint: disable=no-member
+    except ModuleNotFoundError:
+        # Package is not installed and the cwd is not the root of the project
+        root_dir = Path(__file__).parent / "dir_content_diff"
+    deps_file = root_dir / "comparators" / "dependencies.json"
+    with deps_file.open() as f:
+        deps = json.load(f)
+    return deps
+
+
+COMPARATOR_DEPENDENCIES = _retrieve_dependencies()
+
+
+def import_error_message(name):
+    """Raise a log entry for the missing dependencies."""
+    name = name.split(".")[-1]
+    try:
+        dependencies = COMPARATOR_DEPENDENCIES[name]
+    except KeyError as exception:
+        msg = (
+            f"The module {name} has no registered dependency, please add dependencies in the "
+            "dependencies.json file"
+        )
+        raise KeyError(msg) from exception
+
+    if len(dependencies) > 1:
+        req_plural = "s are"
+        requirements = ", ".join(dependencies[:-1]) + f" and {dependencies[-1]}"
+    else:
+        req_plural = " is"
+        requirements = str(dependencies[0])
+
+    msg = (
+        f"Loading the {name} module without the required dependencies installed "
+        f"(requirement{req_plural} the following: {requirements}). "
+        "Will crash at runtime if the related functionalities are used. "
+        f"These dependencies can be installed with 'pip install dir-content-diff[{name}]'."
+    )
+    LOGGER.warning(msg)

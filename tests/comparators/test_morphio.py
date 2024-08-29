@@ -4,10 +4,14 @@
 import re
 
 import pytest
-from morphio import Morphology
 
 import dir_content_diff
 import dir_content_diff.comparators.morphio
+
+try:
+    from morphio import Morphology
+except ImportError:
+    pass
 
 
 class TestRegistry:

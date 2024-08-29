@@ -3,16 +3,19 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 # pylint: disable=use-implicit-booleaness-not-comparison
+import importlib
 import re
-import sys
 
 import pandas as pd
 import pytest
+from packaging import version
 
 import dir_content_diff
 import dir_content_diff.comparators.pandas
 from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
+
+_PANDAS_VERSION = version.parse(importlib.metadata.version("pandas"))
 
 
 class TestRegistry:
@@ -349,7 +352,7 @@ class TestEqualTrees:
         for i, j in zip(ref_files, res_files):
             assert pd.read_hdf(i).equals(pd.read_hdf(j))
 
-    @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
+    @pytest.mark.skipif(_PANDAS_VERSION < version.parse("2.1"), reason="requires Pandas>=2.1")
     def test_feather_comparator(
         self, empty_ref_tree, empty_res_tree, res_feather_equal, pandas_registry_reseter
     ):
@@ -459,7 +462,7 @@ class TestDiffTrees:
         """Test the comparator for HDF5 files."""
         self._check_diff_comparator(empty_ref_tree, empty_res_tree, res_diff_checker, "h5")
 
-    @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
+    @pytest.mark.skipif(_PANDAS_VERSION < version.parse("2.1"), reason="requires Pandas>=2.1")
     def test_feather_comparator(
         self,
         empty_ref_tree,

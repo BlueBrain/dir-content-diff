@@ -8,12 +8,16 @@ import shutil
 
 import numpy as np
 import pytest
-import voxcell
 
 import dir_content_diff
 import dir_content_diff.comparators.voxcell
 from dir_content_diff import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff import compare_trees
+
+try:
+    import voxcell
+except ImportError:
+    pass
 
 
 class TestRegistry:

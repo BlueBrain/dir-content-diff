@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1](https://github.com/BlueBrain/dir-content-diff/compare/1.9.0..1.9.1)
+
+> 29 August 2024
+
+### CI Improvements
+
+- Fix publish job (Adrien Berchet - [#62](https://github.com/BlueBrain/dir-content-diff/pull/62))
+
 ## [1.9.0](https://github.com/BlueBrain/dir-content-diff/compare/1.8.1..1.9.0)
 
 > 29 August 2024

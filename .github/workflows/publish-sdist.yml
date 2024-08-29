@@ -14,7 +14,7 @@ jobs:
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10
+          python-version: "3.10"
       - name: Build a wheel and a source tarball
         run: |
           pip install setuptools>=42 build setuptools_scm[toml]>=3.4

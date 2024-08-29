@@ -1,0 +1,11 @@
+[paths]
+source_paths =
+	dir_content_diff
+	*/site-packages/dir_content_diff
+	*/dir_content_diff/dir_content_diff
+	*/dir-content-diff/dir_content_diff
+
+[report]
+exclude_also =
+    return pd\.read_feather\(path, \*\*kwargs\)
+    data\.to_feather\(path, \*\*kwargs\)

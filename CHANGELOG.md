@@ -1,8 +1,16 @@
 # Changelog
 
+## [1.9.0](https://github.com/BlueBrain/dir-content-diff/compare/1.8.1..1.9.0)
+
+> 29 August 2024
+
+### New Features
+
+- Add new specific comparators (Adrien Berchet - [#60](https://github.com/BlueBrain/dir-content-diff/pull/60))
+
 ## [1.8.1](https://github.com/BlueBrain/dir-content-diff/compare/1.8.0..1.8.1)
 
-> 26 April 2024
+> 1 May 2024
 
 ### Build
 

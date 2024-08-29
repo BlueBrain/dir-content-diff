@@ -76,11 +76,11 @@ def test_export_formatted_data(
         from shutil import rmtree
 
         import dir_content_diff
-        import dir_content_diff.pandas
+        import dir_content_diff.comparators.pandas
         from dir_content_diff import assert_equal_trees
 
         dir_content_diff.reset_comparators()
-        dir_content_diff.pandas.register()
+        dir_content_diff.comparators.pandas.register()
 
 
         def test_export_formatted_data_default(ref_path, res_path):

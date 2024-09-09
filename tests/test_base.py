@@ -411,7 +411,7 @@ class TestBaseComparator:
         assert no_report_diff_default.replace(kwargs_msg, "") == diff
 
     @staticmethod
-    def _test_load_save(tmp_path, comparator):
+    def common_test_load_save(tmp_path, comparator):
         """Test load and save capabilities of the given comparator."""
         initial_data = {
             "a": {
@@ -437,7 +437,7 @@ class TestBaseComparator:
         def test_load_save(self, tmp_path):
             """Test load and save capabilities of the comparator."""
             comparator = dir_content_diff.JsonComparator()
-            TestBaseComparator._test_load_save(tmp_path, comparator)
+            TestBaseComparator.common_test_load_save(tmp_path, comparator)
 
         def test_format_data(self):
             """Test data formatting."""
@@ -519,7 +519,7 @@ class TestBaseComparator:
         def test_load_save(self, tmp_path):
             """Test load and save capabilities of the comparator."""
             comparator = dir_content_diff.XmlComparator()
-            TestBaseComparator._test_load_save(tmp_path, comparator)
+            TestBaseComparator.common_test_load_save(tmp_path, comparator)
 
         def test_xmltodict(self):
             """Test all types of the xmltodict auto cast feature."""
@@ -608,7 +608,7 @@ class TestBaseComparator:
         def test_load_save(self, tmp_path):
             """Test load and save capabilities of the comparator."""
             comparator = dir_content_diff.IniComparator()
-            TestBaseComparator._test_load_save(tmp_path, comparator)
+            TestBaseComparator.common_test_load_save(tmp_path, comparator)
 
         def test_initodict(self, ref_tree):
             """Test conversion of INI files into dict."""

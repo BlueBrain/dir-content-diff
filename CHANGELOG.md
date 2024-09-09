@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/BlueBrain/dir-content-diff/compare/1.9.1..1.10.0)
+
+> 9 September 2024
+
+### New Features
+
+- Add parameters for load and save methods of base comparators (Adrien Berchet - [#64](https://github.com/BlueBrain/dir-content-diff/pull/64))
+
 ## [1.9.1](https://github.com/BlueBrain/dir-content-diff/compare/1.9.0..1.9.1)
 
 > 29 August 2024

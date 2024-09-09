@@ -406,16 +406,16 @@ class JsonComparator(DictComparator):
     This comparator is based on the :class:`DictComparator` and uses the same parameters.
     """
 
-    def load(self, path):
+    def load(self, path, **kwargs):
         """Open a JSON file."""
         with open(path) as file:  # pylint: disable=unspecified-encoding
-            data = json.load(file)
+            data = json.load(file, **kwargs)
         return data
 
-    def save(self, data, path):
+    def save(self, data, path, **kwargs):
         """Save formatted data into a JSON file."""
         with open(path, "w", encoding="utf-8") as file:
-            json.dump(data, file)
+            json.dump(data, file, **kwargs)
 
 
 class YamlComparator(DictComparator):
@@ -424,16 +424,16 @@ class YamlComparator(DictComparator):
     This comparator is based on the :class:`DictComparator` and uses the same parameters.
     """
 
-    def load(self, path):
+    def load(self, path, **kwargs):
         """Open a YAML file."""
         with open(path) as file:  # pylint: disable=unspecified-encoding
-            data = yaml.full_load(file)
+            data = yaml.full_load(file, **kwargs)
         return data
 
-    def save(self, data, path):
+    def save(self, data, path, **kwargs):
         """Save formatted data into a YAML file."""
         with open(path, "w", encoding="utf-8") as file:
-            yaml.dump(data, file)
+            yaml.dump(data, file, **kwargs)
 
 
 class XmlComparator(DictComparator):
@@ -468,10 +468,10 @@ class XmlComparator(DictComparator):
             data = self.xmltodict(file.read())
         return data
 
-    def save(self, data, path):
+    def save(self, data, path, root=False, **kwargs):
         """Save formatted data into a XML file."""
         with open(path, "w", encoding="utf-8") as file:
-            file.write(dicttoxml(data["root"]).decode())
+            file.write(dicttoxml(data, root=root, **kwargs).decode())
 
     @staticmethod
     def _cast_from_attribute(text, attr):
@@ -544,10 +544,10 @@ class IniComparator(DictComparator):
         data.read(path)
         return self.configparser_to_dict(data)
 
-    def save(self, data, path):
+    def save(self, data, path, **kwargs):
         """Save formatted data into a INI file."""
         with open(path, "w", encoding="utf-8") as file:
-            self.dict_to_configparser(data).write(file)
+            self.dict_to_configparser(data, **kwargs).write(file)
 
     @staticmethod
     def configparser_to_dict(config):

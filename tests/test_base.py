@@ -410,8 +410,34 @@ class TestBaseComparator:
         assert kwargs_msg in no_report_diff_default
         assert no_report_diff_default.replace(kwargs_msg, "") == diff
 
+    @staticmethod
+    def _test_load_save(tmp_path, comparator):
+        """Test load and save capabilities of the given comparator."""
+        initial_data = {
+            "a": {
+                "b": 1,
+                "c": [1, 2, 3],
+                "d": {
+                    "test_str": "a str",
+                    "test_int": 999,
+                },
+            }
+        }
+
+        initial_file = tmp_path / "initial_file.json"
+        comparator.save(initial_data, initial_file)
+
+        loaded_data = comparator.load(initial_file)
+
+        assert loaded_data == initial_data
+
     class TestJsonComparator:
         """Test the JSON comparator."""
+
+        def test_load_save(self, tmp_path):
+            """Test load and save capabilities of the comparator."""
+            comparator = dir_content_diff.JsonComparator()
+            TestBaseComparator._test_load_save(tmp_path, comparator)
 
         def test_format_data(self):
             """Test data formatting."""
@@ -489,6 +515,11 @@ class TestBaseComparator:
 
     class TestXmlComparator:
         """Test the XML comparator."""
+
+        def test_load_save(self, tmp_path):
+            """Test load and save capabilities of the comparator."""
+            comparator = dir_content_diff.XmlComparator()
+            TestBaseComparator._test_load_save(tmp_path, comparator)
 
         def test_xmltodict(self):
             """Test all types of the xmltodict auto cast feature."""
@@ -573,6 +604,11 @@ class TestBaseComparator:
 
     class TestIniComparator:
         """Test the INI comparator."""
+
+        def test_load_save(self, tmp_path):
+            """Test load and save capabilities of the comparator."""
+            comparator = dir_content_diff.IniComparator()
+            TestBaseComparator._test_load_save(tmp_path, comparator)
 
         def test_initodict(self, ref_tree):
             """Test conversion of INI files into dict."""

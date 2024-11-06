@@ -11,6 +11,7 @@ When this feature is triggered, the files that are processed by a comparator wit
 capability will be formatted and exported to a directory whose name is built from the compared
 directory with a suffix added. The default suffix is ``_FORMATTED`` and can be customized.
 """
+
 from dir_content_diff import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff import assert_equal_trees
 

@@ -1,4 +1,5 @@
 """Setup for the dir-content-diff package."""
+
 import json
 from pathlib import Path
 
@@ -33,7 +34,7 @@ test_reqs = [
     "packaging>=20",
     "pandas>=1.4",
     "pytest>=6.2",
-    "pytest-html>=2,<4",
+    "pytest-html>=3.2",
 ]
 
 setup(

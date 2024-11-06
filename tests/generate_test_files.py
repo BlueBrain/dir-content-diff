@@ -1,4 +1,5 @@
 """Function to create base files used for tests."""
+
 import configparser
 import copy
 import json

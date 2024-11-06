@@ -1,4 +1,5 @@
 """Extension module to process files with Voxcell."""
+
 from dir_content_diff import register_comparator
 from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.comparators.pandas import DataframeComparator

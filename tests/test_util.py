@@ -1,4 +1,5 @@
 """Test the ``dir-content-diff.util`` package."""
+
 import pytest
 
 import dir_content_diff.util

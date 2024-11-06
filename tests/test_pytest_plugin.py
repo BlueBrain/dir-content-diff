@@ -1,4 +1,5 @@
 """Test the pytest plugin."""
+
 # pylint: disable=missing-function-docstring
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument

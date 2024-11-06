@@ -1,4 +1,5 @@
 """Test the Voxcell extension of the ``dir-content-diff`` package."""
+
 # pylint: disable=missing-function-docstring
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument

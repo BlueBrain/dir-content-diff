@@ -1,8 +1,16 @@
 # Changelog
 
+## [1.11.0](https://github.com/BlueBrain/dir-content-diff/compare/1.10.0..1.11.0)
+
+> 6 November 2024
+
+### Build
+
+- Drop support for Python 3.8 (dependabot[bot] - [#66](https://github.com/BlueBrain/dir-content-diff/pull/66))
+
 ## [1.10.0](https://github.com/BlueBrain/dir-content-diff/compare/1.9.1..1.10.0)
 
-> 9 September 2024
+> 10 September 2024
 
 ### New Features
 

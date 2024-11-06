@@ -1,4 +1,5 @@
 """Test the version of the ``dir-content-diff`` package."""
+
 from importlib.metadata import version
 
 import dir_content_diff

@@ -1,4 +1,5 @@
 """Module containing the base comparators."""
+
 import configparser
 import filecmp
 import json

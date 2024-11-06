@@ -1,4 +1,5 @@
 """Test the MorphIO extensions of the ``dir-content-diff`` package."""
+
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
 import re

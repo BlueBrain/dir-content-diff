@@ -2,6 +2,7 @@
 
 Simple tool to compare directory contents.
 """
+
 import copy
 import importlib.metadata
 import re
@@ -176,18 +177,22 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
             file,
             **kwargs.get(
                 "load_kwargs",
-                comparator._default_load_kwargs
-                if hasattr(comparator, "_default_load_kwargs")
-                else {},
+                (
+                    comparator._default_load_kwargs
+                    if hasattr(comparator, "_default_load_kwargs")
+                    else {}
+                ),
             ),
         )
         formatted_data = comparator.format_data(
             data,
             **kwargs.get(
                 "format_data_kwargs",
-                comparator._default_format_data_kwargs
-                if hasattr(comparator, "_default_format_data_kwargs")
-                else {},
+                (
+                    comparator._default_format_data_kwargs
+                    if hasattr(comparator, "_default_format_data_kwargs")
+                    else {}
+                ),
             ),
         )
         Path(formatted_file).parent.mkdir(parents=True, exist_ok=True)
@@ -196,9 +201,11 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
             formatted_file,
             **kwargs.get(
                 "save_kwargs",
-                comparator._default_save_kwargs
-                if hasattr(comparator, "_default_save_kwargs")
-                else {},
+                (
+                    comparator._default_save_kwargs
+                    if hasattr(comparator, "_default_save_kwargs")
+                    else {}
+                ),
             ),
         )
     else:

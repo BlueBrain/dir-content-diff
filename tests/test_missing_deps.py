@@ -1,4 +1,5 @@
 """Test comparators with missing deps."""
+
 import importlib
 from subprocess import run
 

@@ -14,10 +14,11 @@ from importlib import metadata
 
 # -- Project information -----------------------------------------------------
 
-project = "Directory Content Difference"
+project_name = "Directory Content Difference"
+package_name = "dir-content-diff"
 
 # The short X.Y version
-version = metadata.version("dir-content-diff")
+version = metadata.version(package_name)
 
 # The full version, including alpha/beta/rc tags
 release = version
@@ -61,10 +62,10 @@ html_theme = "sphinx-bluebrain-theme"
 # html_static_path = ['_static']
 
 html_theme_options = {
-    "metadata_distribution": "dir-content-diff",
+    "metadata_distribution": package_name,
 }
 
-html_title = project
+html_title = project_name
 
 # If true, links to the reST sources are added to the pages.
 html_show_sourcelink = False

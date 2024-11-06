@@ -1,4 +1,5 @@
 """Extension module to process morphology files with MorphIO and morph-tool."""
+
 from dir_content_diff import register_comparator
 from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.util import import_error_message

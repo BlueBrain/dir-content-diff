@@ -3,6 +3,7 @@ disable=
 	arguments-differ,
 	invalid-name,
 	too-many-lines,
+	too-many-positional-arguments
 
 [FORMAT]
 # Regexp for a line that is allowed to be longer than the limit.

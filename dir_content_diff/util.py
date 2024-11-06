@@ -1,4 +1,5 @@
 """Some utils used by the ``dir-content-diff`` package."""
+
 import importlib.resources
 import json
 import logging

@@ -39,12 +39,12 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
-    "m2r2",
 ]
 
 todo_include_todos = True
@@ -91,7 +91,17 @@ autodoc_default_options = {
 }
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
-    "pandas": ("https://pandas.pydata.org/docs", None),
     "dictdiffer": ("https://dictdiffer.readthedocs.io/en/latest/", None),
+    "morph_tool": ("https://morph-tool.readthedocs.io/en/latest/", None),
+    "morphio": ("https://morphio.readthedocs.io/en/latest/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs", None),
+    "python": ("https://docs.python.org/3", None),
+    "voxcell": ("https://voxcell.readthedocs.io/en/latest/", None),
 }
+
+# MyST parser settings
+myst_enable_extensions = []
+myst_heading_anchors = 5
+myst_all_links_external = True
+suppress_warnings = ["myst.header"]

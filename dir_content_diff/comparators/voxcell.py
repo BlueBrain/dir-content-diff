@@ -119,7 +119,8 @@ class Mvd3Comparator(DataframeComparator):
     Note: MVD3 files can contain their creation date, so their hashes are depends on
     this creation date, even if the data are the same.
 
-    This comparator inherits from the :class:`dir_content_diff.pandas.DataframeComparator`, read
+    This comparator inherits from the
+    :class:`dir_content_diff.comparators.pandas.DataframeComparator`, read
     the doc of this comparator for details on args and kwargs.
     """
 
@@ -135,7 +136,8 @@ class Mvd3Comparator(DataframeComparator):
 class CellCollectionComparator(DataframeComparator):
     """Comparator for any type of CellCollection file.
 
-    This comparator inherits from the :class:`dir_content_diff.pandas.DataframeComparator`, read
+    This comparator inherits from the
+    :class:`dir_content_diff.comparators.pandas.DataframeComparator`, read
     the doc of this comparator for details on args and kwargs.
     """
 

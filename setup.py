@@ -15,8 +15,7 @@ from pathlib import Path
 from setuptools import setup
 
 doc_reqs = [
-    "docutils<0.21",  # Temporary fix for m2r2
-    "m2r2",
+    "myst_parser",
     "sphinx",
     "sphinx-bluebrain-theme",
 ]

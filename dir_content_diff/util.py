@@ -1,10 +1,20 @@
 """Some utils used by the ``dir-content-diff`` package."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
+import importlib.metadata
 import importlib.resources
-import json
 import logging
 import re
-from pathlib import Path
+
+import packaging.requirements
 
 LOGGER = logging.getLogger("dir-content-diff")
 _ext_pattern = re.compile(r"\.?(.*)")
@@ -79,7 +89,9 @@ def diff_msg_formatter(
     load_kwargs_used = format_kwargs(load_kwargs, "loading data")
     format_data_kwargs_used = format_kwargs(format_data_kwargs, "formatting data")
     filter_kwargs_used = format_kwargs(filter_kwargs, "filtering differences")
-    format_diff_kwargs_used = format_kwargs(format_diff_kwargs, "formatting differences")
+    format_diff_kwargs_used = format_kwargs(
+        format_diff_kwargs, "formatting differences"
+    )
     sort_kwargs_used = format_kwargs(sort_kwargs, "sorting differences")
     concat_kwargs_used = format_kwargs(concat_kwargs, "concatenating differences")
     report_kwargs_used = format_kwargs(report_kwargs, "reporting differences")
@@ -111,17 +123,40 @@ def diff_msg_formatter(
     )
 
 
-def _retrieve_dependencies():
+def _retrieve_dependencies(distribution="dir-content-diff"):
     """Get the comparator dependencies."""
-    try:
-        # Package is installed or the cwd is the root of the project
-        root_dir = importlib.resources.files("dir_content_diff")  # pylint: disable=no-member
-    except ModuleNotFoundError:  # pragma: no cover
-        # Package is not installed and the cwd is not the root of the project
-        root_dir = Path(__file__).parent / "dir_content_diff"
-    deps_file = root_dir / "comparators" / "dependencies.json"
-    with deps_file.open() as f:
-        deps = json.load(f)
+    dependencies = [
+        packaging.requirements.Requirement(i)
+        for i in importlib.metadata.requires(distribution)
+    ]
+    for dep in dependencies:
+        kept = []
+        if not dep.marker:
+            continue
+        for marker in dep.marker._markers:  # pylint: disable=protected-access
+            try:
+                if marker[0].value == "extra":
+                    dep.extras.add(marker[2].value)
+                else:
+                    kept.append(marker)  # pragma: no cover
+            except (AttributeError, IndexError):  # pragma: no cover
+                pass
+        if not kept:
+            dep.marker = None
+        else:
+            dep.marker._markers = (  # pragma: no cover ; pylint: disable=protected-access
+                kept
+            )
+
+    deps = {}
+    for dep in dependencies:
+        for extra in dep.extras:
+            specifier = str(dep.specifier or "")
+            marker = str(dep.marker or "")
+            if extra not in deps:
+                deps[extra] = []
+            deps[extra].append(dep.name + specifier + (f"; {marker}" if marker else ""))
+
     return deps
 
 

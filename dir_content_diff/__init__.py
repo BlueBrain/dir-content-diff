@@ -3,6 +3,15 @@
 Simple tool to compare directory contents.
 """
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 import copy
 import importlib.metadata
 import re
@@ -106,7 +115,9 @@ def unregister_comparator(ext, quiet=False):
     return _COMPARATORS.pop(ext, None)
 
 
-def compare_files(ref_file, comp_file, comparator, *args, return_raw_diffs=False, **kwargs):
+def compare_files(
+    ref_file, comp_file, comparator, *args, return_raw_diffs=False, **kwargs
+):
     """Compare 2 files and return the difference.
 
     Args:
@@ -127,7 +138,9 @@ def compare_files(ref_file, comp_file, comparator, *args, return_raw_diffs=False
     LOGGER.debug("Compare: %s and %s", ref_file, comp_file)
 
     try:
-        return comparator(ref_file, comp_file, *args, return_raw_diffs=return_raw_diffs, **kwargs)
+        return comparator(
+            ref_file, comp_file, *args, return_raw_diffs=return_raw_diffs, **kwargs
+        )
     except Exception as exception:  # pylint: disable=broad-except
         load_kwargs = kwargs.pop("load_kwargs", None)
         format_data_kwargs = kwargs.pop("format_data_kwargs", None)
@@ -139,7 +152,9 @@ def compare_files(ref_file, comp_file, comparator, *args, return_raw_diffs=False
         try:
             exception_args = "\n".join(str(i) for i in exception.args)
         except Exception:  # pylint: disable=broad-exception-caught
-            exception_args = "UNKNOWN ERROR: Could not get information from the exception"
+            exception_args = (
+                "UNKNOWN ERROR: Could not get information from the exception"
+            )
         exc_type = type(exception).__name__
         return diff_msg_formatter(
             ref_file,
@@ -210,7 +225,8 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
         )
     else:
         LOGGER.info(
-            "Skip formatting for '%s' because the comparator has no saving capability.", file
+            "Skip formatting for '%s' because the comparator has no saving capability.",
+            file,
         )
 
 
@@ -376,7 +392,9 @@ def assert_equal_trees(*args, export_formatted_files=False, **kwargs):
         if export_formatted_files is True and assert_equal_trees._pytest_export_suffix:
             export_formatted_files = assert_equal_trees._pytest_export_suffix
 
-    different_files = compare_trees(*args, export_formatted_files=export_formatted_files, **kwargs)
+    different_files = compare_trees(
+        *args, export_formatted_files=export_formatted_files, **kwargs
+    )
 
     # Sort the files according to their relative paths
     sorted_items = sorted(different_files.items(), key=lambda x: x[0])

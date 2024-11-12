@@ -1,5 +1,14 @@
 """Extension module to process files with Pandas."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 from dir_content_diff import register_comparator
 from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.util import import_error_message

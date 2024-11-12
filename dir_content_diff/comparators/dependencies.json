@@ -5,5 +5,5 @@
         "tables>=3.7"
     ],
     "morphio": ["morphio>=3.3.6", "morph_tool>=2.9"],
-    "voxcell": ["voxcell>=3.1.1"]
+    "voxcell": ["voxcell>=3.1.1", "pynrrd<1.1"]
 }

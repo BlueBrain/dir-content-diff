@@ -1,5 +1,14 @@
 """Test the Voxcell extension of the ``dir-content-diff`` package."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 # pylint: disable=missing-function-docstring
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
@@ -269,7 +278,9 @@ class TestDiffTrees:
 
         # Check the saving capability
         assert (
-            empty_res_tree.parent / (empty_res_tree.name + _DEFAULT_EXPORT_SUFFIX) / "file.mvd3"
+            empty_res_tree.parent
+            / (empty_res_tree.name + _DEFAULT_EXPORT_SUFFIX)
+            / "file.mvd3"
         ).exists()
 
     def test_diff_tree_h5(
@@ -299,7 +310,9 @@ class TestDiffTrees:
 
         # Check the saving capability
         assert (
-            empty_res_tree.parent / (empty_res_tree.name + _DEFAULT_EXPORT_SUFFIX) / "file.h5"
+            empty_res_tree.parent
+            / (empty_res_tree.name + _DEFAULT_EXPORT_SUFFIX)
+            / "file.h5"
         ).exists()
 
     def test_diff_tree_nrrd(
@@ -324,7 +337,9 @@ class TestDiffTrees:
 
         # Check the saving capability
         assert (
-            empty_res_tree.parent / (empty_res_tree.name + _DEFAULT_EXPORT_SUFFIX) / "file.nrrd"
+            empty_res_tree.parent
+            / (empty_res_tree.name + _DEFAULT_EXPORT_SUFFIX)
+            / "file.nrrd"
         ).exists()
 
     def test_diff_tree_nrrd_precision(

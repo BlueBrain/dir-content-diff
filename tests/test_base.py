@@ -1,5 +1,14 @@
 """Test the base features of the ``dir-content-diff`` package."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 # pylint: disable=missing-function-docstring
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
@@ -25,7 +34,9 @@ class TestBaseComparator:
         assert dir_content_diff.JsonComparator() != dir_content_diff.PdfComparator()
         assert dir_content_diff.JsonComparator() == dir_content_diff.JsonComparator()
 
-        class ComparatorWithAttributes(dir_content_diff.base_comparators.BaseComparator):
+        class ComparatorWithAttributes(
+            dir_content_diff.base_comparators.BaseComparator
+        ):
             """Compare data from two JSON files."""
 
             def __init__(self, arg1, arg2):
@@ -202,7 +213,9 @@ class TestBaseComparator:
             format_diff_kwargs={"mark_formatted": False},
         )
 
-        kwargs_msg = "Kwargs used for formatting differences: {'mark_formatted': False}\n"
+        kwargs_msg = (
+            "Kwargs used for formatting differences: {'mark_formatted': False}\n"
+        )
         assert kwargs_msg in no_format_diff
         assert diff == no_format_diff.replace(kwargs_msg, "")
         assert len(re.findall("### FORMATTED", diff)) == 0
@@ -323,7 +336,9 @@ class TestBaseComparator:
             concat_kwargs={"eol": "\n"},
         )
 
-        kwargs_msg_eol = "\nKwargs used for concatenating differences: {'eol': '#EOL#'}\n"
+        kwargs_msg_eol = (
+            "\nKwargs used for concatenating differences: {'eol': '#EOL#'}\n"
+        )
         kwargs_msg_n = kwargs_msg_eol.replace("#EOL#", "\\n")
         TEST_EOL = "__TEST_EOL__"
 
@@ -360,7 +375,12 @@ class TestBaseComparator:
                 if mark_report is not None:
                     kwargs["mark_report"] = mark_report
                 report = super().report(
-                    ref_file, comp_file, formatted_differences, diff_args, diff_kwargs, **kwargs
+                    ref_file,
+                    comp_file,
+                    formatted_differences,
+                    diff_args,
+                    diff_kwargs,
+                    **kwargs,
                 )
                 if mark_report:
                     report += "### REPORTED"
@@ -501,7 +521,8 @@ class TestBaseComparator:
             comparator.format_data(data, ref, replace_pattern=patterns)
             assert data == initial_data
             assert comparator.current_state["format_errors"] == [
-                ("missing_ref_entry", i, None) for i in patterns[("string", "NEW VALUE")]
+                ("missing_ref_entry", i, None)
+                for i in patterns[("string", "NEW VALUE")]
             ]
 
             # Missing key in data
@@ -511,7 +532,8 @@ class TestBaseComparator:
             comparator.format_data(data, ref, replace_pattern=patterns)
             assert data == {"a": 1}
             assert comparator.current_state["format_errors"] == [
-                ("missing_comp_entry", i, None) for i in patterns[("string", "NEW VALUE")]
+                ("missing_comp_entry", i, None)
+                for i in patterns[("string", "NEW VALUE")]
             ]
 
     class TestXmlComparator:
@@ -528,11 +550,10 @@ class TestBaseComparator:
 
             # Test empty root
             res = comparator.xmltodict(
-                # fmt: off
-                """<?xml version="1.0" encoding="UTF-8" ?>"""
-                """<root>"""
-                """</root>"""
-                # fmt: on
+                """<?xml version="1.0" encoding="UTF-8" ?>
+                   <root>
+                   </root>
+                """
             )
             assert res == {"root": {}}
 
@@ -590,7 +611,9 @@ class TestBaseComparator:
                 )
 
             # Test bad value in boolean
-            with pytest.raises(ValueError, match="Bool attributes expect 'true' or 'false'."):
+            with pytest.raises(
+                ValueError, match="Bool attributes expect 'true' or 'false'."
+            ):
                 comparator.xmltodict(
                     """<?xml version="1.0" encoding="UTF-8" ?>"""
                     """<root>"""
@@ -643,7 +666,9 @@ class TestRegistry:
 
     def test_update_register(self, registry_reseter):
         """Test the functions to update the registry."""
-        dir_content_diff.register_comparator(".test_ext", dir_content_diff.JsonComparator())
+        dir_content_diff.register_comparator(
+            ".test_ext", dir_content_diff.JsonComparator()
+        )
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
             ".cfg": dir_content_diff.IniComparator(),
@@ -690,13 +715,19 @@ class TestRegistry:
                 "replaced."
             ),
         ):
-            dir_content_diff.register_comparator(".pdf", dir_content_diff.JsonComparator())
+            dir_content_diff.register_comparator(
+                ".pdf", dir_content_diff.JsonComparator()
+            )
 
-        with pytest.raises(ValueError, match="The '.unknown_ext' extension is not registered."):
+        with pytest.raises(
+            ValueError, match="The '.unknown_ext' extension is not registered."
+        ):
             dir_content_diff.unregister_comparator(".unknown_ext")
 
         dir_content_diff.unregister_comparator(".unknown_ext", quiet=True)
-        dir_content_diff.register_comparator(".new_ext", dir_content_diff.JsonComparator())
+        dir_content_diff.register_comparator(
+            ".new_ext", dir_content_diff.JsonComparator()
+        )
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
             ".cfg": dir_content_diff.IniComparator(),
@@ -775,10 +806,12 @@ class TestEqualTrees:
             res_tree_equal,
             export_formatted_files=True,
         )
-        assert sorted(res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED").iterdir()) == [
-            (res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED") / "file").with_suffix(
-                suffix
-            )
+        assert sorted(
+            res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED").iterdir()
+        ) == [
+            (
+                res_tree_equal.with_name(res_tree_equal.name + "_FORMATTED") / "file"
+            ).with_suffix(suffix)
             for suffix in [".ini", ".json", ".xml", ".yaml"]
         ]
 
@@ -790,7 +823,9 @@ class TestEqualTrees:
     def test_pass_register(self, empty_ref_tree, empty_res_tree):
         """Test with empty trees and with an explicit set of comparators."""
         res = compare_trees(
-            empty_ref_tree, empty_res_tree, comparators=dir_content_diff.get_comparators()
+            empty_ref_tree,
+            empty_res_tree,
+            comparators=dir_content_diff.get_comparators(),
         )
         assert res == {}
 
@@ -826,7 +861,10 @@ class TestEqualTrees:
             },
         }
         res = compare_trees(
-            ref_tree, res_tree_equal, specific_args=specific_args, export_formatted_files=True
+            ref_tree,
+            res_tree_equal,
+            specific_args=specific_args,
+            export_formatted_files=True,
         )
 
         pat = (
@@ -867,7 +905,9 @@ class TestEqualTrees:
 
         # Test pattern override
         specific_args["all json files"]["comparator"] = dir_content_diff.PdfComparator()
-        specific_args["file.json"] = {"comparator": dir_content_diff.DefaultComparator()}
+        specific_args["file.json"] = {
+            "comparator": dir_content_diff.DefaultComparator()
+        }
         res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
 
         assert res == {}
@@ -888,7 +928,9 @@ class TestEqualTrees:
 class TestDiffTrees:
     """Tests that should return differences."""
 
-    def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff):
+    def test_diff_tree(
+        self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff
+    ):
         """Test that the returned differences are correct."""
         res = compare_trees(ref_tree, res_tree_diff)
 
@@ -899,10 +941,18 @@ class TestDiffTrees:
         match_res_3 = re.match(xml_diff, res["file.xml"])
         match_res_4 = re.match(ini_diff, res["file.ini"])
 
-        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3, match_res_4]:
+        for match_i in [
+            match_res_0,
+            match_res_1,
+            match_res_2,
+            match_res_3,
+            match_res_4,
+        ]:
             assert match_i is not None
 
-    def test_assert_equal_trees(self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff):
+    def test_assert_equal_trees(
+        self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff
+    ):
         """Test that the exception raised is correct."""
         pattern = (r"\n\n\n").join([dict_diff, pdf_diff, xml_diff, dict_diff])
         with pytest.raises(AssertionError, match=pattern):
@@ -934,7 +984,13 @@ class TestDiffTrees:
             r"The file 'file.ini' does not exist in '\S*/res'\.", res["file.ini"]
         )
 
-        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3, match_res_4]:
+        for match_i in [
+            match_res_0,
+            match_res_1,
+            match_res_2,
+            match_res_3,
+            match_res_4,
+        ]:
             assert match_i is not None
 
     def test_exception_in_comparator(self, ref_tree, res_tree_equal, registry_reseter):
@@ -995,7 +1051,9 @@ class TestDiffTrees:
         )
         assert match is not None
 
-    def test_specific_args(self, ref_tree, res_tree_diff, dict_diff, xml_diff, ini_diff):
+    def test_specific_args(
+        self, ref_tree, res_tree_diff, dict_diff, xml_diff, ini_diff
+    ):
         """Test specific args."""
         specific_args = {
             "file.pdf": {"threshold": 50},
@@ -1036,7 +1094,9 @@ class TestDiffTrees:
         assert re.match(base_diff, res["file.json"]) is not None
 
         # Test pattern override
-        specific_args["all json files"]["comparator"] = dir_content_diff.DefaultComparator()
+        specific_args["all json files"]["comparator"] = (
+            dir_content_diff.DefaultComparator()
+        )
         specific_args["file.json"] = {"comparator": dir_content_diff.JsonComparator()}
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
@@ -1102,7 +1162,13 @@ class TestDiffTrees:
         match_res_3 = re.match(xml_diff, res["file.xml"])
         match_res_4 = re.match(ini_diff, res["file.ini"])
 
-        for match_i in [match_res_0, match_res_1, match_res_2, match_res_3, match_res_4]:
+        for match_i in [
+            match_res_0,
+            match_res_1,
+            match_res_2,
+            match_res_3,
+            match_res_4,
+        ]:
             assert match_i is not None
 
     def test_format_inside_diff(self, ref_tree, res_tree_diff, dict_diff):
@@ -1117,7 +1183,9 @@ class TestDiffTrees:
                 return data
 
             def diff(self, ref, comp, *args, **kwargs):
-                diffs = list(dictdiffer.diff(ref, comp, *args, dot_notation=False, **kwargs))
+                diffs = list(
+                    dictdiffer.diff(ref, comp, *args, dot_notation=False, **kwargs)
+                )
 
                 # Format here instead of overriding the default format method
                 comparator = dir_content_diff.base_comparators.JsonComparator()
@@ -1125,7 +1193,9 @@ class TestDiffTrees:
 
                 return formatted
 
-        res = compare_trees(ref_tree, res_tree_diff, comparators={".json": JsonComparator()})
+        res = compare_trees(
+            ref_tree, res_tree_diff, comparators={".json": JsonComparator()}
+        )
 
         match = re.match(dict_diff, res["file.json"])
 

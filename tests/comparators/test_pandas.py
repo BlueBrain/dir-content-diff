@@ -1,5 +1,14 @@
 """Test the Pandas extension of the ``dir-content-diff`` package."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 # pylint: disable=missing-function-docstring
 # pylint: disable=redefined-outer-name
 # pylint: disable=unused-argument
@@ -253,7 +262,9 @@ class TestEqualTrees:
 
         res_df = pd.read_csv(res_csv_equal, index_col="index")
         res_df["test_path"] = absolute_path
-        res_df["test_data_with_path"] = path_data.replace(relative_path, absolute_path, 1)
+        res_df["test_data_with_path"] = path_data.replace(
+            relative_path, absolute_path, 1
+        )
         res_df["test_path_only_in_res"] = absolute_path
         res_df.to_csv(res_csv_equal, index=True, index_label="index")
 
@@ -353,7 +364,9 @@ class TestEqualTrees:
         for i, j in zip(ref_files, res_files):
             assert pd.read_hdf(i).equals(pd.read_hdf(j))
 
-    @pytest.mark.skipif(_PANDAS_VERSION < version.parse("2.1"), reason="requires Pandas>=2.1")
+    @pytest.mark.skipif(
+        _PANDAS_VERSION < version.parse("2.1"), reason="requires Pandas>=2.1"
+    )
     def test_feather_comparator(
         self, empty_ref_tree, empty_res_tree, res_feather_equal, pandas_registry_reseter
     ):
@@ -383,7 +396,13 @@ class TestDiffTrees:
     """Tests that should return differences."""
 
     def test_diff_tree(
-        self, ref_tree, ref_csv, res_tree_diff, res_csv_diff, csv_diff, pandas_registry_reseter
+        self,
+        ref_tree,
+        ref_csv,
+        res_tree_diff,
+        res_csv_diff,
+        csv_diff,
+        pandas_registry_reseter,
     ):
         """Test that the returned differences are correct."""
         res = compare_trees(ref_tree, res_tree_diff)
@@ -394,7 +413,13 @@ class TestDiffTrees:
         assert match_res is not None
 
     def test_read_csv_kwargs(
-        self, ref_tree, ref_csv, res_tree_diff, res_csv_diff, csv_diff, pandas_registry_reseter
+        self,
+        ref_tree,
+        ref_csv,
+        res_tree_diff,
+        res_csv_diff,
+        csv_diff,
+        pandas_registry_reseter,
     ):
         """Test specific args for the CSV reader."""
         specific_args = {"file.csv": {"load_kwargs": {"header": None, "skiprows": 1}}}
@@ -411,7 +436,13 @@ class TestDiffTrees:
         assert match_res is not None
 
     def test_missing_column(
-        self, ref_tree, ref_csv, res_tree_diff, res_csv_equal, csv_diff, pandas_registry_reseter
+        self,
+        ref_tree,
+        ref_csv,
+        res_tree_diff,
+        res_csv_equal,
+        csv_diff,
+        pandas_registry_reseter,
     ):
         """Test the behavior with missing columns in CSV files."""
         # Rename a column from the CSV file
@@ -461,9 +492,13 @@ class TestDiffTrees:
         pandas_registry_reseter,
     ):
         """Test the comparator for HDF5 files."""
-        self._check_diff_comparator(empty_ref_tree, empty_res_tree, res_diff_checker, "h5")
+        self._check_diff_comparator(
+            empty_ref_tree, empty_res_tree, res_diff_checker, "h5"
+        )
 
-    @pytest.mark.skipif(_PANDAS_VERSION < version.parse("2.1"), reason="requires Pandas>=2.1")
+    @pytest.mark.skipif(
+        _PANDAS_VERSION < version.parse("2.1"), reason="requires Pandas>=2.1"
+    )
     def test_feather_comparator(
         self,
         empty_ref_tree,
@@ -473,7 +508,9 @@ class TestDiffTrees:
         pandas_registry_reseter,
     ):
         """Test the comparator for feather files."""
-        self._check_diff_comparator(empty_ref_tree, empty_res_tree, res_diff_checker, "feather")
+        self._check_diff_comparator(
+            empty_ref_tree, empty_res_tree, res_diff_checker, "feather"
+        )
 
     def test_parquet_comparator(
         self,
@@ -484,7 +521,9 @@ class TestDiffTrees:
         pandas_registry_reseter,
     ):
         """Test the comparator for parquet files."""
-        self._check_diff_comparator(empty_ref_tree, empty_res_tree, res_diff_checker, "parquet")
+        self._check_diff_comparator(
+            empty_ref_tree, empty_res_tree, res_diff_checker, "parquet"
+        )
 
     def test_stata_comparator(
         self,
@@ -497,5 +536,9 @@ class TestDiffTrees:
         """Test the comparator for stata files."""
         specific_args = {"file.dta": {"load_kwargs": {"index_col": "index"}}}
         self._check_diff_comparator(
-            empty_ref_tree, empty_res_tree, res_diff_checker, "dta", specific_args=specific_args
+            empty_ref_tree,
+            empty_res_tree,
+            res_diff_checker,
+            "dta",
+            specific_args=specific_args,
         )

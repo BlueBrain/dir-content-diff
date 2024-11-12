@@ -1,5 +1,14 @@
 """Extension module to process files with Voxcell."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 from dir_content_diff import register_comparator
 from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.comparators.pandas import DataframeComparator
@@ -54,7 +63,11 @@ class NrrdComparator(BaseComparator):
         try:
             if precision is not None:
                 np.testing.assert_array_almost_equal(
-                    ref.voxel_dimensions, comp.voxel_dimensions, *args, decimal=precision, **kwargs
+                    ref.voxel_dimensions,
+                    comp.voxel_dimensions,
+                    *args,
+                    decimal=precision,
+                    **kwargs,
                 )
             else:
                 np.testing.assert_array_equal(
@@ -77,7 +90,15 @@ class NrrdComparator(BaseComparator):
             return False
         return errors
 
-    def report(self, ref_file, comp_file, formatted_differences, diff_args, diff_kwargs, **kwargs):
+    def report(
+        self,
+        ref_file,
+        comp_file,
+        formatted_differences,
+        diff_args,
+        diff_kwargs,
+        **kwargs,
+    ):
         """Create a report from the formatted differences."""
         # pylint: disable=arguments-differ
         if "precision" not in diff_kwargs:
@@ -98,7 +119,8 @@ class Mvd3Comparator(DataframeComparator):
     Note: MVD3 files can contain their creation date, so their hashes are depends on
     this creation date, even if the data are the same.
 
-    This comparator inherits from the :class:`dir_content_diff.pandas.DataframeComparator`, read
+    This comparator inherits from the
+    :class:`dir_content_diff.comparators.pandas.DataframeComparator`, read
     the doc of this comparator for details on args and kwargs.
     """
 
@@ -114,7 +136,8 @@ class Mvd3Comparator(DataframeComparator):
 class CellCollectionComparator(DataframeComparator):
     """Comparator for any type of CellCollection file.
 
-    This comparator inherits from the :class:`dir_content_diff.pandas.DataframeComparator`, read
+    This comparator inherits from the
+    :class:`dir_content_diff.comparators.pandas.DataframeComparator`, read
     the doc of this comparator for details on args and kwargs.
     """
 

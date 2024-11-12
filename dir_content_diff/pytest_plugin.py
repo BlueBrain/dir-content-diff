@@ -12,6 +12,15 @@ capability will be formatted and exported to a directory whose name is built fro
 directory with a suffix added. The default suffix is ``_FORMATTED`` and can be customized.
 """
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 from dir_content_diff import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff import assert_equal_trees
 

@@ -1,3 +1,42 @@
+[project]
+name = "dir-content-diff"
+authors = [
+    { name="Blue Brain Project, EPFL" }
+]
+description = "Simple tool to compare directory contents."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache License 2.0" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dynamic = ["version", "optional-dependencies"]
+dependencies = [
+    "dictdiffer>=0.8",
+    "dicttoxml>=1.7.12",
+    "diff_pdf_visually>=1.7",
+    "jsonpath-ng>=1.5",
+    "packaging>=20",
+    "PyYaml>=6",
+]
+
+[project.urls]
+Homepage = "https://dir-content-diff.readthedocs.io"
+Repository = "https://github.com/BlueBrain/dir-content-diff"
+Tracker = "https://github.com/BlueBrain/dir-content-diff/issues"
+
+[project.entry-points.pytest11]
+dir-content-diff = "dir_content_diff.pytest_plugin"
+
 [build-system]
 requires = [
     "setuptools>=45",
@@ -6,6 +45,9 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.setuptools.packages.find]
+include = ["dir_content_diff*"]
 
 [tool.black]
 line-length = 100
@@ -18,7 +60,7 @@ target-version = [
 
 [tool.pydocstyle]
 # ignore the following:
-#   - D107: Missing docstring in __init__
+#   D107: Missing docstring in __init__
 add-ignore = [
     "D107",
 ]
@@ -28,6 +70,16 @@ convention = "google"
 profile = "black"
 line_length = 100
 force_single_line = true
+
+[tool.flake8]
+# ignore the following:
+#    E203: whitespace before ':'
+#    W503: line break before binary operator
+ignore = [
+    "E203",
+    "W503",
+]
+max-line-length = 120
 
 [tool.pytest.ini_options]
 testpaths = [

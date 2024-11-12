@@ -1,5 +1,14 @@
 """Module containing the base comparators."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 import configparser
 import filecmp
 import json
@@ -222,7 +231,10 @@ class BaseComparator(ABC):
             if hasattr(filtered_diffs, "items"):
                 formatted_diffs = self.concatenate(
                     self.sort(
-                        [self.format_diff(i, **format_diff_kwargs) for i in filtered_diffs.items()],
+                        [
+                            self.format_diff(i, **format_diff_kwargs)
+                            for i in filtered_diffs.items()
+                        ],
                         **sort_kwargs,
                     ),
                     **concat_kwargs,
@@ -230,7 +242,10 @@ class BaseComparator(ABC):
             else:
                 formatted_diffs = self.concatenate(
                     self.sort(
-                        [self.format_diff(i, **format_diff_kwargs) for i in filtered_diffs],
+                        [
+                            self.format_diff(i, **format_diff_kwargs)
+                            for i in filtered_diffs
+                        ],
                         **sort_kwargs,
                     ),
                     **concat_kwargs,
@@ -254,7 +269,10 @@ class BaseComparator(ABC):
 
     def __eq__(self, other):
         """Compare 2 :class:`dir_content_diff.base_comparators.BaseComparator` instances."""
-        if type(self) is not type(other) or self.__dict__.keys() != other.__dict__.keys():
+        if (
+            type(self) is not type(other)
+            or self.__dict__.keys() != other.__dict__.keys()
+        ):
             return False
 
         for k, v in self.__dict__.items():
@@ -363,7 +381,8 @@ class DictComparator(BaseComparator):
                         for i in path.find(data):
                             if isinstance(i.value, str):
                                 i.full_path.update(
-                                    data, re.sub(pattern, new_value, i.value, count, flags)
+                                    data,
+                                    re.sub(pattern, new_value, i.value, count, flags),
                                 )
         return data
 
@@ -510,7 +529,13 @@ class XmlComparator(DictComparator):
     def add_to_output(obj, child):
         """Add entry from :class:`xml.etree.ElementTree.Element` object into the given object."""
         if isinstance(obj, dict):
-            obj.update({child.tag: XmlComparator._cast_from_attribute(child.text, child.attrib)})
+            obj.update(
+                {
+                    child.tag: XmlComparator._cast_from_attribute(
+                        child.text, child.attrib
+                    )
+                }
+            )
             for sub in child:
                 XmlComparator.add_to_output(obj[child.tag], sub)
         elif isinstance(obj, list):

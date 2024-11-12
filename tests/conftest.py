@@ -1,5 +1,14 @@
 """Configuration for the pytest test suite."""
 
+# LICENSE HEADER MANAGED BY add-license-header
+# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+#
+# This file is part of dir-content-diff.
+# See https://github.com/BlueBrain/dir-content-diff for further info.
+#
+# SPDX-License-Identifier: Apache-2.0
+# LICENSE HEADER MANAGED BY add-license-header
+
 # pylint: disable=redefined-outer-name
 from pathlib import Path
 
@@ -135,7 +144,9 @@ def base_diff():
 @pytest.fixture
 def xml_diff(dict_diff):
     """The diff that should be reported for the XML files."""
-    diff = dict_diff.replace("'\\[", "'\\[root\\]\\[").replace(" '' key", " '\\[root\\]' key")
+    diff = dict_diff.replace("'\\[", "'\\[root\\]\\[").replace(
+        " '' key", " '\\[root\\]' key"
+    )
     return diff
 
 

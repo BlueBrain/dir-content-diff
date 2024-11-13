@@ -82,7 +82,11 @@ def res_tree_diff(empty_res_tree):
 @pytest.fixture
 def pdf_diff():
     """The diff that should be reported for the PDF files."""
-    return r"The files '\S*/file.pdf' and '\S*/file.pdf' are different\."
+    return (
+        r"The files '\S*/file.pdf' and '\S*/file.pdf' are different\:\n"
+        "Kwargs used for computing differences: {'verbosity': 0}\n"
+        "The following pages are the most different: 1"
+    )
 
 
 @pytest.fixture

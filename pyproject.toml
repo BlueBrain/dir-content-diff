@@ -21,6 +21,7 @@ classifiers = [
 ]
 dynamic = ["version", "optional-dependencies"]
 dependencies = [
+    "click>=8",
     "dictdiffer>=0.8",
     "dicttoxml>=1.7.12",
     "diff_pdf_visually>=1.7",
@@ -33,6 +34,9 @@ dependencies = [
 Homepage = "https://dir-content-diff.readthedocs.io"
 Repository = "https://github.com/BlueBrain/dir-content-diff"
 Tracker = "https://github.com/BlueBrain/dir-content-diff/issues"
+
+[project.scripts]
+dir-content-diff = "dir_content_diff.cli:main"
 
 [project.entry-points.pytest11]
 dir-content-diff = "dir_content_diff.pytest_plugin"

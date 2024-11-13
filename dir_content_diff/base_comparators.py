@@ -19,10 +19,11 @@ from pathlib import Path
 from xml.etree import ElementTree
 
 import dictdiffer
+import diff_pdf_visually
 import jsonpath_ng
 import yaml
 from dicttoxml import dicttoxml
-from diff_pdf_visually import pdf_similar
+from diff_pdf_visually import pdfdiff_pages
 
 from dir_content_diff.util import diff_msg_formatter
 
@@ -618,7 +619,8 @@ class PdfComparator(BaseComparator):
 
         Keyword Args:
             threshold (int): The threshold used to compare the images.
-            tempdir (pathlib.Path): Empty directory where the temporary images will be exported.
+            tempdir (pathlib.Path): Directory in which a new ``dir-diff` directory will be created
+                to export the debug images.
             dpi (int): The resolution used to convert the PDF files into images.
             verbosity (int): The log verbosity.
             max_report_pagenos (int): Only this number of the different pages will be logged (only
@@ -626,27 +628,105 @@ class PdfComparator(BaseComparator):
             num_threads (int): If set to 2 (the default), the image conversion are processed in
                 parallel. If set to 1 it is processed sequentially.
         """
+        res = pdfdiff_pages(ref, comp, *args, **kwargs)
+        if not res:
+            return False
+        else:
+            return res
+
+    def __call__(self, ref_file, comp_file, *args, **kwargs):
+        """Process arguments before calling the diff method."""
         tempdir = kwargs.pop("tempdir", None)
         if tempdir is not None:
             relative_parts = []
-            for i, j in zip(ref.parts[::-1], comp.parts[::-1]):  # pragma: no branch
+            for i, j in zip(
+                ref_file.parts[::-1], comp_file.parts[::-1]
+            ):  # pragma: no branch
                 if i != j:
                     break
                 relative_parts.append(i)
+            if relative_parts and relative_parts[-1] == Path(tempdir).root:
+                relative_parts.pop()
             if not relative_parts:
-                relative_parts.append(comp.name)
-            relative_parts[-1] = "diff-pdf-" + relative_parts[-1]
+                relative_parts.append(comp_file.name)
+            relative_parts.append("diff-pdf")
             new_tempdir = Path(tempdir) / Path(*relative_parts[::-1])
 
             # Deduplicate name if needed
+            last_part = str(relative_parts[-1])
             num = 1
             while True:
-                try:
+                root = Path(tempdir) / relative_parts[-1]
+                if not root.exists():
                     new_tempdir.mkdir(parents=True, exist_ok=False)
                     break
-                except FileExistsError:
-                    new_tempdir = new_tempdir.with_name(new_tempdir.name + f"_{num}")
-                    num += 1
+                relative_parts[-1] = last_part + f"_{num}"
+                new_tempdir = Path(tempdir) / Path(*relative_parts[::-1])
+                num += 1
 
             kwargs["tempdir"] = new_tempdir
-        return not pdf_similar(ref, comp, *args, **kwargs)
+
+        try:
+            # Update default verbosity
+            if "verbosity" not in kwargs:
+                current_default_verbosity = int(
+                    diff_pdf_visually.constants.DEFAULT_VERBOSITY
+                )
+                try:
+                    if diff_pdf_visually.diff.pdfdiff_pages.__defaults__[1] is None:
+                        diff_pdf_visually.constants.DEFAULT_VERBOSITY = 0
+                    else:
+                        kwargs["verbosity"] = 0
+                finally:
+                    diff_pdf_visually.constants.DEFAULT_VERBOSITY = (
+                        current_default_verbosity
+                    )
+            return super().__call__(ref_file, comp_file, *args, **kwargs)
+        finally:
+            diff_pdf_visually.constants.DEFAULT_VERBOSITY = current_default_verbosity
+
+    def report(
+        self,
+        ref_file,
+        comp_file,
+        formatted_differences,
+        diff_args,
+        diff_kwargs,
+        load_kwargs=None,
+        format_data_kwargs=None,
+        filter_kwargs=None,
+        format_diff_kwargs=None,
+        sort_kwargs=None,
+        concat_kwargs=None,
+        **kwargs,
+    ):  # pylint: disable=too-many-arguments
+        """Add specific information before calling the default method."""
+        if formatted_differences:
+            if isinstance(formatted_differences, str):
+                formatted_differences = (
+                    "The following pages are the most different: "
+                    + formatted_differences.replace("\n", ", ")
+                )
+            if "tempdir" in diff_kwargs:
+                formatted_differences += (
+                    "\nThe visual differences can be found here: "
+                    + str(diff_kwargs["tempdir"])
+                )
+        return super().report(
+            ref_file,
+            comp_file,
+            formatted_differences,
+            diff_args,
+            diff_kwargs,
+            load_kwargs=load_kwargs,
+            format_data_kwargs=format_data_kwargs,
+            filter_kwargs=filter_kwargs,
+            format_diff_kwargs=format_diff_kwargs,
+            sort_kwargs=sort_kwargs,
+            concat_kwargs=concat_kwargs,
+            **kwargs,
+        )
+
+    def format_diff(self, difference, **kwargs):
+        """Format one element difference."""
+        return str(difference)

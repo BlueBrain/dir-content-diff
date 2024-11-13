@@ -669,7 +669,7 @@ class TestBaseComparator:
                 tempdir=res_tree_equal,
             )
             assert not diff
-            assert (res_tree_equal / "diff-pdf-file.pdf" / "diff-1.png").exists()
+            assert (res_tree_equal / "diff-pdf" / "file.pdf" / "diff-1.png").exists()
 
             # Compute difference on nested data
             ref_file = nested_ref / "file.pdf"
@@ -681,12 +681,12 @@ class TestBaseComparator:
                 tempdir=nested_res.parent,
             )
             assert not diff_nested
-            assert (nested_res.parent / "diff-pdf-file.pdf" / "diff-1.png").exists()
+            assert (nested_res.parent / "diff-pdf" / "file.pdf" / "diff-1.png").exists()
 
             # Compare files with different names and with existing tempdir
             other_res_file = res_file.with_name("other_file.pdf")
             shutil.copyfile(res_file, other_res_file)
-            (res_tree_equal / "diff-pdf-other_file.pdf").mkdir()
+            (res_tree_equal / "diff-pdf" / "other_file.pdf").mkdir()
             other_diff = dir_content_diff.compare_files(
                 ref_file,
                 other_res_file,
@@ -694,11 +694,25 @@ class TestBaseComparator:
                 tempdir=res_tree_equal,
             )
             assert not other_diff
-            assert (res_tree_equal / "diff-pdf-other_file.pdf").exists()
-            assert not list((res_tree_equal / "diff-pdf-other_file.pdf").iterdir())
+            assert (res_tree_equal / "diff-pdf" / "other_file.pdf").exists()
+            assert not list((res_tree_equal / "diff-pdf" / "other_file.pdf").iterdir())
             assert (
-                res_tree_equal / "diff-pdf-other_file.pdf_1" / "diff-1.png"
+                res_tree_equal / "diff-pdf_1" / "other_file.pdf" / "diff-1.png"
             ).exists()
+
+            # Compute difference on same data so the root directory is in the common path
+            diff_nested = dir_content_diff.compare_files(
+                ref_file,
+                ref_file,
+                dir_content_diff.PdfComparator(),
+                tempdir=res_tree_equal,
+            )
+            assert not diff_nested
+            assert (res_tree_equal / "diff-pdf_2").exists()
+            all_pdf_files = list((res_tree_equal / "diff-pdf_2").rglob("*.pdf"))
+            all_png_files = list((res_tree_equal / "diff-pdf_2").rglob("*.png"))
+            assert len(all_pdf_files) == 1
+            assert len(all_png_files) == 3
 
 
 class TestRegistry:
@@ -1190,7 +1204,9 @@ class TestDiffTrees:
         res = compare_trees(ref_with_nested_file, res_diff_with_nested_file)
         match = re.match(
             r"The files '\S*/ref/level1/level2/level3/file\.pdf' and "
-            r"'\S*/res/level1/level2/level3/file\.pdf' are different\.",
+            r"'\S*/res/level1/level2/level3/file\.pdf' are different:\n"
+            "Kwargs used for computing differences: {'verbosity': 0}\n"
+            "The following pages are the most different: 1",
             res["level1/level2/level3/file.pdf"],
         )
         assert match is not None
@@ -1269,3 +1285,27 @@ class TestProgrammaticUse:
         assert len(list(filter(lambda x: x[0] == "change", res_json))) == 17
         assert len(list(filter(lambda x: x[0] == "add", res_json))) == 4
         assert len(list(filter(lambda x: x[0] == "remove", res_json))) == 4
+
+
+class TestBaseFunctions:
+    """Test some base functions."""
+
+    def test_pick_comparator(self):
+        """Test the pick_comparator() function"""
+        for ext, comparator in dir_content_diff.get_comparators().items():
+            assert dir_content_diff.pick_comparator(comparator) == comparator
+            assert (
+                dir_content_diff.pick_comparator(comparator.__class__.__name__)
+                == comparator
+            )
+            assert (
+                dir_content_diff.pick_comparator("UknownComparator")
+                == dir_content_diff.DefaultComparator()
+            )
+            assert (
+                dir_content_diff.pick_comparator(
+                    "UknownComparator",
+                    ext,
+                )
+                == comparator
+            )

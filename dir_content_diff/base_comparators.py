@@ -15,6 +15,7 @@ import json
 import re
 from abc import ABC
 from abc import abstractmethod
+from pathlib import Path
 from xml.etree import ElementTree
 
 import dictdiffer
@@ -625,4 +626,28 @@ class PdfComparator(BaseComparator):
             num_threads (int): If set to 2 (the default), the image conversion are processed in
                 parallel. If set to 1 it is processed sequentially.
         """
+        tempdir = kwargs.pop("tempdir", None)
+        if tempdir is not None:
+            relative_parts = []
+            for i, j in zip(ref.parts[::-1], comp.parts[::-1]):  # pragma: no branch
+                if i != j:
+                    break
+                else:
+                    relative_parts.append(i)
+            if not relative_parts:
+                relative_parts.append(comp.name)
+            relative_parts[-1] = "diff-pdf-" + relative_parts[-1]
+            new_tempdir = Path(tempdir) / Path(*relative_parts[::-1])
+
+            # Deduplicate name if needed
+            num = 1
+            while True:
+                try:
+                    new_tempdir.mkdir(parents=True, exist_ok=False)
+                    break
+                except FileExistsError:
+                    new_tempdir = new_tempdir.with_name(new_tempdir.name + f"_{num}")
+                    num += 1
+
+            kwargs["tempdir"] = new_tempdir
         return not pdf_similar(ref, comp, *args, **kwargs)

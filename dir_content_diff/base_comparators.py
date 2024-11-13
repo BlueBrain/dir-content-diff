@@ -632,8 +632,7 @@ class PdfComparator(BaseComparator):
             for i, j in zip(ref.parts[::-1], comp.parts[::-1]):  # pragma: no branch
                 if i != j:
                     break
-                else:
-                    relative_parts.append(i)
+                relative_parts.append(i)
             if not relative_parts:
                 relative_parts.append(comp.name)
             relative_parts[-1] = "diff-pdf-" + relative_parts[-1]

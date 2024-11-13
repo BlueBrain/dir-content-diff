@@ -17,6 +17,7 @@ import configparser
 import copy
 import json
 import re
+import shutil
 
 import dictdiffer
 import pytest
@@ -645,6 +646,59 @@ class TestBaseComparator:
                 "section1": {"attr1": "val1", "attr2": 1},
                 "section2": {"attr3": [1, 2, "a", "b"], "attr4": {"a": 1, "b": [1, 2]}},
             }
+
+    class TestPdfComparator:
+        """Test the PDF comparator."""
+
+        def test_diff_tempfile(self, ref_tree, res_tree_equal):
+            """Test the custom tempfile option."""
+            ref_file = ref_tree / "file.pdf"
+            res_file = res_tree_equal / "file.pdf"
+
+            # Copy the initial data into a nested directory
+            nested_ref = res_tree_equal / "nested" / "ref"
+            nested_res = res_tree_equal / "nested" / "res"
+            shutil.copytree(res_tree_equal, nested_res)
+            shutil.copytree(ref_tree, nested_ref)
+
+            # Compute difference on initial data
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                res_file,
+                dir_content_diff.PdfComparator(),
+                tempdir=res_tree_equal,
+            )
+            assert not diff
+            assert (res_tree_equal / "diff-pdf-file.pdf" / "diff-1.png").exists()
+
+            # Compute difference on nested data
+            ref_file = nested_ref / "file.pdf"
+            res_file = nested_res / "file.pdf"
+            diff_nested = dir_content_diff.compare_files(
+                ref_file,
+                res_file,
+                dir_content_diff.PdfComparator(),
+                tempdir=nested_res.parent,
+            )
+            assert not diff_nested
+            assert (nested_res.parent / "diff-pdf-file.pdf" / "diff-1.png").exists()
+
+            # Compare files with different names and with existing tempdir
+            other_res_file = res_file.with_name("other_file.pdf")
+            shutil.copyfile(res_file, other_res_file)
+            (res_tree_equal / "diff-pdf-other_file.pdf").mkdir()
+            other_diff = dir_content_diff.compare_files(
+                ref_file,
+                other_res_file,
+                dir_content_diff.PdfComparator(),
+                tempdir=res_tree_equal,
+            )
+            assert not other_diff
+            assert (res_tree_equal / "diff-pdf-other_file.pdf").exists()
+            assert not list((res_tree_equal / "diff-pdf-other_file.pdf").iterdir())
+            assert (
+                res_tree_equal / "diff-pdf-other_file.pdf_1" / "diff-1.png"
+            ).exists()
 
 
 class TestRegistry:

@@ -140,25 +140,29 @@ def input_diff(ref, comp, config, export_formatted_files=False, sort_diffs=False
             specific_args=config,
             export_formatted_files=export_formatted_files,
         )
-        if sort_diffs:
-            res = sorted(res.items(), key=lambda x: x[0])
     else:
         comparator_name = config.pop("comparator", None)
         comparator = pick_comparator(
             comparator=comparator_name,
             suffix=ref.suffix,
         )
-        res = {str(ref): compare_files(ref, comp, comparator, **config)}
+        diff = compare_files(ref, comp, comparator, **config)
+        res = {str(ref): diff} if diff is not False else {}
         if export_formatted_files:
             export_formatted_file(ref, **config)
             export_formatted_file(comp, **config)
 
     if res:
+        if sort_diffs:
+            res_list = sorted(res.items(), key=lambda x: x[0])
+        else:
+            res_list = res.items()
+
         LOGGER.info(
             "Differences found between '%s' and '%s':\n\n\n%s",
             ref,
             comp,
-            ("\n\n\n".join([i[1] for i in res.items()])),
+            ("\n\n\n".join([i[1] for i in res_list])),
         )
     else:
         LOGGER.info("No difference found between '%s' and '%s'", ref, comp)

@@ -224,7 +224,7 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
             ),
         )
     else:
-        LOGGER.info(
+        LOGGER.debug(
             "Skip formatting for '%s' because the comparator has no saving capability.",
             file,
         )

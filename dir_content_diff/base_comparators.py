@@ -619,7 +619,7 @@ class PdfComparator(BaseComparator):
 
         Keyword Args:
             threshold (int): The threshold used to compare the images.
-            tempdir (pathlib.Path): Directory in which a new ``dir-diff` directory will be created
+            tempdir (pathlib.Path): Directory in which a new ``dir-diff`` directory will be created
                 to export the debug images.
             dpi (int): The resolution used to convert the PDF files into images.
             verbosity (int): The log verbosity.
@@ -668,12 +668,14 @@ class PdfComparator(BaseComparator):
 
         try:
             # Update default verbosity
-            if "verbosity" not in kwargs:
+            if "verbosity" not in kwargs:  # pragma: no branch
                 current_default_verbosity = int(
                     diff_pdf_visually.constants.DEFAULT_VERBOSITY
                 )
                 try:
-                    if diff_pdf_visually.diff.pdfdiff_pages.__defaults__[1] is None:
+                    if (
+                        diff_pdf_visually.diff.pdfdiff_pages.__defaults__[1] is None
+                    ):  # pragma: no cover
                         diff_pdf_visually.constants.DEFAULT_VERBOSITY = 0
                     else:
                         kwargs["verbosity"] = 0
@@ -701,12 +703,11 @@ class PdfComparator(BaseComparator):
         **kwargs,
     ):  # pylint: disable=too-many-arguments
         """Add specific information before calling the default method."""
-        if formatted_differences:
-            if isinstance(formatted_differences, str):
-                formatted_differences = (
-                    "The following pages are the most different: "
-                    + formatted_differences.replace("\n", ", ")
-                )
+        if formatted_differences and isinstance(formatted_differences, str):
+            formatted_differences = (
+                "The following pages are the most different: "
+                + formatted_differences.replace("\n", ", ")
+            )
             if "tempdir" in diff_kwargs:
                 formatted_differences += (
                     "\nThe visual differences can be found here: "

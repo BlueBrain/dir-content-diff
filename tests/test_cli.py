@@ -26,20 +26,38 @@ class TestCli:
         return {"file.pdf": {"tempdir": str(tmp_path)}}
 
     @pytest.fixture
-    def config_json(self, config):
+    def config_tree_json(self, config):
         """The config as a JSON string."""
         return json.dumps(config)
 
     @pytest.fixture
-    def config_yaml(self, config, tmp_path):
+    def config_file_json(self, config):
+        """The config as a JSON string."""
+        return json.dumps(config["file.pdf"])
+
+    @pytest.fixture
+    def config_tree_yaml(self, config, tmp_path):
         """The config as a YAML file."""
-        filepath = tmp_path / "config.yaml"
+        filepath = tmp_path / "config_tree.yaml"
         with filepath.open("w", encoding="utf-8") as f:
             yaml.dump(config, f)
         return filepath
 
     @pytest.fixture
-    def config_str(self, request):
+    def config_file_yaml(self, config, tmp_path):
+        """The config as a YAML file."""
+        filepath = tmp_path / "config_file.yaml"
+        with filepath.open("w", encoding="utf-8") as f:
+            yaml.dump(config["file.pdf"], f)
+        return filepath
+
+    @pytest.fixture
+    def config_tree_str(self, request):
+        """The string given to the CLI to pass the config."""
+        return request.getfixturevalue(request.param)
+
+    @pytest.fixture
+    def config_file_str(self, request):
         """The string given to the CLI to pass the config."""
         return request.getfixturevalue(request.param)
 
@@ -49,16 +67,31 @@ class TestCli:
         assert "A command line tool for directory or file comparison." in result.stdout
 
     @pytest.mark.parametrize(
-        "config_str", ["config_json", "config_yaml"], indirect=True
+        "config_tree_str,config_file_str",
+        [
+            ["config_tree_json", "config_file_json"],
+            ["config_tree_yaml", "config_file_yaml"],
+        ],
+        indirect=True,
     )
     def test_equal_tree(
-        self, tmp_path, ref_tree, res_tree_equal, config_str, cli_runner, caplog
+        self,
+        tmp_path,
+        ref_tree,
+        res_tree_equal,
+        config_tree_str,
+        config_file_str,
+        cli_runner,
+        caplog,
     ):
         """Test with equal trees."""
         caplog.set_level(logging.INFO, logger="dir-content-diff")
+
+        # Test with trees
         result = cli_runner.invoke(
             dir_content_diff.cli.main,
-            [str(ref_tree), str(res_tree_equal), "--config", config_str],
+            [str(ref_tree), str(res_tree_equal), "--config", config_tree_str],
+            catch_exceptions=False,
         )
         assert result.stdout == ""
         assert caplog.messages == [
@@ -66,17 +99,53 @@ class TestCli:
         ]
         assert (tmp_path / "diff-pdf" / "file.pdf" / "diff-1.png").exists()
 
+        # Test with files
+        caplog.clear()
+        ref_file = ref_tree / "file.pdf"
+        res_file = res_tree_equal / "file.pdf"
+        result = cli_runner.invoke(
+            dir_content_diff.cli.main,
+            [str(ref_file), str(res_file), "--config", config_file_str],
+            catch_exceptions=False,
+        )
+        assert result.stdout == ""
+        assert caplog.messages == [
+            f"No difference found between '{ref_file}' and '{res_file}'"
+        ]
+        assert (tmp_path / "diff-pdf" / "file.pdf" / "diff-1.png").exists()
+
     @pytest.mark.parametrize(
-        "config_str", ["config_json", "config_yaml"], indirect=True
+        "config_tree_str,config_file_str",
+        [
+            ["config_tree_json", "config_file_json"],
+            ["config_tree_yaml", "config_file_yaml"],
+        ],
+        indirect=True,
     )
     def test_diff_tree(
-        self, tmp_path, ref_tree, res_tree_diff, config_str, cli_runner, caplog
+        self,
+        tmp_path,
+        ref_tree,
+        res_tree_diff,
+        config_tree_str,
+        config_file_str,
+        cli_runner,
+        caplog,
     ):
         """Test with different trees."""
         caplog.set_level(logging.INFO, logger="dir-content-diff")
+
+        # Test with trees
         result = cli_runner.invoke(
             dir_content_diff.cli.main,
-            [str(ref_tree), str(res_tree_diff), "--config", config_str],
+            [
+                str(ref_tree),
+                str(res_tree_diff),
+                "--config",
+                config_tree_str,
+                "--sort-diffs",
+                "--export-formatted-files",
+            ],
         )
         assert result.stdout == ""
         assert len(caplog.messages) == 1
@@ -92,6 +161,72 @@ class TestCli:
                 in caplog.messages[0]
             )
         assert (tmp_path / "diff-pdf" / "file.pdf" / "diff-1.png").exists()
+
+        # Test with files
+        caplog.clear()
+        ref_file = ref_tree / "file.pdf"
+        res_file = res_tree_diff / "file.pdf"
+        result = cli_runner.invoke(
+            dir_content_diff.cli.main,
+            [str(ref_file), str(res_file), "--config", config_file_str],
+            catch_exceptions=False,
+        )
+        assert result.stdout == ""
+        assert len(caplog.messages) == 1
+        assert (
+            f"Differences found between '{ref_file}' and '{res_file}':"
+            in caplog.messages[0]
+        )
+        assert (tmp_path / "diff-pdf" / "file.pdf" / "diff-1.png").exists()
+
+    class TestFailures:
+        def test_dir_file(self, cli_runner, caplog, ref_tree, res_tree_diff):
+            """Test exception when comparing a directory with a file."""
+            ref_file = ref_tree / "file.pdf"
+            res_file = res_tree_diff / "file.pdf"
+            with pytest.raises(
+                ValueError,
+                match=r"The reference and compared inputs must both be either two directories or two files\.",
+            ):
+                result = cli_runner.invoke(
+                    dir_content_diff.cli.main,
+                    [str(ref_tree), str(res_file)],
+                    catch_exceptions=False,
+                )
+            with pytest.raises(
+                ValueError,
+                match=r"The reference and compared inputs must both be either two directories or two files\.",
+            ):
+                result = cli_runner.invoke(
+                    dir_content_diff.cli.main,
+                    [str(ref_file), str(res_tree_diff)],
+                    catch_exceptions=False,
+                )
+
+        def test_not_existing_config(self, cli_runner, caplog):
+            """Test exception when the config file does not exist."""
+            with pytest.raises(
+                FileNotFoundError,
+                match=r"The file '/NOT/EXISTING/FILE' does not exist\.",
+            ):
+                result = cli_runner.invoke(
+                    dir_content_diff.cli.main,
+                    ["/A/FILE", "/ANOTHER/FILE", "--config", "/NOT/EXISTING/FILE"],
+                    catch_exceptions=False,
+                )
+
+        def test_bad_yaml_config(self, tmp_path, cli_runner, caplog):
+            """Test exception when the config file does not exist."""
+            filepath = tmp_path / "config_file.yaml"
+            with filepath.open("w", encoding="utf-8") as f:
+                f.write("entry: &A !!!")
+
+            with pytest.raises(yaml.constructor.ConstructorError):
+                result = cli_runner.invoke(
+                    dir_content_diff.cli.main,
+                    ["/A/FILE", "/ANOTHER/FILE", "--config", str(filepath)],
+                    catch_exceptions=False,
+                )
 
 
 def test_entry_point(script_runner):

@@ -17,6 +17,7 @@ from pathlib import Path
 import click
 from yaml import safe_load
 
+from dir_content_diff import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff import compare_files
 from dir_content_diff import compare_trees
 from dir_content_diff import export_formatted_file
@@ -42,22 +43,27 @@ def setup_logger(level: str = "info"):
     )
 
 
-def load_config(ctx, param, value):
+def load_config(ctx, param, value):  # pylint: disable=unused-argument
     """Load configuration from the given path."""
+    # pylint: disable=raise-missing-from
     ctx.config = {}
     if value is not None:
         try:
             ctx.config = json.loads(value)
-        except Exception as json_exc:
+        except Exception:  # pylint: disable=broad-exception-caught
+            path = Path(value)
+            if not path.exists():
+                msg = f"The file '{path}' does not exist."
+                raise FileNotFoundError(msg)
             try:
-                path = Path(value)
-                if not path.exists():
-                    msg = f"The file '{path}' does not exist."
-                    raise FileNotFoundError(msg)
-                with path.open() as f:
+                with path.open(encoding="utf-8") as f:
                     ctx.config = safe_load(f.read())
-            except Exception as path_exc:
-                raise path_exc from json_exc
+            except Exception:  # pylint: disable=broad-exception-caught
+                msg = (
+                    "Could not load the configuration because it could not be parsed as a JSON "
+                    "string nor as a YAML file."
+                )
+                raise SyntaxError(msg)
 
 
 @click.command(
@@ -149,8 +155,22 @@ def input_diff(ref, comp, config, export_formatted_files=False, sort_diffs=False
         diff = compare_files(ref, comp, comparator, **config)
         res = {str(ref): diff} if diff is not False else {}
         if export_formatted_files:
-            export_formatted_file(ref, **config)
-            export_formatted_file(comp, **config)
+            export_formatted_file(
+                ref,
+                ref.with_name(ref.stem + _DEFAULT_EXPORT_SUFFIX).with_suffix(
+                    ref.suffix
+                ),
+                comparator,
+                **config,
+            )
+            export_formatted_file(
+                comp,
+                comp.with_name(comp.stem + _DEFAULT_EXPORT_SUFFIX).with_suffix(
+                    comp.suffix
+                ),
+                comparator,
+                **config,
+            )
 
     if res:
         if sort_diffs:

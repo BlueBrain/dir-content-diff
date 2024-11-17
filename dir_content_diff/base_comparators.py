@@ -631,8 +631,7 @@ class PdfComparator(BaseComparator):
         res = pdfdiff_pages(ref, comp, *args, **kwargs)
         if not res:
             return False
-        else:
-            return res
+        return res
 
     def __call__(self, ref_file, comp_file, *args, **kwargs):
         """Process arguments before calling the diff method."""

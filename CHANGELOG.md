@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.12.0](https://github.com/BlueBrain/dir-content-diff/compare/1.11.0..1.12.0)
+
+> 18 November 2024
+
+### New Features
+
+- Add CLI (Adrien Berchet - [#70](https://github.com/BlueBrain/dir-content-diff/pull/70))
+- Intercept 'tempfile' argument of the PdfComparator to improve it (Adrien Berchet - [#69](https://github.com/BlueBrain/dir-content-diff/pull/69))
+
+### Chores And Housekeeping
+
+- Add license headers, use pyproject.toml file and migrate docs to MyST parser (Adrien Berchet - [#68](https://github.com/BlueBrain/dir-content-diff/pull/68))
+
+### CI Improvements
+
+- Push test results to Codecov (Adrien Berchet - [#73](https://github.com/BlueBrain/dir-content-diff/pull/73))
+
 ## [1.11.0](https://github.com/BlueBrain/dir-content-diff/compare/1.10.0..1.11.0)
 
 > 6 November 2024

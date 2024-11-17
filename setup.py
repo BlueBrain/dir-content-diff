@@ -28,12 +28,14 @@ with (
 
 # Requirements for tests
 test_reqs = [
-    "coverage>=7.2",
     "dicttoxml>=1.7.16",
     "matplotlib>=3.4",
     "rst2pdf>=0.99",
     "pandas>=1.4",
     "pytest>=6.2",
+    "pytest-click>=1.1",
+    "pytest-console-scripts>=1.4",
+    "pytest-cov>=4.1",
     "pytest-html>=3.2",
 ]
 

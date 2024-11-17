@@ -17,6 +17,7 @@ import importlib.metadata
 import re
 from pathlib import Path
 
+from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.base_comparators import DefaultComparator
 from dir_content_diff.base_comparators import IniComparator
 from dir_content_diff.base_comparators import JsonComparator
@@ -28,7 +29,6 @@ from dir_content_diff.util import diff_msg_formatter
 from dir_content_diff.util import format_ext
 
 __version__ = importlib.metadata.version("dir-content-diff")
-
 
 _DEFAULT_COMPARATORS = {
     None: DefaultComparator(),
@@ -224,10 +224,32 @@ def export_formatted_file(file, formatted_file, comparator, **kwargs):
             ),
         )
     else:
-        LOGGER.info(
+        LOGGER.debug(
             "Skip formatting for '%s' because the comparator has no saving capability.",
             file,
         )
+
+
+def pick_comparator(comparator=None, suffix=None, comparators=None):
+    """Pick a comparator based on its name or a file suffix."""
+    if isinstance(comparator, BaseComparator):
+        return comparator
+    if comparators is None:
+        comparators = get_comparators()
+    if comparator is not None:
+        for i in comparators.values():  # pragma: no branch
+            if i.__class__.__name__ == comparator:
+                return i
+        LOGGER.debug(
+            "Could not find the comparator named '%s' in the given comparators",
+            comparator,
+        )
+    if suffix is not None:
+        if suffix in comparators:
+            return comparators.get(suffix)
+        LOGGER.debug("Could not find the comparator for the '%s' suffix", suffix)
+    LOGGER.debug("Returning the default comparator")
+    return _COMPARATORS.get(None)
 
 
 def compare_trees(
@@ -290,9 +312,6 @@ def compare_trees(
         difference messages. If the directories are considered as equal, an empty ``dict`` is
         returned.
     """
-    if comparators is None:
-        comparators = _COMPARATORS
-
     ref_path = Path(ref_path)
     comp_path = Path(comp_path)
     formatted_data_path = comp_path.with_name(
@@ -332,12 +351,10 @@ def compare_trees(
                         break
             if specific_file_args is None:
                 specific_file_args = {}
-            comparator = specific_file_args.pop(
-                "comparator",
-                comparators.get(
-                    ref_file.suffix,
-                    _COMPARATORS.get(None),
-                ),
+            comparator = pick_comparator(
+                comparator=specific_file_args.pop("comparator", None),
+                suffix=ref_file.suffix,
+                comparators=comparators,
             )
             comparator_args = specific_file_args.pop("args", [])
             res = compare_files(

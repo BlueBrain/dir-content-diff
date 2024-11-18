@@ -77,7 +77,7 @@ jobs:
         fail_ci_if_error: false
         flags: pytest
         directory: ./reports
-        name: "dir-content-diff-py${{ matrix.python-version }}-${{ matrix.min_versions }}"
+        name: "dir-content-diff-py${{ matrix.python-version }}-${{ matrix.min_versions }}-test-results"
         token: ${{ secrets.CODECOV_TOKEN }}
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

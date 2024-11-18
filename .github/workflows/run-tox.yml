@@ -71,6 +71,16 @@ jobs:
         flags: pytest
         name: "dir-content-diff-py${{ matrix.python-version }}-${{ matrix.min_versions }}"
         token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload to codecov results
+      uses: codecov/test-results-action@v1
+      with:
+        fail_ci_if_error: false
+        flags: pytest
+        directory: ./reports
+        name: "dir-content-diff-py${{ matrix.python-version }}-${{ matrix.min_versions }}-test-results"
+        token: ${{ secrets.CODECOV_TOKEN }}
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
       if: always()

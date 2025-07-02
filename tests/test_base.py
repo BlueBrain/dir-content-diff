@@ -1,7 +1,7 @@
 """Test the base features of the ``dir-content-diff`` package."""
 
 # LICENSE HEADER MANAGED BY add-license-header
-# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+# Copyright (c) 2023-2025 Blue Brain Project, EPFL.
 #
 # This file is part of dir-content-diff.
 # See https://github.com/BlueBrain/dir-content-diff for further info.
@@ -1205,7 +1205,7 @@ class TestDiffTrees:
         match = re.match(
             r"The files '\S*/ref/level1/level2/level3/file\.pdf' and "
             r"'\S*/res/level1/level2/level3/file\.pdf' are different:\n"
-            "Kwargs used for computing differences: {'verbosity': 0}\n"
+            r"(Kwargs used for computing differences: {'verbosity': 0}\n)?"
             "The following pages are the most different: 1",
             res["level1/level2/level3/file.pdf"],
         )

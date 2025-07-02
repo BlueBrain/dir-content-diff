@@ -665,11 +665,9 @@ class PdfComparator(BaseComparator):
 
             kwargs["tempdir"] = new_tempdir
 
+        # Update default verbosity
+        current_default_verbosity = diff_pdf_visually.constants.DEFAULT_VERBOSITY
         try:
-            # Update default verbosity
-            current_default_verbosity = int(
-                diff_pdf_visually.constants.DEFAULT_VERBOSITY
-            )
             if "verbosity" not in kwargs:  # pragma: no branch
                 if (
                     diff_pdf_visually.diff.pdfdiff_pages.__defaults__[1] is None

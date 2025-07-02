@@ -1,7 +1,7 @@
 """Module containing the base comparators."""
 
 # LICENSE HEADER MANAGED BY add-license-header
-# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+# Copyright (c) 2023-2025 Blue Brain Project, EPFL.
 #
 # This file is part of dir-content-diff.
 # See https://github.com/BlueBrain/dir-content-diff for further info.
@@ -667,21 +667,16 @@ class PdfComparator(BaseComparator):
 
         try:
             # Update default verbosity
+            current_default_verbosity = int(
+                diff_pdf_visually.constants.DEFAULT_VERBOSITY
+            )
             if "verbosity" not in kwargs:  # pragma: no branch
-                current_default_verbosity = int(
-                    diff_pdf_visually.constants.DEFAULT_VERBOSITY
-                )
-                try:
-                    if (
-                        diff_pdf_visually.diff.pdfdiff_pages.__defaults__[1] is None
-                    ):  # pragma: no cover
-                        diff_pdf_visually.constants.DEFAULT_VERBOSITY = 0
-                    else:
-                        kwargs["verbosity"] = 0
-                finally:
-                    diff_pdf_visually.constants.DEFAULT_VERBOSITY = (
-                        current_default_verbosity
-                    )
+                if (
+                    diff_pdf_visually.diff.pdfdiff_pages.__defaults__[1] is None
+                ):  # pragma: no cover
+                    diff_pdf_visually.constants.DEFAULT_VERBOSITY = 0
+                else:
+                    kwargs["verbosity"] = 0
             return super().__call__(ref_file, comp_file, *args, **kwargs)
         finally:
             diff_pdf_visually.constants.DEFAULT_VERBOSITY = current_default_verbosity

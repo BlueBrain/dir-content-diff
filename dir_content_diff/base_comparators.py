@@ -676,7 +676,7 @@ class PdfComparator(BaseComparator):
                 ):  # pragma: no cover
                     diff_pdf_visually.constants.DEFAULT_VERBOSITY = 0
                 else:
-                    kwargs["verbosity"] = 0
+                    kwargs["verbosity"] = 0  # pragma: no cover
             return super().__call__(ref_file, comp_file, *args, **kwargs)
         finally:
             diff_pdf_visually.constants.DEFAULT_VERBOSITY = current_default_verbosity

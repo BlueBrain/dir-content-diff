@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.1](https://github.com/BlueBrain/dir-content-diff/compare/1.12.0..1.12.1)
+
+> 3 July 2025
+
+### Fixes
+
+- Properly update the verbosity in PDF comparator (Adrien Berchet - [#75](https://github.com/BlueBrain/dir-content-diff/pull/75))
+
+### CI Improvements
+
+- Schedule CI every 6 months (Adrien Berchet - [#76](https://github.com/BlueBrain/dir-content-diff/pull/76))
+
 ## [1.12.0](https://github.com/BlueBrain/dir-content-diff/compare/1.11.0..1.12.0)
 
 > 18 November 2024

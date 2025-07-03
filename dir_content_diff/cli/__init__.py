@@ -1,7 +1,7 @@
 """Main entry point of the Command Line Interface for the dir-content-diff package."""
 
 # LICENSE HEADER MANAGED BY add-license-header
-# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+# Copyright (c) 2023-2025 Blue Brain Project, EPFL.
 #
 # This file is part of dir-content-diff.
 # See https://github.com/BlueBrain/dir-content-diff for further info.
@@ -63,7 +63,7 @@ def load_config(ctx, param, value):  # pylint: disable=unused-argument
                     "Could not load the configuration because it could not be parsed as a JSON "
                     "string nor as a YAML file."
                 )
-                raise SyntaxError(msg)
+                raise SyntaxError(msg) from None
 
 
 @click.command(

@@ -1,7 +1,7 @@
 """Configuration for the pytest test suite."""
 
 # LICENSE HEADER MANAGED BY add-license-header
-# Copyright (c) 2023-2024 Blue Brain Project, EPFL.
+# Copyright (c) 2023-2025 Blue Brain Project, EPFL.
 #
 # This file is part of dir-content-diff.
 # See https://github.com/BlueBrain/dir-content-diff for further info.
@@ -84,7 +84,7 @@ def pdf_diff():
     """The diff that should be reported for the PDF files."""
     return (
         r"The files '\S*/file.pdf' and '\S*/file.pdf' are different\:\n"
-        "Kwargs used for computing differences: {'verbosity': 0}\n"
+        r"(Kwargs used for computing differences: {'verbosity': 0}\n)?"
         "The following pages are the most different: 1"
     )
 

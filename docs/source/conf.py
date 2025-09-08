@@ -101,7 +101,7 @@ intersphinx_mapping = {
 }
 
 # MyST parser settings
-myst_enable_extensions = []
+myst_enable_extensions = ["colon_fence"]
 myst_heading_anchors = 5
 myst_all_links_external = True
 suppress_warnings = ["myst.header"]

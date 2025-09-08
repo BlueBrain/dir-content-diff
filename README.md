@@ -63,7 +63,10 @@ import dir_content_diff
 dir_content_diff.compare_trees("reference_dir", "compared_dir")
 ```
 
-This code will return an empty dictionary because no difference was detected.
+If all the files are identical, this code will return an empty dictionary because no difference
+was detected. This is because `dir-content-diff` is only looking for files in the compared directory
+that are also present in the reference directory. Thus extraneous files from the compared directory
+are not considered.
 
 If ``reference_dir/file_1.c`` is the following JSON-like file:
 

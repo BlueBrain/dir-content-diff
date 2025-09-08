@@ -20,6 +20,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 from importlib import metadata
+from pathlib import Path
 
 # -- Project information -----------------------------------------------------
 
@@ -101,7 +102,107 @@ intersphinx_mapping = {
 }
 
 # MyST parser settings
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = [
+    "colon_fence",
+]
 myst_heading_anchors = 5
 myst_all_links_external = True
 suppress_warnings = ["myst.header"]
+
+
+def convert_github_admonitions(text):
+    """Convert GitHub-style admonitions to MyST format."""
+    lines = text.split("\n")
+    github_to_myst = {
+        "> [!NOTE]": ":::{note}",
+        "> [!TIP]": ":::{tip}",
+        "> [!IMPORTANT]": ":::{important}",
+        "> [!WARNING]": ":::{warning}",
+        "> [!CAUTION]": ":::{caution}",
+    }
+
+    converted_lines = []
+    in_admonition = False
+
+    for line in lines:
+        # Check if this line starts a GitHub admonition
+        admonition_found = False
+        for github_style, myst_style in github_to_myst.items():
+            if line.strip().startswith(github_style):
+                # Start of admonition
+                converted_lines.append(myst_style)
+                in_admonition = True
+                admonition_found = True
+                break
+
+        if not admonition_found:
+            if in_admonition:
+                if line.strip().startswith("> "):
+                    # Content of admonition - remove the "> " prefix
+                    content = line[line.find("> ") + 2 :]
+                    converted_lines.append(content)
+                elif line.strip() == ">":
+                    # Empty line in admonition
+                    converted_lines.append("")
+                elif line.strip() == "":
+                    # Empty line - could be end of admonition or just spacing
+                    converted_lines.append("")
+                else:
+                    # End of admonition
+                    converted_lines.append(":::")
+                    converted_lines.append("")
+                    converted_lines.append(line)
+                    in_admonition = False
+            else:
+                # Regular line
+                converted_lines.append(line)
+
+    # Close any remaining open admonition
+    if in_admonition:
+        converted_lines.append(":::")
+
+    return "\n".join(converted_lines)
+
+
+def preprocess_readme_for_sphinx(app, config):
+    """Preprocess README.md to convert GitHub admonitions before Sphinx build."""
+    # Calculate paths relative to the docs directory
+    docs_dir = Path(app.srcdir)
+    project_root = docs_dir.parent.parent
+    readme_path = project_root / "README.md"
+    docs_readme_path = docs_dir / "README_processed.md"
+
+    # Remove existing processed README to ensure fresh generation
+    if docs_readme_path.exists():
+        docs_readme_path.unlink()
+        print(f"[sphinx-hook] Removed existing {docs_readme_path}")
+
+    # Check if README exists
+    if not readme_path.exists():
+        print(f"[sphinx-hook] README.md not found at {readme_path}")
+        return
+
+    # Read original README
+    try:
+        with open(readme_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Convert admonitions
+        converted_content = convert_github_admonitions(content)
+
+        # Write processed README to docs directory
+        with open(docs_readme_path, "w", encoding="utf-8") as f:
+            f.write(converted_content)
+
+        print(f"[sphinx-hook] Processed README saved to {docs_readme_path}")
+
+    except Exception as e:
+        print(f"[sphinx-hook] Error processing README: {e}")
+        raise
+
+
+def setup(app):
+    """Setup Sphinx app with custom handlers."""
+    # Connect the preprocessing function to config-inited event
+    # This runs after configuration is loaded but before any documents are read
+    app.connect("config-inited", preprocess_readme_for_sphinx)

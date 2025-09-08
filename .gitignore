@@ -30,6 +30,7 @@ test_venv
 docs/build
 docs/source/generated
 docs/source/examples
+docs/source/README_processed.md
 
 # reports
 reports

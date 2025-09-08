@@ -137,14 +137,15 @@ def convert_github_admonitions(text):
 
         if not admonition_found:
             if in_admonition:
-                if line.strip().startswith("> "):
+                strip_line = line.strip()
+                if strip_line.startswith("> "):
                     # Content of admonition - remove the "> " prefix
-                    content = line[line.find("> ") + 2 :]
+                    content = strip_line[2:]
                     converted_lines.append(content)
-                elif line.strip() == ">":
+                elif strip_line == ">":
                     # Empty line in admonition
                     converted_lines.append("")
-                elif line.strip() == "":
+                elif strip_line == "":
                     # Empty line - could be end of admonition or just spacing
                     converted_lines.append("")
                 else:
@@ -164,7 +165,7 @@ def convert_github_admonitions(text):
     return "\n".join(converted_lines)
 
 
-def preprocess_readme_for_sphinx(app, config):
+def preprocess_readme_for_sphinx(app, config):  # pylint: disable=unused-argument
     """Preprocess README.md to convert GitHub admonitions before Sphinx build."""
     # Calculate paths relative to the docs directory
     docs_dir = Path(app.srcdir)

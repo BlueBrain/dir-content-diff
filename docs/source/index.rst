@@ -1,4 +1,4 @@
-.. include:: ../../README.md
+.. include:: README_processed.md
    :parser: myst_parser.sphinx_
 
 

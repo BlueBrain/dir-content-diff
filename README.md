@@ -174,7 +174,7 @@ specific_args = {
 }
 ```
 
-And last but not least, it's possible to use regular expressions to associate specific arguments to
+Another possibility is to use regular expressions to associate specific arguments to
 a set of files:
 
 ```python
@@ -184,6 +184,16 @@ specific_args = {
         "comparator": dir_content_diff.BaseComparator(),
     }
 }
+```
+
+And last but not least, it's possible to ignore a set of files from the reference directory (for
+example because the reference directory contains temporary files that should not be compared). For
+example, the following code will ignore all files whose name ends with `_tmp.yaml`:
+
+```python
+import dir_content_diff
+
+dir_content_diff.compare_trees("reference_dir", "compared_dir", ignore_patterns=[r".*_tmp\.yaml"])
 ```
 
 

@@ -68,11 +68,11 @@ dir_content_diff.compare_trees("reference_dir", "compared_dir")
 
 > [!WARNING]
 > The order of the parameters is important: the first path is considered as the `reference`
-> directory while the second one is the `compared` directory. Inverting the parameters way return
+> directory while the second one is the `compared` directory. Inverting the parameters may return
 > a different result (in this example it would return that the file `sub_file_3.b` is missing).
 
 If all the files are identical, this code will return an empty dictionary because no difference
-was detected. As pointed previously, this is because `dir-content-diff` is only looking for files
+was detected. As mentioned previously, this is because `dir-content-diff` is only looking for files
 in the compared directory that are also present in the reference directory, so the file
 `sub_file_3.b` is just ignored in this case.
 

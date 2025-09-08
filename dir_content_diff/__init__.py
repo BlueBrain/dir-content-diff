@@ -259,6 +259,7 @@ def compare_trees(
     specific_args=None,
     return_raw_diffs=False,
     export_formatted_files=False,
+    ignore_patterns=None,
 ):
     """Compare all files from 2 different directory trees and return the differences.
 
@@ -306,6 +307,9 @@ def compare_trees(
             new directory with formatted compared data files. If a string is passed, this string is
             used as suffix for the new directory. If `True` is passed, the suffix is
             ``_FORMATTED``.
+        ignore_patterns (list): A list of regular expression patterns. If the relative path of a
+            file matches one of these patterns, it is ignored during the comparison. Note that
+            this means that any specific arguments for that file will also be ignored.
 
     Returns:
         dict: A ``dict`` in which the keys are the relative file paths and the values are the
@@ -333,6 +337,11 @@ def compare_trees(
         for pattern in v.pop("patterns", []):
             pattern_specific_args[re.compile(pattern)] = v
 
+    if ignore_patterns is None:
+        ignore_patterns = []
+    else:
+        ignore_patterns = [re.compile(i) for i in ignore_patterns]
+
     # Loop over all files and call the correct comparator
     different_files = {}
     for ref_file in ref_path.glob("**/*"):
@@ -341,6 +350,14 @@ def compare_trees(
 
         relative_path = ref_file.relative_to(ref_path).as_posix()
         comp_file = comp_path / relative_path
+
+        ignored = False
+        for pattern in ignore_patterns:
+            if pattern.match(relative_path):
+                ignored = True
+                break
+        if ignored:
+            continue
 
         if comp_file.exists():
             specific_file_args = specific_args.get(relative_path, None)

@@ -1018,6 +1018,26 @@ class TestDiffTrees:
         ]:
             assert match_i is not None
 
+    def test_diff_tree_ignore(
+        self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff
+    ):
+        """Test that the returned differences are correct even with ignored files."""
+        res = compare_trees(
+            ref_tree, res_tree_diff, ignore_patterns=[r".*\.yaml", r".*\.ini"]
+        )
+
+        assert len(res) == 3
+        match_res_0 = re.match(pdf_diff, res["file.pdf"])
+        match_res_1 = re.match(dict_diff, res["file.json"])
+        match_res_3 = re.match(xml_diff, res["file.xml"])
+
+        for match_i in [
+            match_res_0,
+            match_res_1,
+            match_res_3,
+        ]:
+            assert match_i is not None
+
     def test_assert_equal_trees(
         self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff
     ):

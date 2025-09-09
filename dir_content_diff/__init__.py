@@ -342,6 +342,10 @@ def compare_trees(
     else:
         ignore_patterns = [re.compile(i) for i in ignore_patterns]
 
+    # Build the comparator registry if not given
+    if comparators is None:
+        comparators = get_comparators()
+
     # Loop over all files and call the correct comparator
     different_files = {}
     for ref_file in ref_path.glob("**/*"):

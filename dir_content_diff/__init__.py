@@ -333,6 +333,10 @@ def compare_trees(
         for pattern in v.pop("patterns", []):
             pattern_specific_args[re.compile(pattern)] = v
 
+    # Build the comparator registry if not given
+    if comparators is None:
+        comparators = get_comparators()
+
     # Loop over all files and call the correct comparator
     different_files = {}
     for ref_file in ref_path.glob("**/*"):

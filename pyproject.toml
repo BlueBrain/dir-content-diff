@@ -21,6 +21,7 @@ classifiers = [
 ]
 dynamic = ["version", "optional-dependencies"]
 dependencies = [
+    "attrs>=21.3.0",
     "click>=8",
     "dictdiffer>=0.8",
     "dicttoxml>=1.7.12",

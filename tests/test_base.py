@@ -23,6 +23,7 @@ import dictdiffer
 import pytest
 
 import dir_content_diff
+from dir_content_diff import ComparisonConfig
 from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
 
@@ -855,6 +856,60 @@ def res_diff_with_nested_file(res_tree_diff):
     return res_tree_diff
 
 
+class TestConfig:
+    """Test the configuration options."""
+
+    def test_invalid_patterns(self):
+        """Test invalid patterns."""
+        with pytest.raises(
+            Exception  # Can be ValueError or ValidationError
+        ) as exc_info:
+            ComparisonConfig(include_patterns=["[BAD PATTERN<+)"])
+        assert "Invalid regex pattern" in str(exc_info.value)
+        assert "[BAD PATTERN<+)" in str(exc_info.value)
+
+        with pytest.raises(
+            Exception  # Can be ValueError or ValidationError
+        ) as exc_info:
+            ComparisonConfig(exclude_patterns=["[BAD PATTERN<+)"])
+        assert "Invalid regex pattern" in str(exc_info.value)
+        assert "[BAD PATTERN<+)" in str(exc_info.value)
+
+        with pytest.raises(
+            Exception  # Can be ValueError or ValidationError
+        ) as exc_info:
+            ComparisonConfig(
+                specific_args={"files from pattern": {"patterns": ["[BAD PATTERN<+)"]}}
+            )
+        assert "Invalid regex pattern" in str(exc_info.value)
+        assert "[BAD PATTERN<+)" in str(exc_info.value)
+
+    def test_config_and_other_params(self):
+        """Test that config patterns are properly combined with other patterns."""
+        config = ComparisonConfig(
+            include_patterns=[r".*\.json"],
+            exclude_patterns=[r".*file\.json"],
+            specific_args={
+                "all json files": {
+                    "comparator": dir_content_diff.DefaultComparator(),
+                    "patterns": [r".*file\.json"],
+                }
+            },
+        )
+
+        new_config = dir_content_diff._check_config(  # pylint: disable=protected-access
+            config,
+            include_patterns=[r".*\.yaml"],
+            exclude_patterns=[r".*file\.yaml"],
+        )
+        assert new_config.include_patterns == (r".*\.yaml",)
+        assert new_config.exclude_patterns == (r".*file\.yaml",)
+        assert new_config.specific_args == config.specific_args
+        assert new_config.comparators == config.comparators
+        assert new_config.return_raw_diffs == config.return_raw_diffs
+        assert new_config.export_formatted_files == config.export_formatted_files
+
+
 class TestEqualTrees:
     """Tests that should return no difference."""
 
@@ -890,10 +945,11 @@ class TestEqualTrees:
 
     def test_pass_register(self, empty_ref_tree, empty_res_tree):
         """Test with empty trees and with an explicit set of comparators."""
+        config = ComparisonConfig(comparators=dir_content_diff.get_comparators())
         res = compare_trees(
             empty_ref_tree,
             empty_res_tree,
-            comparators=dir_content_diff.get_comparators(),
+            config=config,
         )
         assert res == {}
 
@@ -1023,18 +1079,22 @@ class TestDiffTrees:
     ):
         """Test that the returned differences are correct even with ignored files."""
         res = compare_trees(
-            ref_tree, res_tree_diff, ignore_patterns=[r".*\.yaml", r".*\.ini"]
+            ref_tree,
+            res_tree_diff,
+            include_patterns=[r".*\.[ijpy].*"],
+            exclude_patterns=[r".*\.yaml", r".*\.ini"],
         )
 
-        assert len(res) == 3
+        # 'include_patterns' excludes files whose extension does not start with any of [i,j,p,y], so
+        # XML files are excluded.
+        # 'exclude_patterns' excludes yaml and ini files.
+        assert len(res) == 2
         match_res_0 = re.match(pdf_diff, res["file.pdf"])
         match_res_1 = re.match(dict_diff, res["file.json"])
-        match_res_3 = re.match(xml_diff, res["file.xml"])
 
         for match_i in [
             match_res_0,
             match_res_1,
-            match_res_3,
         ]:
             assert match_i is not None
 

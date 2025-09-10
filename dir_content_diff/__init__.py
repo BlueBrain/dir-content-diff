@@ -15,7 +15,17 @@ Simple tool to compare directory contents.
 import copy
 import importlib.metadata
 import re
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import Optional
+from typing import Pattern
+from typing import Tuple
+from typing import Union
+
+import attrs
 
 from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.base_comparators import DefaultComparator
@@ -27,6 +37,9 @@ from dir_content_diff.base_comparators import YamlComparator
 from dir_content_diff.util import LOGGER
 from dir_content_diff.util import diff_msg_formatter
 from dir_content_diff.util import format_ext
+
+# Type alias for comparators
+ComparatorType = Union[BaseComparator, Callable]
 
 __version__ = importlib.metadata.version("dir-content-diff")
 
@@ -61,13 +74,15 @@ def get_comparators():
     return copy.deepcopy(_COMPARATORS)
 
 
-def register_comparator(ext, comparator, force=False):
+def register_comparator(
+    ext: str, comparator: ComparatorType, force: bool = False
+) -> None:
     """Add a comparator to the registry.
 
     Args:
-        ext (str): The extension to register.
-        comparator (callable): The comparator that should be associated with the given extension.
-        force (bool): If set to ``True``, no exception is raised if the given ``ext`` is already
+        ext: The extension to register.
+        comparator: The comparator that should be associated with the given extension.
+        force: If set to ``True``, no exception is raised if the given ``ext`` is already
             registered and the comparator is replaced.
 
     .. note::
@@ -98,12 +113,12 @@ def register_comparator(ext, comparator, force=False):
     _COMPARATORS[ext] = comparator
 
 
-def unregister_comparator(ext, quiet=False):
+def unregister_comparator(ext: str, quiet: bool = False):
     """Remove a comparator from the registry.
 
     Args:
-        ext (str): The extension to unregister.
-        quiet (bool): If set to ``True``, no exception is raised if the given ``ext`` is not
+        ext: The extension to unregister.
+        quiet: If set to ``True``, no exception is raised if the given ``ext`` is not
             registered.
 
     Returns:
@@ -115,23 +130,212 @@ def unregister_comparator(ext, quiet=False):
     return _COMPARATORS.pop(ext, None)
 
 
+def _convert_iterable_to_tuple(
+    x: Optional[Iterable[str]],
+) -> Optional[Tuple[str, ...]]:
+    """Convert an iterable to a tuple, or return None."""
+    if x is None:
+        return None
+    return tuple(x)
+
+
+def _validate_specific_args(instance, attribute, value):  # pylint: disable=unused-argument
+    """Validate specific_args structure."""
+    for file_path, args in value.items():
+        if not isinstance(args, dict):
+            raise ValueError(f"specific_args['{file_path}'] must be a dictionary")
+        # Note: regex patterns in specific_args will be validated during compilation
+        # in __attrs_post_init__, so no need to validate them here
+
+
+def _validate_export_formatted_files(instance, attribute, value):  # pylint: disable=unused-argument
+    """Validate export_formatted_files is either bool or non-empty string."""
+    if isinstance(value, str) and len(value.strip()) == 0:
+        raise ValueError(
+            "export_formatted_files must be a non-empty string when provided as string"
+        )
+
+
+def _validate_comparators(instance, attribute, value):  # pylint: disable=unused-argument
+    """Validate comparators are either BaseComparator instances or callable."""
+    for ext, comparator in value.items():
+        if not (isinstance(comparator, BaseComparator) or callable(comparator)):
+            raise ValueError(
+                f"Comparator for extension '{ext}' must be a BaseComparator instance "
+                "or callable"
+            )
+
+
+@attrs.frozen
+class ComparisonConfig:
+    """Configuration class to store comparison settings.
+
+    Attributes:
+        include_patterns: A list of regular expression patterns. If the relative path of a
+            file does not match any of these patterns, it is ignored during the comparison. Note
+            that this means that any specific arguments for that file will also be ignored.
+        exclude_patterns: A list of regular expression patterns. If the relative path of a
+            file matches any of these patterns, it is ignored during the comparison. Note that
+            this means that any specific arguments for that file will also be ignored.
+        comparators: A ``dict`` to override the registered comparators.
+        specific_args: A ``dict`` with the args/kwargs that should be given to the
+            comparator for a given file. This ``dict`` should be like the following:
+
+            .. code-block:: Python
+
+                {
+                    <relative_file_path>: {
+                        comparator: ComparatorInstance,
+                        args: [arg1, arg2, ...],
+                        kwargs: {
+                            kwarg_name_1: kwarg_value_1,
+                            kwarg_name_2: kwarg_value_2,
+                        }
+                    },
+                    <another_file_path>: {...},
+                    <a name for this category>: {
+                        "patterns": ["regex1", "regex2", ...],
+                        ... (other arguments)
+                    }
+                }
+
+            If the "patterns" entry is present, then the name is not considered and is only used as
+            a helper for the user. When a "patterns" entry is detected, the other arguments are
+            applied to all files whose relative name matches one of the given regular expression
+            patterns. If a file could match multiple patterns of different groups, only the first
+            one is considered.
+
+            Note that all entries in this ``dict`` are optional.
+        return_raw_diffs: If set to ``True``, only the raw differences are returned instead
+            of a formatted report.
+        export_formatted_files: If set to ``True`` or a not empty string, create a
+            new directory with formatted compared data files. If a string is passed, this string is
+            used as suffix for the new directory. If `True` is passed, the suffix is
+            ``_FORMATTED``.
+    """
+
+    include_patterns: Optional[Iterable[str]] = attrs.field(
+        default=None, converter=_convert_iterable_to_tuple
+    )
+    exclude_patterns: Optional[Iterable[str]] = attrs.field(
+        default=None, converter=_convert_iterable_to_tuple
+    )
+    comparators: Optional[Dict[Optional[str], ComparatorType]] = attrs.field(
+        default=None, validator=attrs.validators.optional(_validate_comparators)
+    )
+    specific_args: Optional[Dict[str, Dict[str, Any]]] = attrs.field(
+        default=None, validator=attrs.validators.optional(_validate_specific_args)
+    )
+    return_raw_diffs: bool = attrs.field(default=False)
+    export_formatted_files: Union[bool, str] = attrs.field(
+        default=False, validator=_validate_export_formatted_files
+    )
+
+    # Compiled patterns - computed once, no caching complexity needed
+    compiled_include_patterns: Tuple[Pattern[str], ...] = attrs.field(init=False)
+    compiled_exclude_patterns: Tuple[Pattern[str], ...] = attrs.field(init=False)
+    pattern_specific_args: Dict[Pattern[str], Dict[str, Any]] = attrs.field(
+        init=False, repr=False
+    )
+
+    def __attrs_post_init__(self):
+        """Initialize computed fields after attrs initialization."""
+        # Validate and compile patterns - with frozen, we compile once and store directly
+        try:
+            compiled_include = self._compile_patterns(self.include_patterns)
+            object.__setattr__(self, "compiled_include_patterns", compiled_include)
+        except ValueError as e:
+            raise ValueError(f"Error in include_patterns: {e}") from e
+
+        try:
+            compiled_exclude = self._compile_patterns(self.exclude_patterns)
+            object.__setattr__(self, "compiled_exclude_patterns", compiled_exclude)
+        except ValueError as e:
+            raise ValueError(f"Error in exclude_patterns: {e}") from e
+
+        # Setup specific args and pattern specific args
+        if self.specific_args is None:
+            # Use object.__setattr__ to modify the field even if it's frozen
+            object.__setattr__(self, "specific_args", {})
+
+        # Setup pattern specific args
+        pattern_specific_args = {}
+        if self.specific_args:  # Check if it's not None
+            for file_path, v in self.specific_args.items():
+                if "patterns" in v:
+                    patterns = v.pop("patterns", [])
+                    for pattern in patterns:
+                        try:
+                            compiled_pattern = self._compile_pattern(pattern)
+                            pattern_specific_args[compiled_pattern] = v
+                        except ValueError as e:
+                            raise ValueError(
+                                f"Error in specific_args['{file_path}']['patterns']: {e}"
+                            ) from e
+
+        object.__setattr__(self, "pattern_specific_args", pattern_specific_args)
+
+        # Setup comparators
+        if self.comparators is None:
+            object.__setattr__(self, "comparators", get_comparators())
+
+    def _compile_pattern(self, pattern: str) -> Pattern[str]:
+        """Compile a regex pattern."""
+        try:
+            return re.compile(pattern)
+        except re.error as e:
+            raise ValueError(f"Invalid regex pattern: '{pattern}'") from e
+
+    def _compile_patterns(
+        self, patterns: Optional[Iterable[str]]
+    ) -> Tuple[Pattern[str], ...]:
+        """Compile regex patterns from any iterable to tuple."""
+        if patterns is None:
+            return ()
+        return tuple(self._compile_pattern(pattern) for pattern in patterns)
+
+    # Note: compiled_include_patterns, compiled_exclude_patterns, and pattern_specific_args
+    # are now direct attributes set in __attrs_post_init__, no properties needed!
+
+    def should_ignore_file(self, relative_path: str) -> bool:
+        """Check if a file should be ignored."""
+        # Check inclusion patterns first
+        if self.compiled_include_patterns:
+            included = any(
+                pattern.match(relative_path)
+                for pattern in self.compiled_include_patterns
+            )
+            if not included:
+                return True
+
+        # Check exclusion patterns
+        return any(
+            pattern.match(relative_path) for pattern in self.compiled_exclude_patterns
+        )
+
+
 def compare_files(
-    ref_file, comp_file, comparator, *args, return_raw_diffs=False, **kwargs
-):
+    ref_file: str,
+    comp_file: str,
+    comparator: ComparatorType,
+    *args,
+    return_raw_diffs: bool = False,
+    **kwargs,
+) -> Union[bool, str]:
     """Compare 2 files and return the difference.
 
     Args:
-        ref_file (str): Path to the reference file.
-        comp_file (str): Path to the compared file.
-        comparator (callable): The comparator to use (see in :func:`register_comparator` for the
+        ref_file: Path to the reference file.
+        comp_file: Path to the compared file.
+        comparator: The comparator to use (see in :func:`register_comparator` for the
             comparator signature).
-        return_raw_diffs (bool): If set to ``True``, only the raw differences are returned instead
+        return_raw_diffs: If set to ``True``, only the raw differences are returned instead
             of a formatted report.
         *args: passed to the comparator.
         **kwargs: passed to the comparator.
 
     Returns:
-        bool or str: ``False`` if the files are equal or a string with a message explaining the
+        ``False`` if the files are equal or a string with a message explaining the
         differences if they are different.
     """
     # Get the compared file
@@ -172,15 +376,20 @@ def compare_files(
         )
 
 
-def export_formatted_file(file, formatted_file, comparator, **kwargs):
+def export_formatted_file(
+    file: str,
+    formatted_file: str,
+    comparator: ComparatorType,
+    **kwargs,
+) -> None:
     """Format a data file and export it.
 
     .. note:: A new file is created only if the corresponding comparator has saving capability.
 
     Args:
-        file (str): Path to the compared file.
-        formatted_file (str): Path to the formatted file.
-        comparator (callable): The comparator to use (see in :func:`register_comparator` for the
+        file: Path to the compared file.
+        formatted_file: Path to the formatted file.
+        comparator: The comparator to use (see in :func:`register_comparator` for the
             comparator signature).
         **kwargs: Can contain the following dictionaries: 'load_kwargs', 'format_data_kwargs' and
             'save_kwargs'.
@@ -252,14 +461,24 @@ def pick_comparator(comparator=None, suffix=None, comparators=None):
     return _COMPARATORS.get(None)
 
 
+def _check_config(config=None, **kwargs):
+    if config is not None:
+        if kwargs:
+            # Override config attributes with kwargs
+            config = attrs.evolve(config, **kwargs)
+    else:
+        config = ComparisonConfig(
+            **kwargs,
+        )
+    return config
+
+
 def compare_trees(
-    ref_path,
-    comp_path,
-    comparators=None,
-    specific_args=None,
-    return_raw_diffs=False,
-    export_formatted_files=False,
-    ignore_patterns=None,
+    ref_path: Union[str, Path],
+    comp_path: Union[str, Path],
+    *,
+    config: ComparisonConfig = None,
+    **kwargs,
 ):
     """Compare all files from 2 different directory trees and return the differences.
 
@@ -270,81 +489,35 @@ def compare_trees(
         ignored.
 
     Args:
-        ref_path (str): Path to the reference directory.
-        comp_path (str): Path to the directory that must be compared against the reference.
-        comparators (dict): A ``dict`` to override the registered comparators.
-        specific_args (dict): A ``dict`` with the args/kwargs that should be given to the
-            comparator for a given file. This ``dict`` should be like the following:
+        ref_path: Path to the reference directory.
+        comp_path: Path to the directory that must be compared against the reference.
+        config (ComparisonConfig): A config object. If given, all other configuration parameters
+            should be set to default values.
 
-            .. code-block:: Python
-
-                {
-                    <relative_file_path>: {
-                        comparator: ComparatorInstance,
-                        args: [arg1, arg2, ...],
-                        kwargs: {
-                            kwarg_name_1: kwarg_value_1,
-                            kwarg_name_2: kwarg_value_2,
-                        }
-                    },
-                    <another_file_path>: {...},
-                    <a name for this category>: {
-                        "patterns": ["regex1", "regex2", ...],
-                        ... (other arguments)
-                    }
-                }
-
-            If the "patterns" entry is present, then the name is not considered and is only used as
-            a helper for the user. When a "patterns" entry is detected, the other arguments are
-            applied to all files whose relative name matches one of the given regular expression
-            patterns. If a file could match multiple patterns of different groups, only the first
-            one is considered.
-
-            Note that all entries in this ``dict`` are optional.
-        return_raw_diffs (bool): If set to ``True``, only the raw differences are returned instead
-            of a formatted report.
-        export_formatted_files (bool or str): If set to ``True`` or a not empty string, create a
-            new directory with formatted compared data files. If a string is passed, this string is
-            used as suffix for the new directory. If `True` is passed, the suffix is
-            ``_FORMATTED``.
-        ignore_patterns (list): A list of regular expression patterns. If the relative path of a
-            file matches one of these patterns, it is ignored during the comparison. Note that
-            this means that any specific arguments for that file will also be ignored.
+    Keyword Args:
+        **kwargs (dict): Additional keyword arguments are used to build a ComparisonConfig object
+            and will override the values of the given `config` argument.
 
     Returns:
         dict: A ``dict`` in which the keys are the relative file paths and the values are the
         difference messages. If the directories are considered as equal, an empty ``dict`` is
         returned.
     """
+    config = _check_config(config, **kwargs)
+
     ref_path = Path(ref_path)
     comp_path = Path(comp_path)
     formatted_data_path = comp_path.with_name(
         comp_path.name
         + (
-            export_formatted_files
-            if (export_formatted_files is not True and export_formatted_files)
+            config.export_formatted_files
+            if (
+                config.export_formatted_files is not True
+                and config.export_formatted_files
+            )
             else _DEFAULT_EXPORT_SUFFIX
         )
     )
-
-    if specific_args is None:
-        specific_args = {}
-    else:
-        specific_args = copy.deepcopy(specific_args)
-
-    pattern_specific_args = {}
-    for v in specific_args.values():
-        for pattern in v.pop("patterns", []):
-            pattern_specific_args[re.compile(pattern)] = v
-
-    if ignore_patterns is None:
-        ignore_patterns = []
-    else:
-        ignore_patterns = [re.compile(i) for i in ignore_patterns]
-
-    # Build the comparator registry if not given
-    if comparators is None:
-        comparators = get_comparators()
 
     # Loop over all files and call the correct comparator
     different_files = {}
@@ -355,18 +528,14 @@ def compare_trees(
         relative_path = ref_file.relative_to(ref_path).as_posix()
         comp_file = comp_path / relative_path
 
-        ignored = False
-        for pattern in ignore_patterns:
-            if pattern.match(relative_path):
-                ignored = True
-                break
-        if ignored:
+        if config.should_ignore_file(relative_path):
+            LOGGER.debug("Ignore file: %s", relative_path)
             continue
 
         if comp_file.exists():
-            specific_file_args = specific_args.get(relative_path, None)
+            specific_file_args = (config.specific_args or {}).get(relative_path, None)
             if specific_file_args is None:
-                for pattern, pattern_args in pattern_specific_args.items():
+                for pattern, pattern_args in config.pattern_specific_args.items():
                     if pattern.match(relative_path):
                         specific_file_args = copy.deepcopy(pattern_args)
                         break
@@ -375,7 +544,7 @@ def compare_trees(
             comparator = pick_comparator(
                 comparator=specific_file_args.pop("comparator", None),
                 suffix=ref_file.suffix,
-                comparators=comparators,
+                comparators=config.comparators,
             )
             comparator_args = specific_file_args.pop("args", [])
             res = compare_files(
@@ -383,12 +552,12 @@ def compare_trees(
                 comp_file,
                 comparator,
                 *comparator_args,
-                return_raw_diffs=return_raw_diffs,
+                return_raw_diffs=config.return_raw_diffs,
                 **specific_file_args,
             )
             if res is not False:
                 different_files[relative_path] = res
-            if export_formatted_files is not False:
+            if config.export_formatted_files is not False:
                 export_formatted_file(
                     comp_file,
                     formatted_data_path / relative_path,

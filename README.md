@@ -186,14 +186,20 @@ specific_args = {
 }
 ```
 
-And last but not least, it's possible to ignore a set of files from the reference directory (for
-example because the reference directory contains temporary files that should not be compared). For
-example, the following code will ignore all files whose name ends with `_tmp.yaml`:
+And last but not least, it's possible to filter files from the reference directory (for example
+because the reference directory contains temporary files that should not be compared). For
+example, the following code will ignore all files whose name does not start with `file_` and does
+not ends with `_tmp.yaml`:
 
 ```python
 import dir_content_diff
 
-dir_content_diff.compare_trees("reference_dir", "compared_dir", ignore_patterns=[r".*_tmp\.yaml"])
+dir_content_diff.compare_trees(
+    "reference_dir",
+    "compared_dir",
+    include_patterns=[r"file_.*"],
+    exclude_patterns=[r".*_tmp\.yaml"],
+)
 ```
 
 

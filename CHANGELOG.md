@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.13.0](https://github.com/BlueBrain/dir-content-diff/compare/1.12.1..1.13.0)
+
+> 12 September 2025
+
+### New Features
+
+- Add patterns to ignore files in the reference directory (Adrien Berchet - [#86](https://github.com/BlueBrain/dir-content-diff/pull/86))
+
+### Documentation Changes
+
+- Fix format in Sphinx (Adrien Berchet - [#85](https://github.com/BlueBrain/dir-content-diff/pull/85))
+- Clarify how reference and compared directories are processed (Adrien Berchet - [#83](https://github.com/BlueBrain/dir-content-diff/pull/83))
+
+### Performance Improvements
+
+- Build comparator registry only once before iterating over all files (Adrien Berchet - [#87](https://github.com/BlueBrain/dir-content-diff/pull/87))
+
 ## [1.12.1](https://github.com/BlueBrain/dir-content-diff/compare/1.12.0..1.12.1)
 
 > 3 July 2025

@@ -22,8 +22,8 @@ from dir_content_diff.base_comparators import DefaultComparator
 # from dir_content_diff.core import _check_config
 # from dir_content_diff.core import _split_into_chunks
 # Import core comparison functionality
+from dir_content_diff.config import ComparisonConfig
 from dir_content_diff.core import ComparatorType
-from dir_content_diff.core import ComparisonConfig
 from dir_content_diff.core import assert_equal_trees
 from dir_content_diff.core import compare_files
 from dir_content_diff.core import compare_trees

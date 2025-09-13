@@ -13,6 +13,8 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Optional
+from typing import Union
 
 import click
 from yaml import safe_load
@@ -102,6 +104,19 @@ def load_config(ctx, param, value):  # pylint: disable=unused-argument
     default=False,
     help="Sort the differences by file name.",
 )
+@click.option(
+    "--executor-type",
+    type=click.Choice(["sequential", "thread", "process"]),
+    default="sequential",
+    help="Type of executor for execution. 'sequential' for single-threaded, "
+    "'thread' for I/O-bound tasks, 'process' for CPU-bound tasks.",
+)
+@click.option(
+    "--max-workers",
+    type=int,
+    help="Maximum number of worker threads/processes for parallel execution. "
+    "Only used with 'thread' or 'process' executor types.",
+)
 @click.version_option()
 @click.pass_context
 def main(ctx, *args, **kwargs):
@@ -120,16 +135,31 @@ def main(ctx, *args, **kwargs):
 
     ref = Path(kwargs.pop("reference_input"))
     comp = Path(kwargs.pop("compared_input"))
+
+    # Extract execution options
+    executor_type = kwargs.pop("executor_type", "sequential")
+    max_workers = kwargs.pop("max_workers", None)
+
     input_diff(
         ref,
         comp,
         ctx.config,
         kwargs.pop("export_formatted_files", False),
         kwargs.pop("sort_diffs", False),
+        executor_type,
+        max_workers,
     )
 
 
-def input_diff(ref, comp, config, export_formatted_files=False, sort_diffs=False):
+def input_diff(
+    ref: Union[str, Path],
+    comp: Union[str, Path],
+    config,
+    export_formatted_files: Union[bool, str] = False,
+    sort_diffs: bool = False,
+    executor_type: str = "sequential",
+    max_workers: Optional[int] = None,
+):
     """Compute and display differences from given inputs."""
     ref = Path(ref)
     comp = Path(comp)
@@ -145,6 +175,8 @@ def input_diff(ref, comp, config, export_formatted_files=False, sort_diffs=False
             comp,
             specific_args=config,
             export_formatted_files=export_formatted_files,
+            executor_type=executor_type,
+            max_workers=max_workers,
         )
     else:
         comparator_name = config.pop("comparator", None)

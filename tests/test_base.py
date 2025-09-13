@@ -16,6 +16,7 @@
 import configparser
 import copy
 import json
+import logging
 import re
 import shutil
 
@@ -1370,7 +1371,7 @@ class TestProgrammaticUse:
 class TestBaseFunctions:
     """Test some base functions."""
 
-    def test_pick_comparator(self):
+    def test_pick_comparator(self, caplog):
         """Test the pick_comparator() function"""
         for ext, comparator in dir_content_diff.get_comparators().items():
             assert dir_content_diff.pick_comparator(comparator) == comparator
@@ -1389,3 +1390,43 @@ class TestBaseFunctions:
                 )
                 == comparator
             )
+
+        caplog.clear()
+        caplog.set_level(logging.DEBUG)
+        comparators = dir_content_diff.get_comparators()
+        dir_content_diff.pick_comparator("UknownComparator", "UnknownExt", comparators)
+
+        assert caplog.messages == [
+            "Could not find the comparator named 'UknownComparator' in the given comparators",
+            "Could not find the comparator for the 'UnknownExt' suffix",
+            "Returning the default comparator",
+        ]
+
+    def test_pick_comparator_suffix(self, caplog):
+        """Test the pick_comparator() function with only suffix."""
+        caplog.clear()
+        caplog.set_level(logging.DEBUG)
+
+        assert (
+            dir_content_diff.pick_comparator(suffix=".pdf")
+            == dir_content_diff.PdfComparator()
+        )
+        assert not caplog.messages
+
+        caplog.clear()
+        comparators = {".pdf": None}
+        assert (
+            dir_content_diff.pick_comparator(suffix=".pdf", comparators=comparators)
+            == dir_content_diff.DefaultComparator()
+        )
+
+        assert caplog.messages == [
+            "Could not find the comparator for the '.pdf' suffix",
+            "Returning the default comparator",
+        ]
+
+    def test_pick_comparator_no_default(self, registry_reseter):
+        dir_content_diff._COMPARATORS.pop(None)  # pylint: disable=protected-access
+
+        with pytest.raises(RuntimeError, match="No default comparator available"):
+            dir_content_diff.pick_comparator()

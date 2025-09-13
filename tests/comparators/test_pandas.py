@@ -21,6 +21,7 @@ import pytest
 from packaging import version
 
 import dir_content_diff
+import dir_content_diff.base_comparators
 import dir_content_diff.comparators.pandas
 from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
@@ -35,27 +36,27 @@ class TestRegistry:
         """Test registering the pandas plugin."""
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".json": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
-            ".yaml": dir_content_diff.YamlComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".json": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
+            ".yaml": dir_content_diff.base_comparators.YamlComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
         }
 
         dir_content_diff.comparators.pandas.register()
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".json": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
-            ".yaml": dir_content_diff.YamlComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".json": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
+            ".yaml": dir_content_diff.base_comparators.YamlComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
             ".csv": dir_content_diff.comparators.pandas.CsvComparator(),
             ".tsv": dir_content_diff.comparators.pandas.CsvComparator(),
             ".h4": dir_content_diff.comparators.pandas.HdfComparator(),

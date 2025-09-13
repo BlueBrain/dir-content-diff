@@ -16,9 +16,9 @@ from unittest.mock import patch
 import attrs
 
 from dir_content_diff import ComparisonConfig
-from dir_content_diff import _split_into_chunks
 from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
+from dir_content_diff.core import _split_into_chunks
 
 from . import generate_test_files
 

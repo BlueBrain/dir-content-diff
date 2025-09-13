@@ -36,6 +36,8 @@ the files, so it is not able to report which values are different.
 
 ### Compare two directories
 
+#### Basic Directory Comparison
+
 Let's compare two directories with the following structures:
 
 ```bash
@@ -75,6 +77,8 @@ If all the files are identical, this code will return an empty dictionary becaus
 was detected. As mentioned previously, this is because `dir-content-diff` is only looking for files
 in the compared directory that are also present in the reference directory, so the file
 `sub_file_3.b` is just ignored in this case.
+
+#### Using Custom Comparators
 
 If ``reference_dir/file_1.c`` is the following JSON-like file:
 
@@ -117,6 +121,8 @@ The previous code will output the following dictionary:
 }
 ```
 
+#### Assertion-based Comparison
+
 It is also possible to check whether the two directories are equal or not with the following code:
 
 ```python
@@ -135,7 +141,9 @@ Changed the value of '[a]' from 1 to 2.
 Changed the value of '[b][0]' from 1 to 10.
 ```
 
-Finally, the comparators have parameters that can be passed either to be used for all files of a
+#### Advanced Configuration Options
+
+The comparators have parameters that can be passed either to be used for all files of a
 given extension or only for a specific file:
 
 ```python
@@ -163,6 +171,8 @@ dir_content_diff.assert_equal_trees(
 
 Each comparator has different arguments that are detailed in the documentation.
 
+##### File-specific Comparators
+
 It's also possible to specify a arbitrary comparator for a specific file:
 
 ```python
@@ -173,6 +183,8 @@ specific_args = {
     }
 }
 ```
+
+##### Pattern-based Configuration
 
 Another possibility is to use regular expressions to associate specific arguments to
 a set of files:
@@ -186,7 +198,9 @@ specific_args = {
 }
 ```
 
-And last but not least, it's possible to filter files from the reference directory (for example
+##### File Filtering
+
+Last but not least, it's possible to filter files from the reference directory (for example
 because the reference directory contains temporary files that should not be compared). For
 example, the following code will ignore all files whose name does not start with `file_` and does
 not ends with `_tmp.yaml`:
@@ -201,6 +215,73 @@ dir_content_diff.compare_trees(
     exclude_patterns=[r".*_tmp\.yaml"],
 )
 ```
+
+
+### Parallel Execution
+
+By default, `dir-content-diff` runs file comparisons sequentially. However, for improved performance when comparing large numbers of files, parallel execution is available using either thread-based or process-based concurrency.
+
+#### Configuration Options
+
+Parallel execution can be configured using the following parameters:
+
+- **`executor_type`**: Controls the type of parallel execution:
+  - `"sequential"` (default): No parallel execution, files are compared one by one
+  - `"thread"`: Uses `ThreadPoolExecutor` (recommended for I/O-bound tasks)
+  - `"process"`: Uses `ProcessPoolExecutor` (recommended for CPU-intensive comparisons)
+
+- **`max_workers`**: Maximum number of worker threads/processes. If `None` (default), it defaults to `min(32, (os.cpu_count() or 1) + 4)`.
+
+#### Usage Examples
+
+Enable thread-based parallel execution:
+
+```python
+import dir_content_diff
+
+dir_content_diff.compare_trees(
+    "reference_dir",
+    "compared_dir",
+    executor_type="thread",
+    max_workers=8
+)
+```
+
+Enable process-based parallel execution with automatic worker count:
+
+```python
+import dir_content_diff
+
+dir_content_diff.compare_trees(
+    "reference_dir",
+    "compared_dir",
+    executor_type="process"
+)
+```
+
+Using a configuration object:
+
+```python
+import dir_content_diff
+
+config = dir_content_diff.ComparisonConfig(
+    executor_type="thread",
+    max_workers=4
+)
+
+dir_content_diff.compare_trees(
+    "reference_dir",
+    "compared_dir",
+    config=config
+)
+```
+
+#### Performance Considerations
+
+- **Thread-based execution** (`executor_type="thread"`) is generally recommended for most use cases as file comparisons are typically I/O-bound operations
+- **Process-based execution** (`executor_type="process"`) may be beneficial when using computationally intensive comparators or when dealing with very large files
+- Parallel execution is automatically disabled for single file comparisons and falls back to sequential execution when only one file needs to be compared
+- The optimal number of workers depends on your system's capabilities and the nature of your files; too many workers may actually decrease performance due to overhead
 
 
 ### Export formatted data

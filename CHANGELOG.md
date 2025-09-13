@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.14.0](https://github.com/BlueBrain/dir-content-diff/compare/1.13.0..1.14.0)
+
+> 13 September 2025
+
+### New Features
+
+- Add parallel iteration over compared files (Adrien Berchet - [#89](https://github.com/BlueBrain/dir-content-diff/pull/89))
+
+### Documentation Changes
+
+- Improve README to describe parallel execution (Adrien Berchet - [#91](https://github.com/BlueBrain/dir-content-diff/pull/91))
+
+### Refactoring and Updates
+
+- Reorganize the code (Adrien Berchet - [#90](https://github.com/BlueBrain/dir-content-diff/pull/90))
+
 ## [1.13.0](https://github.com/BlueBrain/dir-content-diff/compare/1.12.1..1.13.0)
 
 > 12 September 2025

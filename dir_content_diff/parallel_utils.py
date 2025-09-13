@@ -51,6 +51,7 @@ def _compare_file_chunk(
     config: ComparisonConfig,
     comp_path: Path,
     formatted_data_path: Path,
+    compare_single_file_func,
 ) -> List[Tuple[str, Union[str, bool]]]:  # pragma: no cover
     """Compare a chunk of files.
 
@@ -59,17 +60,15 @@ def _compare_file_chunk(
         config: Comparison configuration.
         comp_path: Path to the comparison directory.
         formatted_data_path: Path where formatted files should be exported.
+        compare_single_file_func: Function to compare a single file.
 
     Returns:
         List of comparison results for the chunk.
     """
-    # Import here to avoid circular imports
-    from dir_content_diff.core import _compare_single_file
-
     results = []
     for ref_file, relative_path in file_chunk:
         try:
-            result = _compare_single_file(
+            result = compare_single_file_func(
                 ref_file, comp_path, relative_path, config, formatted_data_path
             )
             results.append(result)

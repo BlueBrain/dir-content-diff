@@ -10,7 +10,7 @@
 This project provides simple tools to compare the content of a directory against a reference
 directory.
 
-This is useful to check the results of a process that generate several files, like a luigi
+This is useful to check the results of a process that generates several files, like a luigi
 workflow for example.
 
 

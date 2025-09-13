@@ -14,13 +14,10 @@ Simple tool to compare directory contents.
 
 import importlib.metadata
 
-# Import base comparators for backward compatibility
+# Import base comparators
 from dir_content_diff.base_comparators import BaseComparator
 from dir_content_diff.base_comparators import DefaultComparator
 
-# from dir_content_diff.core import _DEFAULT_EXPORT_SUFFIX
-# from dir_content_diff.core import _check_config
-# from dir_content_diff.core import _split_into_chunks
 # Import core comparison functionality
 from dir_content_diff.config import ComparisonConfig
 from dir_content_diff.core import ComparatorType
@@ -31,17 +28,10 @@ from dir_content_diff.core import export_formatted_file
 from dir_content_diff.core import pick_comparator
 
 # Import comparator registry functionality
-# from dir_content_diff.registry import _COMPARATORS
 from dir_content_diff.registry import get_comparators
 from dir_content_diff.registry import register_comparator
 from dir_content_diff.registry import reset_comparators
 from dir_content_diff.registry import unregister_comparator
-
-# from dir_content_diff.base_comparators import IniComparator
-# from dir_content_diff.base_comparators import JsonComparator
-# from dir_content_diff.base_comparators import PdfComparator
-# from dir_content_diff.base_comparators import XmlComparator
-# from dir_content_diff.base_comparators import YamlComparator
 
 __version__ = importlib.metadata.version("dir-content-diff")
 
@@ -60,13 +50,4 @@ __all__ = [
     "unregister_comparator",
     "BaseComparator",
     "DefaultComparator",
-    # "IniComparator",
-    # "JsonComparator",
-    # "PdfComparator",
-    # "XmlComparator",
-    # "YamlComparator",
-    # "_DEFAULT_EXPORT_SUFFIX",
-    # "_split_into_chunks",
-    # "_check_config",
-    # "_COMPARATORS",
 ]

@@ -623,7 +623,7 @@ class TestBaseComparator:
 
             # Test bad value in boolean
             with pytest.raises(
-                ValueError, match="Bool attributes expect 'true' or 'false'."
+                ValueError, match="Boolean attributes expect 'true' or 'false'."
             ):
                 comparator.xmltodict(
                     """<?xml version="1.0" encoding="UTF-8" ?>"""

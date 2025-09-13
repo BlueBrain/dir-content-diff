@@ -14,18 +14,11 @@ This module contains the main comparison functions and configuration classes.
 
 import copy
 import os
-import re
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Literal
 from typing import Optional
-from typing import Pattern
 from typing import Tuple
 from typing import Union
 
@@ -45,8 +38,6 @@ from dir_content_diff.util import diff_msg_formatter
 ComparatorType = Union[BaseComparator, Callable]
 
 _DEFAULT_EXPORT_SUFFIX = "_FORMATTED"
-
-
 
 
 def compare_files(
@@ -368,6 +359,7 @@ def compare_trees(
                         config,
                         comp_path,
                         formatted_data_path,
+                        _compare_single_file,
                     ): chunk
                     for chunk in file_chunks
                     if chunk  # Skip empty chunks

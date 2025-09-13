@@ -26,6 +26,7 @@ from typing import Union
 import attrs
 
 from dir_content_diff.base_comparators import BaseComparator
+from dir_content_diff.registry import get_comparators
 
 # Type alias for comparators
 ComparatorType = Union[BaseComparator, Callable]
@@ -150,9 +151,6 @@ class ComparisonConfig:
 
     def __attrs_post_init__(self):
         """Initialize computed fields after attrs initialization."""
-        # Import here to avoid circular imports
-        from dir_content_diff.registry import get_comparators
-
         # Validate and compile patterns - with frozen, we compile once and store directly
         try:
             compiled_include = self._compile_patterns(self.include_patterns)

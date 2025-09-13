@@ -28,7 +28,7 @@ def test_import_error_message(monkeypatch, caplog):
     with pytest.raises(
         KeyError,
         match=(
-            "The module UNKNOWN_MODULE has no registered dependency, please add dependencies in "
+            "The module UNKNOWN_MODULE has no registered dependency, please add dependencies to "
             "the dependencies.json file"
         ),
     ):

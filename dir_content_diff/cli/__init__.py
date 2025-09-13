@@ -19,11 +19,11 @@ from typing import Union
 import click
 from yaml import safe_load
 
-from dir_content_diff import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff import compare_files
 from dir_content_diff import compare_trees
 from dir_content_diff import export_formatted_file
 from dir_content_diff import pick_comparator
+from dir_content_diff.core import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff.util import LOGGER
 
 

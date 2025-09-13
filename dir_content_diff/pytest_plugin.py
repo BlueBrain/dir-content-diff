@@ -21,8 +21,8 @@ directory with a suffix added. The default suffix is ``_FORMATTED`` and can be c
 # SPDX-License-Identifier: Apache-2.0
 # LICENSE HEADER MANAGED BY add-license-header
 
-from dir_content_diff import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff import assert_equal_trees
+from dir_content_diff.core import _DEFAULT_EXPORT_SUFFIX
 
 
 def pytest_addoption(parser):

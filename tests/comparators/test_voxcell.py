@@ -21,8 +21,8 @@ import pytest
 
 import dir_content_diff
 import dir_content_diff.comparators.voxcell
-from dir_content_diff import _DEFAULT_EXPORT_SUFFIX
 from dir_content_diff import compare_trees
+from dir_content_diff.core import _DEFAULT_EXPORT_SUFFIX
 
 try:
     import voxcell

@@ -24,6 +24,8 @@ import dictdiffer
 import pytest
 
 import dir_content_diff
+import dir_content_diff.base_comparators
+import dir_content_diff.registry
 from dir_content_diff import ComparisonConfig
 from dir_content_diff import assert_equal_trees
 from dir_content_diff import compare_trees
@@ -34,8 +36,14 @@ class TestBaseComparator:
 
     def test_equal(self):
         """Test equal."""
-        assert dir_content_diff.JsonComparator() != dir_content_diff.PdfComparator()
-        assert dir_content_diff.JsonComparator() == dir_content_diff.JsonComparator()
+        assert (
+            dir_content_diff.base_comparators.JsonComparator()
+            != dir_content_diff.base_comparators.PdfComparator()
+        )
+        assert (
+            dir_content_diff.base_comparators.JsonComparator()
+            == dir_content_diff.base_comparators.JsonComparator()
+        )
 
         class ComparatorWithAttributes(
             dir_content_diff.base_comparators.BaseComparator
@@ -460,7 +468,7 @@ class TestBaseComparator:
 
         def test_load_save(self, tmp_path):
             """Test load and save capabilities of the comparator."""
-            comparator = dir_content_diff.JsonComparator()
+            comparator = dir_content_diff.base_comparators.JsonComparator()
             TestBaseComparator.common_test_load_save(tmp_path, comparator)
 
         def test_format_data(self):
@@ -508,17 +516,17 @@ class TestBaseComparator:
                 ]
             }
 
-            comparator = dir_content_diff.JsonComparator()
+            comparator = dir_content_diff.base_comparators.JsonComparator()
             comparator.format_data(data)
             assert data == initial_data
 
             data = copy.deepcopy(initial_data)
-            comparator = dir_content_diff.JsonComparator()
+            comparator = dir_content_diff.base_comparators.JsonComparator()
             comparator.format_data(data, replace_pattern=patterns)
             assert data == expected_data
 
             # Missing key in ref
-            comparator = dir_content_diff.JsonComparator()
+            comparator = dir_content_diff.base_comparators.JsonComparator()
             data = copy.deepcopy(initial_data)
             ref = {"a": 1}
             comparator.format_data(data, ref, replace_pattern=patterns)
@@ -529,7 +537,7 @@ class TestBaseComparator:
             ]
 
             # Missing key in data
-            comparator = dir_content_diff.JsonComparator()
+            comparator = dir_content_diff.base_comparators.JsonComparator()
             ref = copy.deepcopy(initial_data)
             data = {"a": 1}
             comparator.format_data(data, ref, replace_pattern=patterns)
@@ -544,12 +552,12 @@ class TestBaseComparator:
 
         def test_load_save(self, tmp_path):
             """Test load and save capabilities of the comparator."""
-            comparator = dir_content_diff.XmlComparator()
+            comparator = dir_content_diff.base_comparators.XmlComparator()
             TestBaseComparator.common_test_load_save(tmp_path, comparator)
 
         def test_xmltodict(self):
             """Test all types of the xmltodict auto cast feature."""
-            comparator = dir_content_diff.XmlComparator()
+            comparator = dir_content_diff.base_comparators.XmlComparator()
 
             # Test empty root
             res = comparator.xmltodict(
@@ -615,7 +623,7 @@ class TestBaseComparator:
 
             # Test bad value in boolean
             with pytest.raises(
-                ValueError, match="Bool attributes expect 'true' or 'false'."
+                ValueError, match="Boolean attributes expect 'true' or 'false'."
             ):
                 comparator.xmltodict(
                     """<?xml version="1.0" encoding="UTF-8" ?>"""
@@ -626,7 +634,7 @@ class TestBaseComparator:
 
         def test_add_to_output_with_none(self):
             """Test wrong type for add_to_output() method."""
-            comparator = dir_content_diff.XmlComparator()
+            comparator = dir_content_diff.base_comparators.XmlComparator()
             comparator.add_to_output(None, None)
 
     class TestIniComparator:
@@ -634,7 +642,7 @@ class TestBaseComparator:
 
         def test_load_save(self, tmp_path):
             """Test load and save capabilities of the comparator."""
-            comparator = dir_content_diff.IniComparator()
+            comparator = dir_content_diff.base_comparators.IniComparator()
             TestBaseComparator.common_test_load_save(tmp_path, comparator)
 
         def test_initodict(self, ref_tree):
@@ -642,7 +650,7 @@ class TestBaseComparator:
             data = configparser.ConfigParser()
             data.read(ref_tree / "file.ini")
 
-            comparator = dir_content_diff.IniComparator()
+            comparator = dir_content_diff.base_comparators.IniComparator()
             res = comparator.configparser_to_dict(data)
             assert res == {
                 "section1": {"attr1": "val1", "attr2": 1},
@@ -667,7 +675,7 @@ class TestBaseComparator:
             diff = dir_content_diff.compare_files(
                 ref_file,
                 res_file,
-                dir_content_diff.PdfComparator(),
+                dir_content_diff.base_comparators.PdfComparator(),
                 tempdir=res_tree_equal,
             )
             assert not diff
@@ -679,7 +687,7 @@ class TestBaseComparator:
             diff_nested = dir_content_diff.compare_files(
                 ref_file,
                 res_file,
-                dir_content_diff.PdfComparator(),
+                dir_content_diff.base_comparators.PdfComparator(),
                 tempdir=nested_res.parent,
             )
             assert not diff_nested
@@ -692,7 +700,7 @@ class TestBaseComparator:
             other_diff = dir_content_diff.compare_files(
                 ref_file,
                 other_res_file,
-                dir_content_diff.PdfComparator(),
+                dir_content_diff.base_comparators.PdfComparator(),
                 tempdir=res_tree_equal,
             )
             assert not other_diff
@@ -706,7 +714,7 @@ class TestBaseComparator:
             diff_nested = dir_content_diff.compare_files(
                 ref_file,
                 ref_file,
-                dir_content_diff.PdfComparator(),
+                dir_content_diff.base_comparators.PdfComparator(),
                 tempdir=res_tree_equal,
             )
             assert not diff_nested
@@ -724,58 +732,58 @@ class TestRegistry:
         """Test the initial registry with the get_comparators() function."""
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".json": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".yaml": dir_content_diff.YamlComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".json": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".yaml": dir_content_diff.base_comparators.YamlComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
         }
 
     def test_update_register(self, registry_reseter):
         """Test the functions to update the registry."""
         dir_content_diff.register_comparator(
-            ".test_ext", dir_content_diff.JsonComparator()
+            ".test_ext", dir_content_diff.base_comparators.JsonComparator()
         )
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".test_ext": dir_content_diff.JsonComparator(),
-            ".json": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".yaml": dir_content_diff.YamlComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".test_ext": dir_content_diff.base_comparators.JsonComparator(),
+            ".json": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".yaml": dir_content_diff.base_comparators.YamlComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
         }
 
         dir_content_diff.unregister_comparator(".yaml")
         dir_content_diff.unregister_comparator("json")  # Test suffix without dot
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".test_ext": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".test_ext": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
         }
 
         dir_content_diff.reset_comparators()
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".json": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".yaml": dir_content_diff.YamlComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".json": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".yaml": dir_content_diff.base_comparators.YamlComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
         }
 
         with pytest.raises(
@@ -786,7 +794,7 @@ class TestRegistry:
             ),
         ):
             dir_content_diff.register_comparator(
-                ".pdf", dir_content_diff.JsonComparator()
+                ".pdf", dir_content_diff.base_comparators.JsonComparator()
             )
 
         with pytest.raises(
@@ -796,34 +804,34 @@ class TestRegistry:
 
         dir_content_diff.unregister_comparator(".unknown_ext", quiet=True)
         dir_content_diff.register_comparator(
-            ".new_ext", dir_content_diff.JsonComparator()
+            ".new_ext", dir_content_diff.base_comparators.JsonComparator()
         )
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".json": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".yaml": dir_content_diff.YamlComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
-            ".new_ext": dir_content_diff.JsonComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".json": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".yaml": dir_content_diff.base_comparators.YamlComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
+            ".new_ext": dir_content_diff.base_comparators.JsonComparator(),
         }
         dir_content_diff.register_comparator(
-            ".new_ext", dir_content_diff.PdfComparator(), force=True
+            ".new_ext", dir_content_diff.base_comparators.PdfComparator(), force=True
         )
         assert dir_content_diff.get_comparators() == {
             None: dir_content_diff.DefaultComparator(),
-            ".cfg": dir_content_diff.IniComparator(),
-            ".conf": dir_content_diff.IniComparator(),
-            ".ini": dir_content_diff.IniComparator(),
-            ".json": dir_content_diff.JsonComparator(),
-            ".pdf": dir_content_diff.PdfComparator(),
-            ".yaml": dir_content_diff.YamlComparator(),
-            ".yml": dir_content_diff.YamlComparator(),
-            ".xml": dir_content_diff.XmlComparator(),
-            ".new_ext": dir_content_diff.PdfComparator(),
+            ".cfg": dir_content_diff.base_comparators.IniComparator(),
+            ".conf": dir_content_diff.base_comparators.IniComparator(),
+            ".ini": dir_content_diff.base_comparators.IniComparator(),
+            ".json": dir_content_diff.base_comparators.JsonComparator(),
+            ".pdf": dir_content_diff.base_comparators.PdfComparator(),
+            ".yaml": dir_content_diff.base_comparators.YamlComparator(),
+            ".yml": dir_content_diff.base_comparators.YamlComparator(),
+            ".xml": dir_content_diff.base_comparators.XmlComparator(),
+            ".new_ext": dir_content_diff.base_comparators.PdfComparator(),
         }
 
 
@@ -898,7 +906,7 @@ class TestConfig:
             },
         )
 
-        new_config = dir_content_diff._check_config(  # pylint: disable=protected-access
+        new_config = dir_content_diff.core._check_config(  # pylint: disable=protected-access
             config,
             include_patterns=[r".*\.yaml"],
             exclude_patterns=[r".*file\.yaml"],
@@ -1029,7 +1037,9 @@ class TestEqualTrees:
         assert res == {}
 
         # Test pattern override
-        specific_args["all json files"]["comparator"] = dir_content_diff.PdfComparator()
+        specific_args["all json files"]["comparator"] = (
+            dir_content_diff.base_comparators.PdfComparator()
+        )
         specific_args["file.json"] = {
             "comparator": dir_content_diff.DefaultComparator()
         }
@@ -1246,7 +1256,9 @@ class TestDiffTrees:
         specific_args["all json files"]["comparator"] = (
             dir_content_diff.DefaultComparator()
         )
-        specific_args["file.json"] = {"comparator": dir_content_diff.JsonComparator()}
+        specific_args["file.json"] = {
+            "comparator": dir_content_diff.base_comparators.JsonComparator()
+        }
         res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
 
         assert re.match(dict_diff, res["file.json"]) is not None
@@ -1409,7 +1421,7 @@ class TestBaseFunctions:
 
         assert (
             dir_content_diff.pick_comparator(suffix=".pdf")
-            == dir_content_diff.PdfComparator()
+            == dir_content_diff.base_comparators.PdfComparator()
         )
         assert not caplog.messages
 
@@ -1426,7 +1438,8 @@ class TestBaseFunctions:
         ]
 
     def test_pick_comparator_no_default(self, registry_reseter):
-        dir_content_diff._COMPARATORS.pop(None)  # pylint: disable=protected-access
+        """Test the pick_comparator() function when no default comparator is available."""
+        dir_content_diff.registry._COMPARATORS.pop(None)  # pylint: disable=protected-access
 
         with pytest.raises(RuntimeError, match="No default comparator available"):
             dir_content_diff.pick_comparator()

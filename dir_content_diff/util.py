@@ -170,7 +170,7 @@ def import_error_message(name):
         dependencies = COMPARATOR_DEPENDENCIES[name]
     except KeyError as exception:
         msg = (
-            f"The module {name} has no registered dependency, please add dependencies in the "
+            f"The module {name} has no registered dependency, please add dependencies to the "
             "dependencies.json file"
         )
         raise KeyError(msg) from exception

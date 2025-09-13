@@ -513,7 +513,7 @@ class XmlComparator(DictComparator):
             elif str(text).lower() == "false":
                 res = False
             else:
-                raise ValueError("Bool attributes expect 'true' or 'false'.")
+                raise ValueError("Boolean attributes expect 'true' or 'false'.")
         elif value_type == "list":
             res = []
         elif value_type == "dict":

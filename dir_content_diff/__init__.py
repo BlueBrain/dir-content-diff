@@ -14,12 +14,17 @@ Simple tool to compare directory contents.
 
 import copy
 import importlib.metadata
+import os
 import re
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import Iterable
+from typing import List
+from typing import Literal
 from typing import Optional
 from typing import Pattern
 from typing import Tuple
@@ -212,6 +217,11 @@ class ComparisonConfig:
             new directory with formatted compared data files. If a string is passed, this string is
             used as suffix for the new directory. If `True` is passed, the suffix is
             ``_FORMATTED``.
+        max_workers: Maximum number of worker threads/processes for parallel execution. If None,
+            defaults to min(32, (os.cpu_count() or 1) + 4) as per executor default.
+        executor_type: Type of executor to use for parallel execution. 'thread' uses
+            ThreadPoolExecutor (better for I/O-bound tasks), 'process' uses ProcessPoolExecutor
+            (better for CPU-bound tasks), 'sequential' disables parallel execution.
     """
 
     include_patterns: Optional[Iterable[str]] = attrs.field(
@@ -230,6 +240,10 @@ class ComparisonConfig:
     export_formatted_files: Union[bool, str] = attrs.field(
         default=False, validator=_validate_export_formatted_files
     )
+    executor_type: Literal["sequential", "thread", "process"] = attrs.field(
+        default="sequential"
+    )
+    max_workers: Optional[int] = attrs.field(default=None)
 
     # Compiled patterns - computed once, no caching complexity needed
     compiled_include_patterns: Tuple[Pattern[str], ...] = attrs.field(init=False)
@@ -315,8 +329,8 @@ class ComparisonConfig:
 
 
 def compare_files(
-    ref_file: str,
-    comp_file: str,
+    ref_file: Union[str, Path],
+    comp_file: Union[str, Path],
     comparator: ComparatorType,
     *args,
     return_raw_diffs: bool = False,
@@ -343,7 +357,11 @@ def compare_files(
 
     try:
         return comparator(
-            ref_file, comp_file, *args, return_raw_diffs=return_raw_diffs, **kwargs
+            Path(ref_file),
+            Path(comp_file),
+            *args,
+            return_raw_diffs=return_raw_diffs,
+            **kwargs,
         )
     except Exception as exception:  # pylint: disable=broad-except
         load_kwargs = kwargs.pop("load_kwargs", None)
@@ -377,8 +395,8 @@ def compare_files(
 
 
 def export_formatted_file(
-    file: str,
-    formatted_file: str,
+    file: Union[str, Path],
+    formatted_file: Union[str, Path],
     comparator: ComparatorType,
     **kwargs,
 ) -> None:
@@ -455,29 +473,175 @@ def pick_comparator(comparator=None, suffix=None, comparators=None):
         )
     if suffix is not None:
         if suffix in comparators:
-            return comparators.get(suffix)
+            suffix_comparator = comparators.get(suffix)
+            if suffix_comparator is not None:
+                return suffix_comparator
         LOGGER.debug("Could not find the comparator for the '%s' suffix", suffix)
     LOGGER.debug("Returning the default comparator")
-    return _COMPARATORS.get(None)
+    default_comparator = _COMPARATORS.get(None)
+    if default_comparator is None:
+        raise RuntimeError("No default comparator available")
+    return default_comparator
 
 
 def _check_config(config=None, **kwargs):
+    """Process configuration."""
     if config is not None:
         if kwargs:
             # Override config attributes with kwargs
             config = attrs.evolve(config, **kwargs)
     else:
-        config = ComparisonConfig(
-            **kwargs,
-        )
+        config = ComparisonConfig(**kwargs)
+
     return config
+
+
+def _compare_single_file(
+    ref_file: Path,
+    comp_path: Path,
+    relative_path: str,
+    config: ComparisonConfig,
+    formatted_data_path: Path,
+) -> Tuple[str, Union[str, bool]]:
+    """Compare a single file and optionally export formatted version.
+
+    Args:
+        ref_file: Path to the reference file.
+        comp_file: Path to the comparison file.
+        relative_path: Relative path of the file from the reference directory.
+        config: Comparison configuration.
+        formatted_data_path: Path where formatted files should be exported.
+
+    Returns:
+        A tuple containing the relative path and the comparison result.
+        The result is False if files are equal, or a string describing differences.
+    """
+    comp_file = comp_path / relative_path
+    if not comp_file.exists():
+        msg = f"The file '{relative_path}' does not exist in '{comp_path}'."
+        return relative_path, msg
+
+    # Get specific arguments for this file
+    specific_file_args = (config.specific_args or {}).get(relative_path, None)
+    if specific_file_args is None:
+        for pattern, pattern_args in config.pattern_specific_args.items():
+            if pattern.match(relative_path):
+                specific_file_args = copy.deepcopy(pattern_args)
+                break
+    if specific_file_args is None:
+        specific_file_args = {}
+
+    # Pick the appropriate comparator
+    comparator = pick_comparator(
+        comparator=specific_file_args.pop("comparator", None),
+        suffix=ref_file.suffix,
+        comparators=config.comparators,
+    )
+
+    # Get comparator arguments
+    comparator_args = specific_file_args.pop("args", [])
+
+    # Compare files
+    comparison_result = compare_files(
+        ref_file,
+        comp_file,
+        comparator,
+        *comparator_args,
+        return_raw_diffs=config.return_raw_diffs,
+        **specific_file_args,
+    )
+
+    # Export formatted file if requested
+    if config.export_formatted_files is not False:
+        export_formatted_file(
+            comp_file,
+            formatted_data_path / relative_path,
+            comparator,
+            **specific_file_args,
+        )
+
+    return relative_path, comparison_result
+
+
+def _collect_files_to_compare(ref_path: Path, config: ComparisonConfig):
+    """Collect all files that need to be compared.
+
+    Args:
+        ref_path: Path to the reference directory.
+        config: Comparison configuration.
+
+    Yields:
+        Tuples of (ref_file, relative_path) for files to compare.
+    """
+    for ref_file in ref_path.glob("**/*"):
+        if ref_file.is_dir():
+            continue
+
+        relative_path = ref_file.relative_to(ref_path).as_posix()
+
+        if config.should_ignore_file(relative_path):
+            LOGGER.debug("Ignore file: %s", relative_path)
+            continue
+
+        yield ref_file, relative_path
+
+
+def _compare_file_chunk(
+    file_chunk: List[Tuple[Path, Path, str]],
+    config: ComparisonConfig,
+    comp_path: Path,
+    formatted_data_path: Path,
+) -> List[Tuple[str, Union[str, bool]]]:  # pragma: no cover
+    """Compare a chunk of files.
+
+    Args:
+        file_chunk: List of file tuples to compare.
+        config: Comparison configuration.
+        formatted_data_path: Path where formatted files should be exported.
+
+    Returns:
+        List of comparison results for the chunk.
+    """
+    results = []
+    for ref_file, relative_path in file_chunk:
+        try:
+            result = _compare_single_file(
+                ref_file, comp_path, relative_path, config, formatted_data_path
+            )
+            results.append(result)
+        except Exception as e:  # pylint: disable=broad-except
+            LOGGER.error("Error comparing file %s: %s", relative_path, e)
+            results.append((relative_path, f"Error comparing file: {e}"))
+    return results
+
+
+def _split_into_chunks(items: List[Any], num_chunks: int) -> List[List[Any]]:
+    """Split a list of items into approximately equal chunks.
+
+    Args:
+        items: List of items to split.
+        num_chunks: Desired number of chunks.
+
+    Returns:
+        List of chunks.
+    """
+    if num_chunks <= 0:
+        return [items]
+
+    chunk_size = max(1, len(items) // num_chunks)
+    chunks = []
+
+    for i in range(0, len(items), chunk_size):
+        chunks.append(items[i : i + chunk_size])
+
+    return chunks
 
 
 def compare_trees(
     ref_path: Union[str, Path],
     comp_path: Union[str, Path],
     *,
-    config: ComparisonConfig = None,
+    config: Optional[ComparisonConfig] = None,
     **kwargs,
 ):
     """Compare all files from 2 different directory trees and return the differences.
@@ -519,54 +683,99 @@ def compare_trees(
         )
     )
 
-    # Loop over all files and call the correct comparator
+    # Collect all files to compare
+    files_to_compare = list(_collect_files_to_compare(ref_path, config))
+
     different_files = {}
-    for ref_file in ref_path.glob("**/*"):
-        if ref_file.is_dir():
-            continue
 
-        relative_path = ref_file.relative_to(ref_path).as_posix()
-        comp_file = comp_path / relative_path
+    if config.executor_type != "sequential" and len(files_to_compare) > 1:
+        # Parallel execution
+        executor_class = (
+            ThreadPoolExecutor
+            if config.executor_type == "thread"
+            else ProcessPoolExecutor
+        )
+        LOGGER.debug(
+            "Starting parallel comparison of %d files with %s(max_workers=%s)",
+            len(files_to_compare),
+            executor_class.__name__,
+            config.max_workers,
+        )
 
-        if config.should_ignore_file(relative_path):
-            LOGGER.debug("Ignore file: %s", relative_path)
-            continue
+        # Determine max_workers with default fallback
+        actual_max_workers = config.max_workers
+        if actual_max_workers is None:
+            actual_max_workers = min(32, (os.cpu_count() or 1) + 4)
 
-        if comp_file.exists():
-            specific_file_args = (config.specific_args or {}).get(relative_path, None)
-            if specific_file_args is None:
-                for pattern, pattern_args in config.pattern_specific_args.items():
-                    if pattern.match(relative_path):
-                        specific_file_args = copy.deepcopy(pattern_args)
-                        break
-            if specific_file_args is None:
-                specific_file_args = {}
-            comparator = pick_comparator(
-                comparator=specific_file_args.pop("comparator", None),
-                suffix=ref_file.suffix,
-                comparators=config.comparators,
-            )
-            comparator_args = specific_file_args.pop("args", [])
-            res = compare_files(
-                ref_file,
-                comp_file,
-                comparator,
-                *comparator_args,
-                return_raw_diffs=config.return_raw_diffs,
-                **specific_file_args,
-            )
-            if res is not False:
-                different_files[relative_path] = res
-            if config.export_formatted_files is not False:
-                export_formatted_file(
-                    comp_file,
-                    formatted_data_path / relative_path,
-                    comparator,
-                    **specific_file_args,
+        with executor_class(max_workers=actual_max_workers) as executor:
+            if config.executor_type == "process":
+                # For ProcessPoolExecutor, use chunk-based approach for better performance
+                file_chunks = _split_into_chunks(files_to_compare, actual_max_workers)
+
+                future_to_chunk = {
+                    executor.submit(
+                        _compare_file_chunk,
+                        chunk,
+                        config,
+                        comp_path,
+                        formatted_data_path,
+                    ): chunk
+                    for chunk in file_chunks
+                    if chunk  # Skip empty chunks
+                }
+
+                # Collect results from chunks
+                for future in future_to_chunk:
+                    try:
+                        chunk_results = future.result()
+                        for relative_path, result in chunk_results:
+                            if result:
+                                different_files[relative_path] = result
+                    except Exception as e:  # pragma: no cover
+                        LOGGER.error("Error in chunk processing: %s", e)
+                        raise
+
+            else:
+                # For ThreadPoolExecutor, submit individual files (better load balancing)
+                future_to_file = {
+                    executor.submit(
+                        _compare_single_file,
+                        ref_file,
+                        comp_path,
+                        relative_path,
+                        config,
+                        formatted_data_path,
+                    ): relative_path
+                    for ref_file, relative_path in files_to_compare
+                }
+
+                # Collect results as they complete
+                for future in future_to_file:
+                    try:
+                        relative_path, result = future.result()
+                        if result:
+                            different_files[relative_path] = result
+                    except Exception as e:  # pragma: no cover
+                        LOGGER.error(
+                            "Error comparing file %s: %s", future_to_file[future], e
+                        )
+                        raise
+    else:
+        # Sequential execution (original behavior)
+        LOGGER.debug(
+            "Starting sequential comparison of %d files", len(files_to_compare)
+        )
+
+        for ref_file, relative_path in files_to_compare:
+            try:
+                _, result = _compare_single_file(
+                    ref_file, comp_path, relative_path, config, formatted_data_path
                 )
-        else:
-            msg = f"The file '{relative_path}' does not exist in '{comp_path}'."
-            different_files[relative_path] = msg
+                if result is not False:
+                    different_files[relative_path] = result
+            except Exception as exc:  # pragma: no cover
+                LOGGER.error("File comparison failed for %s: %s", relative_path, exc)
+                raise
 
     return different_files
 

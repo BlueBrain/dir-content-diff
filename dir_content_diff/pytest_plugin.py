@@ -13,7 +13,7 @@ directory with a suffix added. The default suffix is ``_FORMATTED`` and can be c
 """
 
 # LICENSE HEADER MANAGED BY add-license-header
-# Copyright (c) 2023-2025 Blue Brain Project, EPFL.
+# Copyright (c) 2023-2026 Blue Brain Project, EPFL.
 #
 # This file is part of dir-content-diff.
 # See https://github.com/BlueBrain/dir-content-diff for further info.

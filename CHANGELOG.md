@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.14.1](https://github.com/BlueBrain/dir-content-diff/compare/1.14.0..1.14.1)
+
+> 15 January 2026
+
+### Chores And Housekeeping
+
+- Bump copyright (Adrien Berchet - [#99](https://github.com/BlueBrain/dir-content-diff/pull/99))
+
+### Documentation Changes
+
+- Change theme to Furo because BBP theme is deprecated (Adrien Berchet - [#100](https://github.com/BlueBrain/dir-content-diff/pull/100))
+
 ## [1.14.0](https://github.com/BlueBrain/dir-content-diff/compare/1.13.0..1.14.0)
 
 > 13 September 2025

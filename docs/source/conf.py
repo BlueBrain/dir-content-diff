@@ -1,7 +1,7 @@
 """Configuration file for the Sphinx documentation builder."""
 
 # LICENSE HEADER MANAGED BY add-license-header
-# Copyright (c) 2023-2025 Blue Brain Project, EPFL.
+# Copyright (c) 2023-2026 Blue Brain Project, EPFL.
 #
 # This file is part of dir-content-diff.
 # See https://github.com/BlueBrain/dir-content-diff for further info.
@@ -64,16 +64,12 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx-bluebrain-theme"
+html_theme = "furo"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
-
-html_theme_options = {
-    "metadata_distribution": package_name,
-}
 
 html_title = project_name
 

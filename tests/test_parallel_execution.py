@@ -187,11 +187,11 @@ class TestParallelExecution:
         generate_test_files.create_json(empty_res_tree / "file.json")
 
         # Mock the parallel executors and configure logs
-        with patch(
-            "concurrent.futures.ThreadPoolExecutor"
-        ) as mock_thread_executor, patch(
-            "concurrent.futures.ProcessPoolExecutor"
-        ) as mock_process_executor, caplog.at_level(logging.DEBUG):
+        with (
+            patch("concurrent.futures.ThreadPoolExecutor") as mock_thread_executor,
+            patch("concurrent.futures.ProcessPoolExecutor") as mock_process_executor,
+            caplog.at_level(logging.DEBUG),
+        ):
             result = compare_trees(
                 empty_ref_tree, empty_res_tree, executor_type="thread", max_workers=4
             )

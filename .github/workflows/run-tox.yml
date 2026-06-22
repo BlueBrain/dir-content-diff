@@ -35,12 +35,12 @@ jobs:
     - name: Install APT Packages
       run: |
         sudo apt-get install -y poppler-utils imagemagick
-    - name: Cache tox and precommit environments
+    - name: Cache tox and prek environments
       uses: actions/cache@v5
       with:
         path: |
           .tox
-          ~/.cache/pre-commit
+          ~/.cache/prek
         key: ${{ runner.os }}-${{ matrix.python-version }}-${{ steps.date.outputs.date }}-${{ hashFiles('setup.py') }}-${{ hashFiles('.pre-commit-config.yaml') }}
     - name: Clear results in tox environments
       run: |

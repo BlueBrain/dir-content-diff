@@ -41,7 +41,7 @@ jobs:
         path: |
           .tox
           ~/.cache/prek
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ steps.date.outputs.date }}-${{ hashFiles('setup.py') }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ steps.date.outputs.date }}-${{ hashFiles('setup.py', 'pyproject.toml', 'tox.ini', 'dir_content_diff/comparators/dependencies.json', '.pre-commit-config.yaml') }}
     - name: Clear results in tox environments
       run: |
         rm -rf .tox/*/tmp

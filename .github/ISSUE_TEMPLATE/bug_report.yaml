@@ -9,29 +9,29 @@ body:
   - type: markdown
     attributes:
       value: "
-Thanks for taking the time to fill out this bug report!
+        Thanks for taking the time to fill out this bug report!
 
 
-Before submitting, make sure you search in the [issue list](https://github.com/BlueBrain/dir-content-diff/issues) that a similar issue was not already reported.
-If it is not the case, please read the following guidelines.
+        Before submitting, make sure you search in the [issue list](https://github.com/BlueBrain/dir-content-diff/issues) that a similar issue was not already reported.
+        If it is not the case, please read the following guidelines.
 
-### GUIDELINES FOR REPORTING BUGS
+        ### GUIDELINES FOR REPORTING BUGS
 
-Bug reports that are not properly formulated and formatted or without enough details can be very hard for us to understand and fix.
-In order to ensure we can help you fixing your bug, please follow these guidelines.
+        Bug reports that are not properly formulated and formatted or without enough details can be very hard for us to understand and fix.
+        In order to ensure we can help you fixing your bug, please follow these guidelines.
 
 
-Your reports must include the following features:
+        Your reports must include the following features:
 
-1. **succinct description** of the problem - typically a line or two at most.
+        1. **succinct description** of the problem - typically a line or two at most.
 
-2. **succinct, dependency-free code** which reproduces the problem, otherwise known as a [Minimal, Complete, and Verifiable](https://stackoverflow.com/help/mcve) example.
-  IF YOU DO NOT HAVE A COMPLETE, RUNNABLE TEST CASE WRITTEN DIRECTLY IN THE TEXTAREA BELOW, YOUR ISSUE MAY BE CLOSED.
+        2. **succinct, dependency-free code** which reproduces the problem, otherwise known as a [Minimal, Complete, and Verifiable](https://stackoverflow.com/help/mcve) example.
+          IF YOU DO NOT HAVE A COMPLETE, RUNNABLE TEST CASE WRITTEN DIRECTLY IN THE TEXTAREA BELOW, YOUR ISSUE MAY BE CLOSED.
 
-3. **complete stack traces for all errors** - please avoid screenshots, use formatted text inside issues.
+        3. **complete stack traces for all errors** - please avoid screenshots, use formatted text inside issues.
 
-4. other relevant things as applicable: **dependencies**, **comparative performance timings** for performance issues, etc.
-"
+        4. other relevant things as applicable: **dependencies**, **comparative performance timings** for performance issues, etc.
+      "
 
   - type: textarea
     attributes:
@@ -45,8 +45,8 @@ Your reports must include the following features:
     attributes:
       label: Optional link from https://dir-content-diff.readthedocs.io which documents the behavior that is expected
       description: "
-Please make sure the behavior you are seeing is definitely in contradiction to what's documented as the correct behavior.
-"
+        Please make sure the behavior you are seeing is definitely in contradiction to what's documented as the correct behavior.
+      "
     validations:
       required: false
 
@@ -54,7 +54,8 @@ Please make sure the behavior you are seeing is definitely in contradiction to w
     attributes:
       label: To Reproduce
       description: "
-Provide your [Minimal, Complete, and Verifiable](https://stackoverflow.com/help/mcve) example here."
+        Provide your [Minimal, Complete, and Verifiable](https://stackoverflow.com/help/mcve) example here.
+      "
       placeholder: "# Insert code here (text area already python formatted)"
       render: Python
     validations:
@@ -64,9 +65,9 @@ Provide your [Minimal, Complete, and Verifiable](https://stackoverflow.com/help/
     attributes:
       label: Error
       description: "
-Provide the complete text of any errors received **including the complete stack trace**.
-If the message is a warning, run your program with the ``-Werror`` flag: ``python -Werror myprogram.py``
-"
+        Provide the complete text of any errors received **including the complete stack trace**.
+        If the message is a warning, run your program with the ``-Werror`` flag: ``python -Werror myprogram.py``
+      "
       placeholder: "# Copy the complete stack trace and error message here (text area already formatted for Python backtrace)"
       render: Python traceback
     validations:

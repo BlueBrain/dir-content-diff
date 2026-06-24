@@ -138,7 +138,6 @@ class TestParallelExecution:
     def test_parallel_with_specific_args(self, ref_tree, res_tree_equal):
         """Test parallel execution with specific args."""
         specific_args = {
-            "file.yaml": {"args": [None, None, None, False, 0, False]},
             "file.json": {"tolerance": 0},
         }
 

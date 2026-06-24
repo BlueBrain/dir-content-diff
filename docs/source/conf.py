@@ -88,7 +88,6 @@ autodoc_default_options = {
 }
 
 intersphinx_mapping = {
-    "dictdiffer": ("https://dictdiffer.readthedocs.io/en/latest/", None),
     "morph_tool": ("https://morph-tool.readthedocs.io/en/latest/", None),
     "morphio": ("https://morphio.readthedocs.io/en/latest/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),

@@ -22,7 +22,7 @@ dynamic = ["version", "optional-dependencies"]
 dependencies = [
     "attrs>=21.3.0",
     "click>=8",
-    "dictdiffer>=0.8",
+    "deepdiff>=8.6",
     "dicttoxml>=1.7.12",
     "diff_pdf_visually>=1.7",
     "jsonpath-ng>=1.5",
@@ -90,4 +90,10 @@ testpaths = [
 ]
 markers = [
     "comparators_missing_deps: marks tests for missing dependencies",
+]
+
+[dependency-groups]
+dev = [
+    "ipython>=8.39.0",
+    "pdbpp>=0.12.1",
 ]

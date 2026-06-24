@@ -412,7 +412,7 @@ def compare_trees(
                 _, result = _compare_single_file(
                     ref_file, comp_path, relative_path, config, formatted_data_path
                 )
-                if result is not False:
+                if result:
                     different_files[relative_path] = result
             except Exception as exc:  # pragma: no cover
                 LOGGER.error("File comparison failed for %s: %s", relative_path, exc)

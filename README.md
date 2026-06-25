@@ -169,6 +169,21 @@ dir_content_diff.assert_equal_trees(
 )
 ```
 
+Dictionary-based comparators such as JSON, YAML, XML and INI use keyword arguments for
+their comparison options. The project-specific `tolerance` and `absolute_tolerance`
+arguments control numeric comparisons. Useful DeepDiff options can also be passed as
+keywords, for example `exclude_paths`, `exclude_regex_paths`, `include_paths`,
+`ignore_order`, `ignore_string_case` and `max_diffs`.
+
+```python
+specific_args = {
+    "sub_dir_1/sub_file_1.a": {
+        "exclude_paths": {"root['metadata']['timestamp']"},
+        "ignore_order": True,
+    }
+}
+```
+
 Each comparator has different arguments that are detailed in the documentation.
 
 ##### File-specific Comparators

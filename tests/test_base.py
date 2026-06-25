@@ -656,6 +656,71 @@ class TestBaseComparator:
                 }
             }
 
+        def test_diff_rejects_positional_args(self):
+            """Test dictionary comparisons require keyword arguments."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            with pytest.raises(TypeError, match="does not accept positional"):
+                comparator.diff({"value": 1}, {"value": 2}, None)
+
+        def test_positional_diff_args_are_reported(self, ref_tree, res_tree_equal):
+            """Test positional config args fail with a clear report."""
+            res = compare_trees(
+                ref_tree,
+                res_tree_equal,
+                specific_args={"file.json": {"args": [None]}},
+            )
+
+            report = res["file.json"]
+            assert "Exception raised: (TypeError)" in report
+            assert "does not accept positional comparison arguments" in report
+            assert "takes 3 positional arguments" not in report
+
+        def test_keyword_tolerance_is_applied(self):
+            """Test tolerance remains a first-class keyword argument."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert (
+                comparator.diff(
+                    {"value": 100.0},
+                    {"value": 105.0},
+                    tolerance=0.1,
+                )
+                == {}
+            )
+            assert comparator.diff(
+                {"value": 100.0},
+                {"value": 105.0},
+                tolerance=0,
+            ) == {
+                "values_changed": {
+                    "root['value']": {"new_value": 105.0, "old_value": 100.0}
+                }
+            }
+
+        def test_deepdiff_exclude_paths_kwarg(self):
+            """Test useful DeepDiff kwargs are passed through."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert comparator.diff(
+                {"value": 1, "generated": "old"},
+                {"value": 2, "generated": "new"},
+                exclude_paths={"root['generated']"},
+            ) == {"values_changed": {"root['value']": {"new_value": 2, "old_value": 1}}}
+
+        def test_deepdiff_ignore_order_kwarg(self):
+            """Test DeepDiff list-order controls can be used."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert (
+                comparator.diff(
+                    {"values": [1, 2, 3]},
+                    {"values": [3, 2, 1]},
+                    ignore_order=True,
+                )
+                == {}
+            )
+
         def test_numeric_equality_and_nan_handling(self):
             """Test numeric equality and NaN handling."""
             comparator = dir_content_diff.base_comparators.JsonComparator()

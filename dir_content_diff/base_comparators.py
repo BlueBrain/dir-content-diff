@@ -476,7 +476,16 @@ class DictComparator(BaseComparator):
                                 )
         return data
 
-    def diff(self, ref, comp, **kwargs):
+    def diff(
+        self,
+        ref,
+        comp,
+        *args,
+        tolerance=None,
+        absolute_tolerance=None,
+        custom_operators=None,
+        **kwargs,
+    ):
         """Compare 2 dictionaries.
 
         This function compares dictionaries and returns a machine-readable diff report.
@@ -485,12 +494,18 @@ class DictComparator(BaseComparator):
             tolerance (float): Relative threshold to consider when comparing two float numbers.
             absolute_tolerance (float): Absolute threshold to consider when comparing
                 two float numbers.
+            custom_operators (list): Additional custom operators passed to DeepDiff.
             **kwargs: Additional keyword arguments are passed to :class:`deepdiff.diff.DeepDiff`.
         """
+        if args:
+            raise TypeError(
+                "DictComparator.diff does not accept positional comparison "
+                "arguments. Use keyword arguments instead, for example "
+                "'tolerance', 'absolute_tolerance', 'exclude_paths', "
+                "'exclude_regex_paths', 'include_paths', or 'ignore_order'."
+            )
         errors = self.current_state.get("format_errors", [])
-        tolerance = kwargs.pop("tolerance", None)
-        absolute_tolerance = kwargs.pop("absolute_tolerance", None)
-        custom_operators = list(kwargs.pop("custom_operators", []))
+        custom_operators = list(custom_operators or [])
         custom_operators.insert(
             0, _NumericToleranceOperator(tolerance, absolute_tolerance)
         )

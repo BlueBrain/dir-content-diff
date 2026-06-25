@@ -92,16 +92,41 @@ def pdf_diff():
 @pytest.fixture
 def dict_diff():
     """The diff that should be reported for the JSON and YAML files."""
-    return (
+    diff = (
         r"""The files '\S*' and '\S*' are different:\n"""
-        r"""Changed the value of \['int_value'\] from 1 to 2\.\n"""
-        r"""(?:Changed the value of .*\n)*"""
-        r"""Changed the value of \['simple_list'\]\[2\] from "str_val" """
-        r"""to "__str_val__"\."""
-        r"""(?:\nChanged the value of .*)*"""
-        r"""\ndictionary_item_added: .*root\['simple_dict'\]\['__dict_key_2__'\].*\n"""
-        r"""dictionary_item_removed: .*root\['nested_dict_test'\].*"""
+        r"""Added value at \['nested_dict'\]\['sub_nested_dict'\]\['__nested_dict_key_2__'\]: "nested_dict_val_2"\.\n"""
+        r"""Added value at \['nested_dict'\]\['sub_nested_dict'\]\['nested_dict_key_1'\]: "__nested_dict_val_1__"\.\n"""
+        r"""Added value at \['nested_list'\]\[3\]\[1\]\['__nested_dict_key_2__'\]: "nested_dict_val_2"\.\n"""
+        r"""Added value at \['simple_dict'\]\['__dict_key_2__'\]: \[1, 2, 3\]\.\n"""
+        r"""Added value at \['simple_dict'\]\['__dict_key_3__'\]: \[1, 2, 3\]\.\n"""
+        r"""Added value at \['simple_dict'\]\['__dict_key_4__'\]: \[1, 2, 3\]\.\n"""
+        r"""Added value at \['simple_list_test'\]: \[\["dict_key_1", \[1, 4, 3\]\], """
+        r"""\["__dict_key_2__", \[1, 2, 3\]\]\]\.\n"""
+        r"""Changed value at \['int_value'\]: 1 -> 2\.\n"""
+        r"""Changed value at \['nested_dict'\]\['dict_key'\]\[1\]: 2 -> 4\.\n"""
+        r"""Changed value at \['nested_dict'\]\['sub_nested_dict'\]\['nested_list_key'\]\[0\]: 1 -> 2\.\n"""
+        r"""Changed value at \['nested_dict'\]\['sub_nested_dict'\]\['nested_list_key'\]\[1\]: 2.5 -> 2.50001\.\n"""
+        r"""Changed value at \['nested_dict'\]\['sub_nested_dict'\]\['nested_list_key'\]"""
+        r"""\[2\]: "str_val" -> "__str_val__"\.\n"""
+        r"""Changed value at \['nested_list'\]\[0\]: 1 -> 2\.\n"""
+        r"""Changed value at \['nested_list'\]\[1\]: 2.5 -> 2.50001\.\n"""
+        r"""Changed value at \['nested_list'\]\[2\]: "str_val" -> "__str_val__"\.\n"""
+        r"""Changed value at \['nested_list'\]\[3\]\[0\]: "nested_list_val" -> "__nested_list_val__"\.\n"""
+        r"""Changed value at \['nested_list'\]\[3\]\[1\]\['nested_dict_key_1'\]: """
+        r""""nested_dict_val_1" -> "__nested_dict_val_1__"\.\n"""
+        r"""Changed value at \['nested_list'\]\[3\]\[1\]\['nested_list_key'\]\[0\]: 1 -> 2\.\n"""
+        r"""Changed value at \['nested_list'\]\[3\]\[1\]\['nested_list_key'\]\[1\]: 2.5 -> 2.50001\.\n"""
+        r"""Changed value at \['nested_list'\]\[3\]\[1\]\['nested_list_key'\]\[2\]: "str_val" -> "__str_val__"\.\n"""
+        r"""Changed value at \['simple_dict'\]\['dict_key_1'\]\[1\]: 2 -> 4\.\n"""
+        r"""Changed value at \['simple_list'\]\[0\]: 1 -> 2\.\n"""
+        r"""Changed value at \['simple_list'\]\[1\]: 2.5 -> 2.50001\.\n"""
+        r"""Changed value at \['simple_list'\]\[2\]: "str_val" -> "__str_val__"\.\n"""
+        r"""Removed value at \['nested_dict'\]\['sub_nested_dict'\]\['nested_dict_key'\]: "nested_dict_val"\.\n"""
+        r"""Removed value at \['nested_dict_test'\]: 0\.\n"""
+        r"""Removed value at \['nested_list'\]\[3\]\[1\]\['nested_dict_key_2'\]: "nested_dict_val_2"\.\n"""
+        r"""Removed value at \['simple_dict'\]\['dict_key_2'\]: \[1, 2, 3\]\."""
     )
+    return diff
 
 
 @pytest.fixture
@@ -111,29 +136,24 @@ def base_diff():
 
 
 @pytest.fixture
-def xml_diff():
+def xml_diff(dict_diff):
     """The diff that should be reported for the XML files."""
-    return (
-        r"""The files '\S*' and '\S*' are different:\n"""
-        r"""Changed the value of \['root'\]\['int_value'\] from 1 to 2\.\n"""
-        r"""(?:Changed the value of .*\n)*"""
-        r"""Changed the value of \['root'\]\['simple_list'\]\[2\] from "str_val" """
-        r"""to "__str_val__"\."""
-        r"""(?:\nChanged the value of .*)*"""
-        r"""\ndictionary_item_added: .*root\['root'\]\['simple_dict'\]\['__dict_key_2__'\].*\n"""
-        r"""dictionary_item_removed: .*root\['root'\]\['nested_dict_test'\].*"""
-    )
+    return dict_diff.replace(r"value at \[", r"value at \['root'\]\[")
 
 
 @pytest.fixture
 def ini_diff():
     """The diff that should be reported for the INI files."""
-    return (
+    diff = (
         r"The files '\S*/file\.ini' and '\S*/file\.ini' are different:\n"
-        r"""Changed the value of \['section1'\]\['attr1'\] from "val1" to "val2"\.\n"""
-        r"""(?:Changed the value of .*\n)*"""
-        r"""Changed the value of \['section2'\]\['attr4'\]\['b'\]\[1\] from 2 to 3\."""
+        r"""Changed value at \['section1'\]\['attr1'\]: "val1" -> "val2"\.\n"""
+        r"""Changed value at \['section1'\]\['attr2'\]: 1 -> 2\.\n"""
+        r"""Changed value at \['section2'\]\['attr3'\]\[1\]: 2 -> 3\.\n"""
+        r"""Changed value at \['section2'\]\['attr3'\]\[3\]: "b" -> "c"\.\n"""
+        r"""Changed value at \['section2'\]\['attr4'\]\['a'\]: 1 -> 4\.\n"""
+        r"""Changed value at \['section2'\]\['attr4'\]\['b'\]\[1\]: 2 -> 3\."""
     )
+    return diff
 
 
 @pytest.fixture

@@ -721,6 +721,109 @@ class TestBaseComparator:
                 == {}
             )
 
+        def test_top_level_json_scalar_diff_report(self, tmp_path):
+            """Test top-level scalar JSON files use the DeepDiff root path."""
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text("1", encoding="utf-8")
+            comp_file.write_text("2", encoding="utf-8")
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.JsonComparator(),
+            )
+
+            assert "Changed value at root: 1 -> 2." in diff
+
+        def test_yaml_added_mapping_with_mixed_key_types(self, tmp_path):
+            """Test YAML mappings with mixed key types can be reported."""
+            ref_file = tmp_path / "ref.yaml"
+            comp_file = tmp_path / "comp.yaml"
+            ref_file.write_text("{}\n", encoding="utf-8")
+            comp_file.write_text(
+                "payload:\n  1: one\n  '2': two\n",
+                encoding="utf-8",
+            )
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.YamlComparator(),
+            )
+
+            assert """Added value at ['payload']: {"1": "one", "2": "two"}.""" in diff
+
+        def test_missing_replace_pattern_paths_are_reported(self, tmp_path):
+            """Test missing replace-pattern paths are shown in the report."""
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text(
+                json.dumps({"stable": "ok", "target": "old"}),
+                encoding="utf-8",
+            )
+            comp_file.write_text(
+                json.dumps({"stable": "ok", "extra": "old"}),
+                encoding="utf-8",
+            )
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.JsonComparator(),
+                format_data_kwargs={
+                    "replace_pattern": {("old", "new"): ["target", "extra"]},
+                },
+            )
+
+            assert "The path 'extra' is missing in the reference dictionary" in diff
+            assert "The path 'target' is missing in the compared dictionary" in diff
+
+        def test_grouped_replace_pattern_errors_can_be_formatted(self, tmp_path):
+            """Test custom filters can keep grouped format errors."""
+
+            class ComparatorWithGroupedErrors(
+                dir_content_diff.base_comparators.JsonComparator
+            ):
+                """Keep the grouped DeepDiff report shape."""
+
+                def filter(self, differences, **kwargs):
+                    return differences
+
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text(json.dumps({"target": "old"}), encoding="utf-8")
+            comp_file.write_text(json.dumps({}), encoding="utf-8")
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                ComparatorWithGroupedErrors(),
+                format_data_kwargs={
+                    "replace_pattern": {("old", "new"): ["target"]},
+                },
+            )
+
+            assert "The path 'target' is missing in the compared dictionary" in diff
+
+        def test_deepdiff_repetition_changes_are_preserved(self, tmp_path):
+            """Test unsupported DeepDiff categories remain visible."""
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text(json.dumps({"values": [1, 1, 2]}), encoding="utf-8")
+            comp_file.write_text(json.dumps({"values": [1, 2, 2]}), encoding="utf-8")
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.JsonComparator(),
+                ignore_order=True,
+                report_repetition=True,
+            )
+
+            assert "repetition_change:" in diff
+            assert '"old_repeat": 2' in diff
+
         def test_numeric_equality_and_nan_handling(self):
             """Test numeric equality and NaN handling."""
             comparator = dir_content_diff.base_comparators.JsonComparator()

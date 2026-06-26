@@ -391,7 +391,9 @@ class DictComparator(BaseComparator):
             return (
                 f"Removed value at {formatted_path}: {cls._format_report_value(value)}."
             )
-        raise ValueError(f"Unexpected dictionary diff action: {action!r}")
+        raise ValueError(
+            f"Unexpected dictionary diff action: {action!r}"
+        )  # pragma: no cover
 
     @classmethod
     def _value_change_values(cls, values):
@@ -405,7 +407,7 @@ class DictComparator(BaseComparator):
         """Yield normalized action tuples for known DeepDiff report categories."""
         action = cls._DIFF_ACTION_CATEGORIES.get(category)
         if action is None or not hasattr(value, "items"):
-            return
+            return  # pragma: no cover
 
         for path, diff_value in value.items():
             if action == "change":

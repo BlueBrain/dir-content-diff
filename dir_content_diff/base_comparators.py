@@ -12,26 +12,57 @@
 import configparser
 import filecmp
 import json
+import math
 import re
 from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
 from xml.etree import ElementTree
 
-import dictdiffer
 import diff_pdf_visually
 import jsonpath_ng
 import yaml
+from deepdiff import DeepDiff
+from deepdiff.operator import BaseOperator
 from dicttoxml import dicttoxml
 from diff_pdf_visually import pdfdiff_pages
 
 from dir_content_diff.util import diff_msg_formatter
 
-_ACTION_MAPPING = {
-    "add": "Added the value(s) '{value}' in the '{key}' key.",
-    "change": "Changed the value of '{key}' from {value[0]} to {value[1]}.",
-    "remove": "Removed the value(s) '{value}' from '{key}' key.",
-}
+
+class _NumericToleranceOperator(BaseOperator):
+    """Numeric comparison operator implementing the existing tolerance kwargs."""
+
+    def __init__(self, tolerance, absolute_tolerance):
+        super().__init__()
+        self.tolerance = tolerance
+        self.absolute_tolerance = absolute_tolerance
+
+    def match(self, level):
+        """Return whether both compared values are numeric."""
+        return (
+            isinstance(level.t1, (int, float))
+            and isinstance(level.t2, (int, float))
+            and not isinstance(level.t1, bool)
+            and not isinstance(level.t2, bool)
+        )
+
+    def give_up_diffing(self, level, diff_instance):
+        """Return whether two numeric values should be treated as equal."""
+        first_is_nan = bool(level.t1 != level.t1)
+        second_is_nan = bool(level.t2 != level.t2)
+        if first_is_nan or second_is_nan:
+            return first_is_nan and second_is_nan
+        return math.isclose(
+            level.t1,
+            level.t2,
+            rel_tol=self.tolerance or 0,
+            abs_tol=self.absolute_tolerance or 0,
+        )
+
+    def normalize_value_for_hashing(self, parent, obj):  # pylint: disable=unused-argument
+        """Return unmodified values when set items are hashed."""
+        return obj
 
 
 class BaseComparator(ABC):
@@ -231,25 +262,24 @@ class BaseComparator(ABC):
         else:
             filtered_diffs = self.filter(diffs, **filter_kwargs)
             if hasattr(filtered_diffs, "items"):
+                sorted_diffs = self.sort(
+                    [
+                        self.format_diff(i, **format_diff_kwargs)
+                        for i in filtered_diffs.items()
+                    ],
+                    **sort_kwargs,
+                )
                 formatted_diffs = self.concatenate(
-                    self.sort(
-                        [
-                            self.format_diff(i, **format_diff_kwargs)
-                            for i in filtered_diffs.items()
-                        ],
-                        **sort_kwargs,
-                    ),
+                    sorted_diffs,
                     **concat_kwargs,
                 )
             else:
+                sorted_diffs = self.sort(
+                    [self.format_diff(i, **format_diff_kwargs) for i in filtered_diffs],
+                    **sort_kwargs,
+                )
                 formatted_diffs = self.concatenate(
-                    self.sort(
-                        [
-                            self.format_diff(i, **format_diff_kwargs)
-                            for i in filtered_diffs
-                        ],
-                        **sort_kwargs,
-                    ),
+                    sorted_diffs,
                     **concat_kwargs,
                 )
 
@@ -302,10 +332,20 @@ class DefaultComparator(BaseComparator):
 class DictComparator(BaseComparator):
     """Comparator for dictionaries."""
 
+    _MISSING_VALUE = object()
+    _DIFF_ACTION_CATEGORIES = {
+        "dictionary_item_added": "add",
+        "iterable_item_added": "add",
+        "dictionary_item_removed": "remove",
+        "iterable_item_removed": "remove",
+        "type_changes": "change",
+        "values_changed": "change",
+    }
+
     _ACTION_MAPPING = {
-        "add": "Added the value(s) '{value}' in the '{key}' key.",
-        "change": "Changed the value of '{key}' from {value[0]} to {value[1]}.",
-        "remove": "Removed the value(s) '{value}' from '{key}' key.",
+        "add": "Added value at {key}: {value}.",
+        "change": "Changed value at {key}: {value[0]} -> {value[1]}.",
+        "remove": "Removed value at {key}: {value}.",
         "missing_ref_entry": (
             "The path '{key}' is missing in the reference dictionary, please fix the "
             "'replace_pattern' argument."
@@ -316,39 +356,89 @@ class DictComparator(BaseComparator):
         ),
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._format_mapping = {
-            "add": self._format_add_value,
-            "remove": self._format_remove_value,
-            "change": self._format_change_value,
-        }
+    @staticmethod
+    def _format_report_value(value):
+        try:
+            return json.dumps(value, default=str, sort_keys=True)
+        except TypeError:
+            return json.dumps(value, default=str)
 
     @staticmethod
-    def _format_key(key):
-        if isinstance(key, str):
-            key = key.split(".")
-        if key == [""]:
-            key = []
-        return "".join(f"[{k}]" for k in key)
+    def _format_report_path(path):
+        """Format a path for human-readable reports."""
+        if isinstance(path, str) and path.startswith("root["):
+            path = path[4:]
+        return path
 
-    @staticmethod
-    def _format_add_value(value):
-        return json.dumps(dict(sorted(value)))
+    @classmethod
+    def _format_action(cls, action, path, value):
+        """Format a normalized diff action."""
+        formatted_path = cls._format_report_path(path)
+        if action == "change":
+            old_value, new_value = value
+            if old_value is cls._MISSING_VALUE:
+                return f"{formatted_path}: {cls._format_report_value(new_value)}"
+            return (
+                f"Changed value at {formatted_path}: "
+                f"{cls._format_report_value(old_value)} -> "
+                f"{cls._format_report_value(new_value)}."
+            )
+        if action == "add":
+            return (
+                f"Added value at {formatted_path}: {cls._format_report_value(value)}."
+            )
+        if action == "remove":
+            return (
+                f"Removed value at {formatted_path}: {cls._format_report_value(value)}."
+            )
+        raise ValueError(
+            f"Unexpected dictionary diff action: {action!r}"
+        )  # pragma: no cover
 
-    @staticmethod
-    def _format_remove_value(value):
-        return json.dumps(dict(sorted(value)))
+    @classmethod
+    def _value_change_values(cls, values):
+        """Return explicit old/new values from a DeepDiff value-change item."""
+        if hasattr(values, "items") and "old_value" in values and "new_value" in values:
+            return values["old_value"], values["new_value"]
+        return cls._MISSING_VALUE, values
 
-    @staticmethod
-    def _format_change_value(value):
-        value = list(value)
-        for num, i in enumerate(value):
-            if isinstance(i, str):
-                value[num] = f"'{i}'"
+    @classmethod
+    def _iter_deepdiff_actions(cls, category, value):
+        """Yield normalized action tuples for known DeepDiff report categories."""
+        action = cls._DIFF_ACTION_CATEGORIES.get(category)
+        if action is None or not hasattr(value, "items"):
+            return  # pragma: no cover
+
+        for path, diff_value in value.items():
+            if action == "change":
+                diff_value = cls._value_change_values(diff_value)
+            yield action, path, diff_value
+
+    @classmethod
+    def _format_deepdiff_category(cls, category, value):
+        """Format a known grouped DeepDiff category."""
+        return "\n".join(
+            cls._format_action(action, path, diff_value)
+            for action, path, diff_value in cls._iter_deepdiff_actions(category, value)
+        )
+
+    def filter(self, differences, **kwargs):
+        """Expand grouped categories into formatted diff elements."""
+        filtered_differences = super().filter(differences, **kwargs)
+        expanded_differences = []
+        for category, value in filtered_differences.items():
+            if category == "format_errors":
+                expanded_differences.extend(
+                    (category, action, key, error_value)
+                    for action, key, error_value in value
+                )
+            elif category in self._DIFF_ACTION_CATEGORIES and hasattr(value, "items"):
+                expanded_differences.extend(
+                    self._iter_deepdiff_actions(category, value)
+                )
             else:
-                value[num] = str(i)
-        return value
+                expanded_differences.append((category, value))
+        return expanded_differences
 
     def format_data(self, data, ref=None, replace_pattern=None, **kwargs):
         """Format the loaded data."""
@@ -388,38 +478,77 @@ class DictComparator(BaseComparator):
                                 )
         return data
 
-    def diff(self, ref, comp, *args, **kwargs):
+    def diff(
+        self,
+        ref,
+        comp,
+        *args,
+        tolerance=None,
+        absolute_tolerance=None,
+        custom_operators=None,
+        **kwargs,
+    ):
         """Compare 2 dictionaries.
 
-        This function calls :func:`dictdiffer.diff` to compare the dictionaries, read the doc of
-        this function for details on args and kwargs.
+        This function compares dictionaries and returns a machine-readable diff report.
 
         Keyword Args:
             tolerance (float): Relative threshold to consider when comparing two float numbers.
             absolute_tolerance (float): Absolute threshold to consider when comparing
                 two float numbers.
-            ignore (set[list]): Set of keys that should not be checked.
-            path_limit (list[str]): List of path limit tuples or :class:`dictdiffer.utils.PathLimit`
-                object to limit the diff recursion depth.
+            custom_operators (list): Additional custom operators passed to DeepDiff.
+            **kwargs: Additional keyword arguments are passed to :class:`deepdiff.diff.DeepDiff`.
         """
+        if args:
+            raise TypeError(
+                "DictComparator.diff does not accept positional comparison "
+                "arguments. Use keyword arguments instead, for example "
+                "'tolerance', 'absolute_tolerance', 'exclude_paths', "
+                "'exclude_regex_paths', 'include_paths', or 'ignore_order'."
+            )
         errors = self.current_state.get("format_errors", [])
+        custom_operators = list(custom_operators or [])
+        custom_operators.insert(
+            0, _NumericToleranceOperator(tolerance, absolute_tolerance)
+        )
 
-        if len(args) > 5:
-            dot_notation = args[5]
-            args = args[:5] + args[6:]
-        else:
-            dot_notation = kwargs.pop("dot_notation", False)
-        kwargs["dot_notation"] = dot_notation
-        errors.extend(list(dictdiffer.diff(ref, comp, *args, **kwargs)))
-        return errors
+        kwargs.setdefault("verbose_level", 2)
+        kwargs.setdefault(
+            "threshold_to_diff_deeper", 0
+        )  # Expand all differences, even if they are small
+        kwargs.setdefault("zip_ordered_iterables", True)
+        kwargs.setdefault("ignore_nan_inequality", True)
+        kwargs.setdefault("ignore_private_variables", False)
+
+        report = DeepDiff(
+            ref,
+            comp,
+            custom_operators=custom_operators,
+            **kwargs,
+        ).to_dict()
+        if errors:
+            report["format_errors"] = errors
+        return report
 
     def format_diff(self, difference):
         """Format one element difference."""
-        action, key, value = difference
-        return self._ACTION_MAPPING[action].format(
-            key=self._format_key(key),
-            value=self._format_mapping[action](value),
-        )
+        if len(difference) == 4 and difference[0] == "format_errors":
+            _, action, key, error_value = difference
+            return self._ACTION_MAPPING[action].format(key=key, value=error_value)
+
+        if len(difference) == 3 and difference[0] in {"add", "change", "remove"}:
+            action, path, value = difference
+            return self._format_action(action, path, value)
+
+        category, value = difference
+        if category == "format_errors":
+            return "\n".join(
+                self._ACTION_MAPPING[action].format(key=key, value=error_value)
+                for action, key, error_value in value
+            )
+        if category in self._DIFF_ACTION_CATEGORIES and hasattr(value, "items"):
+            return self._format_deepdiff_category(category, value)
+        return f"{category}: {self._format_report_value(value)}"
 
 
 class JsonComparator(DictComparator):

@@ -157,7 +157,7 @@
 
 - Cast exception args to str before joining them (Adrien Berchet - [#35](https://github.com/BlueBrain/dir-content-diff/pull/35))
 
-### Changes to Test Assests
+### Changes to Test Assets
 
 - Fix for Pandas&gt;=2 (Adrien Berchet - [#33](https://github.com/BlueBrain/dir-content-diff/pull/33))
 

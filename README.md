@@ -114,9 +114,9 @@ The previous code will output the following dictionary:
 {
     'file_1.c': (
         'The files \'reference_dir/file_1.c\' and \'compared_dir/file_1.c\' are different:\n'
-        'Added the value(s) \'{"2": 0}\' in the \'[b]\' key.\n'
-        'Changed the value of \'[a]\' from 1 to 2.\n'
-        'Changed the value of \'[b][0]\' from 1 to 10.'
+        'Added value at [\'b\'][2]: 0.\n'
+        'Changed value at [\'a\']: 1 -> 2.\n'
+        'Changed value at [\'b\'][0]: 1 -> 10.'
     )
 }
 ```
@@ -136,9 +136,9 @@ Which will output the following ``AssertionError``:
 
 ```bash
 AssertionError: The files 'reference_dir/file_1.c' and 'compared_dir/file_1.c' are different:
-Added the value(s) '{"2": 0}' in the '[b]' key.
-Changed the value of '[a]' from 1 to 2.
-Changed the value of '[b][0]' from 1 to 10.
+Added value at ['b'][2]: 0.
+Changed value at ['a']: 1 -> 2.
+Changed value at ['b'][0]: 1 -> 10.
 ```
 
 #### Advanced Configuration Options
@@ -167,6 +167,21 @@ dir_content_diff.assert_equal_trees(
     comparators=comparators,
     specific_args=specific_args,
 )
+```
+
+Dictionary-based comparators such as JSON, YAML, XML and INI use keyword arguments for
+their comparison options. The project-specific `tolerance` and `absolute_tolerance`
+arguments control numeric comparisons. Useful DeepDiff options can also be passed as
+keywords, for example `exclude_paths`, `exclude_regex_paths`, `include_paths`,
+`ignore_order`, `ignore_string_case` and `max_diffs`.
+
+```python
+specific_args = {
+    "sub_dir_1/sub_file_1.a": {
+        "exclude_paths": {"root['metadata']['timestamp']"},
+        "ignore_order": True,
+    }
+}
 ```
 
 Each comparator has different arguments that are detailed in the documentation.

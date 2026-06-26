@@ -17,10 +17,10 @@ import configparser
 import copy
 import json
 import logging
+import math
 import re
 import shutil
 
-import dictdiffer
 import pytest
 
 import dir_content_diff
@@ -230,8 +230,8 @@ class TestBaseComparator:
         assert kwargs_msg in no_format_diff
         assert diff == no_format_diff.replace(kwargs_msg, "")
         assert len(re.findall("### FORMATTED", diff)) == 0
-        assert len(re.findall("### FORMATTED", formatted_diff)) == 25
-        assert len(re.findall("### FORMATTED", formatted_diff_default)) == 25
+        assert len(re.findall("### FORMATTED", formatted_diff)) == 28
+        assert len(re.findall("### FORMATTED", formatted_diff_default)) == 28
         assert kwargs_msg in diff_default
         assert diff_default.replace(kwargs_msg, "") == diff
 
@@ -366,6 +366,37 @@ class TestBaseComparator:
         ) == concat_eol_diff.replace(kwargs_msg_eol, "").replace("#EOL#", TEST_EOL)
         assert concat_eol_diff == concat_eol_diff_default
         assert diff == concat_diff_default.replace(kwargs_msg_n, "\n")
+
+    def test_base_comparator_does_not_flatten_formatted_differences(self, tmp_path):
+        """Test base comparator concatenation keeps embedded newlines untouched."""
+
+        class ComparatorWithMultilineDiff(
+            dir_content_diff.base_comparators.BaseComparator
+        ):
+            """Compare data with multiline formatted diff entries."""
+
+            def diff(self, ref, comp, *args, **kwargs):
+                return ["first\nsecond", "third"]
+
+            def concatenate(self, differences, eol=None):
+                if not eol:
+                    eol = "\n"
+                return eol.join(differences)
+
+        ref_file = tmp_path / "ref.txt"
+        res_file = tmp_path / "res.txt"
+        ref_file.write_text("ref", encoding="utf-8")
+        res_file.write_text("res", encoding="utf-8")
+
+        diff = dir_content_diff.compare_files(
+            ref_file,
+            res_file,
+            ComparatorWithMultilineDiff(),
+            concat_kwargs={"eol": "#EOL#"},
+        )
+
+        assert "first\nsecond#EOL#third" in diff
+        assert "first#EOL#second#EOL#third" not in diff
 
     def test_report_kwargs(self, ref_tree, res_tree_diff):
         """Test the report_kwargs method."""
@@ -546,6 +577,342 @@ class TestBaseComparator:
                 ("missing_comp_entry", i, None)
                 for i in patterns[("string", "NEW VALUE")]
             ]
+
+        def test_numeric_tolerance(self):
+            """Test numeric tolerance semantics."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert (
+                comparator.diff({"value": 100.0}, {"value": 111.0}, tolerance=0.1) == {}
+            )
+            assert comparator.diff(
+                {"value": 100.0},
+                {"value": 112.0},
+                tolerance=0.1,
+            ) == {
+                "values_changed": {
+                    "root['value']": {"new_value": 112.0, "old_value": 100.0}
+                }
+            }
+
+            assert (
+                comparator.diff(
+                    {"value": 0.0},
+                    {"value": 0.05},
+                    absolute_tolerance=0.1,
+                )
+                == {}
+            )
+            assert comparator.diff(
+                {"value": 0.0},
+                {"value": 0.11},
+                absolute_tolerance=0.1,
+            ) == {
+                "values_changed": {
+                    "root['value']": {"new_value": 0.11, "old_value": 0.0}
+                }
+            }
+
+            assert (
+                comparator.diff(
+                    {"value": 100.0},
+                    {"value": 111.0},
+                    tolerance=0.1,
+                    absolute_tolerance=0.01,
+                )
+                == {}
+            )
+            assert comparator.diff({"value": 1}, {"value": 1.05}, tolerance=0.1) == {}
+            assert comparator.diff({"value": 1}, {"value": 1.2}, tolerance=0.1) == {
+                "type_changes": {
+                    "root['value']": {
+                        "new_type": float,
+                        "new_value": 1.2,
+                        "old_type": int,
+                        "old_value": 1,
+                    }
+                }
+            }
+            assert comparator.diff({"value": True}, {"value": 1}) == {
+                "type_changes": {
+                    "root['value']": {
+                        "new_type": int,
+                        "new_value": 1,
+                        "old_type": bool,
+                        "old_value": True,
+                    }
+                }
+            }
+            assert comparator.diff(
+                {"value": 1.0},
+                {"value": 1.0000000000001},
+                tolerance=0,
+            ) == {
+                "values_changed": {
+                    "root['value']": {
+                        "new_value": 1.0000000000001,
+                        "old_value": 1.0,
+                    }
+                }
+            }
+
+        def test_diff_rejects_positional_args(self):
+            """Test dictionary comparisons require keyword arguments."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            with pytest.raises(TypeError, match="does not accept positional"):
+                comparator.diff({"value": 1}, {"value": 2}, None)
+
+        def test_positional_diff_args_are_reported(self, ref_tree, res_tree_equal):
+            """Test positional config args fail with a clear report."""
+            res = compare_trees(
+                ref_tree,
+                res_tree_equal,
+                specific_args={"file.json": {"args": [None]}},
+            )
+
+            report = res["file.json"]
+            assert "Exception raised: (TypeError)" in report
+            assert "does not accept positional comparison arguments" in report
+            assert "takes 3 positional arguments" not in report
+
+        def test_keyword_tolerance_is_applied(self):
+            """Test tolerance remains a first-class keyword argument."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert (
+                comparator.diff(
+                    {"value": 100.0},
+                    {"value": 105.0},
+                    tolerance=0.1,
+                )
+                == {}
+            )
+            assert comparator.diff(
+                {"value": 100.0},
+                {"value": 105.0},
+                tolerance=0,
+            ) == {
+                "values_changed": {
+                    "root['value']": {"new_value": 105.0, "old_value": 100.0}
+                }
+            }
+
+        def test_deepdiff_exclude_paths_kwarg(self):
+            """Test useful DeepDiff kwargs are passed through."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert comparator.diff(
+                {"value": 1, "generated": "old"},
+                {"value": 2, "generated": "new"},
+                exclude_paths={"root['generated']"},
+            ) == {"values_changed": {"root['value']": {"new_value": 2, "old_value": 1}}}
+
+        def test_deepdiff_ignore_order_kwarg(self):
+            """Test DeepDiff list-order controls can be used."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert (
+                comparator.diff(
+                    {"values": [1, 2, 3]},
+                    {"values": [3, 2, 1]},
+                    ignore_order=True,
+                )
+                == {}
+            )
+
+        def test_top_level_json_scalar_diff_report(self, tmp_path):
+            """Test top-level scalar JSON files use the DeepDiff root path."""
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text("1", encoding="utf-8")
+            comp_file.write_text("2", encoding="utf-8")
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.JsonComparator(),
+            )
+
+            assert "Changed value at root: 1 -> 2." in diff
+
+        def test_yaml_added_mapping_with_mixed_key_types(self, tmp_path):
+            """Test YAML mappings with mixed key types can be reported."""
+            ref_file = tmp_path / "ref.yaml"
+            comp_file = tmp_path / "comp.yaml"
+            ref_file.write_text("{}\n", encoding="utf-8")
+            comp_file.write_text(
+                "payload:\n  1: one\n  '2': two\n",
+                encoding="utf-8",
+            )
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.YamlComparator(),
+            )
+
+            assert """Added value at ['payload']: {"1": "one", "2": "two"}.""" in diff
+
+        def test_missing_replace_pattern_paths_are_reported(self, tmp_path):
+            """Test missing replace-pattern paths are shown in the report."""
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text(
+                json.dumps({"stable": "ok", "target": "old"}),
+                encoding="utf-8",
+            )
+            comp_file.write_text(
+                json.dumps({"stable": "ok", "extra": "old"}),
+                encoding="utf-8",
+            )
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.JsonComparator(),
+                format_data_kwargs={
+                    "replace_pattern": {("old", "new"): ["target", "extra"]},
+                },
+            )
+
+            assert "The path 'extra' is missing in the reference dictionary" in diff
+            assert "The path 'target' is missing in the compared dictionary" in diff
+
+        def test_grouped_replace_pattern_errors_can_be_formatted(self, tmp_path):
+            """Test custom filters can keep grouped format errors."""
+
+            class ComparatorWithGroupedErrors(
+                dir_content_diff.base_comparators.JsonComparator
+            ):
+                """Keep the grouped DeepDiff report shape."""
+
+                def filter(self, differences, **kwargs):
+                    return differences
+
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text(json.dumps({"target": "old"}), encoding="utf-8")
+            comp_file.write_text(json.dumps({}), encoding="utf-8")
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                ComparatorWithGroupedErrors(),
+                format_data_kwargs={
+                    "replace_pattern": {("old", "new"): ["target"]},
+                },
+            )
+
+            assert "The path 'target' is missing in the compared dictionary" in diff
+
+        def test_deepdiff_repetition_changes_are_preserved(self, tmp_path):
+            """Test unsupported DeepDiff categories remain visible."""
+            ref_file = tmp_path / "ref.json"
+            comp_file = tmp_path / "comp.json"
+            ref_file.write_text(json.dumps({"values": [1, 1, 2]}), encoding="utf-8")
+            comp_file.write_text(json.dumps({"values": [1, 2, 2]}), encoding="utf-8")
+
+            diff = dir_content_diff.compare_files(
+                ref_file,
+                comp_file,
+                dir_content_diff.base_comparators.JsonComparator(),
+                ignore_order=True,
+                report_repetition=True,
+            )
+
+            assert "repetition_change:" in diff
+            assert '"old_repeat": 2' in diff
+
+        def test_numeric_equality_and_nan_handling(self):
+            """Test numeric equality and NaN handling."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+            nan = float("nan")
+
+            assert comparator.diff({"value": 1}, {"value": 1.0}) == {}
+            assert comparator.diff({"value": nan}, {"value": nan}) == {}
+
+            diff = comparator.diff({"value": nan}, {"value": 1.0})
+            value_diff = diff["values_changed"]["root['value']"]
+            assert math.isnan(value_diff["old_value"])
+            assert value_diff["new_value"] == 1.0
+
+        @pytest.mark.parametrize(
+            "difference, expected",
+            [
+                (
+                    (
+                        "values_changed",
+                        {"root['value']": {"new_value": "new", "old_value": "old"}},
+                    ),
+                    """Changed value at ['value']: "old" -> "new".""",
+                ),
+                (
+                    (
+                        "type_changes",
+                        {
+                            "root['value']": {
+                                "new_type": int,
+                                "new_value": 1,
+                                "old_type": bool,
+                                "old_value": True,
+                            }
+                        },
+                    ),
+                    "Changed value at ['value']: true -> 1.",
+                ),
+                (
+                    ("dictionary_item_added", {"root['value']": {"enabled": True}}),
+                    """Added value at ['value']: {"enabled": true}.""",
+                ),
+                (
+                    ("iterable_item_added", {"root['values'][1]": "new"}),
+                    """Added value at ['values'][1]: "new".""",
+                ),
+                (
+                    ("dictionary_item_removed", {"root['value']": {"enabled": False}}),
+                    """Removed value at ['value']: {"enabled": false}.""",
+                ),
+                (
+                    ("iterable_item_removed", {"root['values'][1]": "old"}),
+                    """Removed value at ['values'][1]: "old".""",
+                ),
+                (
+                    ("values_changed", {"root['value']": {"new_value": "new"}}),
+                    """['value']: {"new_value": "new"}""",
+                ),
+                (
+                    ("repetition_change", {"root['values'][1]": {"old_repeat": 1}}),
+                    """repetition_change: {"root['values'][1]": {"old_repeat": 1}}""",
+                ),
+            ],
+        )
+        def test_format_deepdiff_categories(self, difference, expected):
+            """Test human-readable reports for DeepDiff categories."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert comparator.format_diff(difference) == expected
+
+        def test_sort_uses_base_comparator_behavior(self):
+            """Test dictionary comparator sorting uses the base comparator behavior."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert (
+                comparator.sort.__func__
+                is dir_content_diff.base_comparators.BaseComparator.sort
+            )
+            assert comparator.sort(["b", "a"]) == ["a", "b"]
+
+        def test_tuple_values_use_native_iterable_report(self):
+            """Test tuple values use the native iterable report."""
+            comparator = dir_content_diff.base_comparators.JsonComparator()
+
+            assert comparator.diff({"k": (1,)}, {"k": (1, 2)}) == {
+                "iterable_item_added": {"root['k'][1]": 2}
+            }
+            assert comparator.diff({"k": (1, 2)}, {"k": (1, 3)}) == {
+                "values_changed": {"root['k'][1]": {"new_value": 3, "old_value": 2}}
+            }
 
     class TestXmlComparator:
         """Test the XML comparator."""
@@ -976,7 +1343,6 @@ class TestEqualTrees:
     def test_specific_args(self, ref_tree, res_tree_equal):
         """Test specific args."""
         specific_args = {
-            "file.yaml": {"args": [None, None, None, False, 0, False]},
             "file.json": {"tolerance": 0},
         }
         res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
@@ -986,7 +1352,6 @@ class TestEqualTrees:
     def test_replace_pattern(self, ref_tree, res_tree_equal):
         """Test specific args."""
         specific_args = {
-            "file.yaml": {"args": [None, None, None, False, 0, False]},
             "file.json": {
                 "format_data_kwargs": {
                     "replace_pattern": {(".*val.*", "NEW_VAL"): ["*.[*]"]},
@@ -1004,8 +1369,8 @@ class TestEqualTrees:
             r"""The files '\S*/ref/file\.json' and '\S*/res/file\.json' are different:\n"""
             r"""Kwargs used for formatting data: """
             r"""{'replace_pattern': {\('\.\*val\.\*', 'NEW_VAL'\): \['\*\.\[\*\]'\]}}\n"""
-            r"""Changed the value of '\[nested_list\]\[2\]' from 'str_val' to 'NEW_VAL'\.\n"""
-            r"""Changed the value of '\[simple_list\]\[2\]' from 'str_val' to 'NEW_VAL'\."""
+            r"""Changed value at \['nested_list'\]\[2\]: "str_val" -> "NEW_VAL"\.\n"""
+            r"""Changed value at \['simple_list'\]\[2\]: "str_val" -> "NEW_VAL"\."""
         )
 
         assert re.match(pat, res["file.json"]) is not None
@@ -1013,7 +1378,6 @@ class TestEqualTrees:
     def test_specific_comparator(self, ref_tree, res_tree_equal):
         """Test specific args."""
         specific_args = {
-            "file.yaml": {"args": [None, None, None, False, 0, False]},
             "file.json": {"comparator": dir_content_diff.DefaultComparator()},
         }
         res = compare_trees(ref_tree, res_tree_equal, specific_args=specific_args)
@@ -1024,7 +1388,6 @@ class TestEqualTrees:
         """Test specific args."""
         specific_args = {
             "all yaml files": {
-                "args": [None, None, None, False, 0, False],
                 "patterns": [r".*\.yaml"],
             },
             "all json files": {
@@ -1240,7 +1603,6 @@ class TestDiffTrees:
         """Test specific args."""
         specific_args = {
             "all yaml files": {
-                "args": [None, None, None, False, 0, False],
                 "patterns": [r".*\.yaml"],
             },
             "all json files": {
@@ -1304,36 +1666,6 @@ class TestDiffTrees:
         )
         assert match is not None
 
-    def test_fix_dot_notation(
-        self, ref_tree, res_tree_diff, pdf_diff, dict_diff, xml_diff, ini_diff
-    ):
-        """Test that the dot notation is properly fixed."""
-        specific_args = {"file.yaml": {"args": [None, None, None, False, 0, True]}}
-        res = compare_trees(ref_tree, res_tree_diff, specific_args=specific_args)
-
-        assert len(res) == 5
-        match_res_0 = re.match(pdf_diff, res["file.pdf"])
-        match_res_1 = re.match(
-            dict_diff.replace(
-                r"are different:\n",
-                r"are different:\nArgs used for computing differences: "
-                r"\[None, None, None, False, 0, True\]\n",
-            ),
-            res["file.yaml"],
-        )
-        match_res_2 = re.match(dict_diff, res["file.json"])
-        match_res_3 = re.match(xml_diff, res["file.xml"])
-        match_res_4 = re.match(ini_diff, res["file.ini"])
-
-        for match_i in [
-            match_res_0,
-            match_res_1,
-            match_res_2,
-            match_res_3,
-            match_res_4,
-        ]:
-            assert match_i is not None
-
     def test_format_inside_diff(self, ref_tree, res_tree_diff, dict_diff):
         """Test formatting the result inside the diff method."""
 
@@ -1346,13 +1678,12 @@ class TestDiffTrees:
                 return data
 
             def diff(self, ref, comp, *args, **kwargs):
-                diffs = list(
-                    dictdiffer.diff(ref, comp, *args, dot_notation=False, **kwargs)
-                )
-
                 # Format here instead of overriding the default format method
                 comparator = dir_content_diff.base_comparators.JsonComparator()
-                formatted = [comparator.format_diff(i) for i in diffs]
+                diffs = comparator.diff(ref, comp, **kwargs)
+                formatted = [
+                    comparator.format_diff(i) for i in comparator.filter(diffs)
+                ]
 
                 return formatted
 
@@ -1368,16 +1699,18 @@ class TestDiffTrees:
 class TestProgrammaticUse:
     """Test specific comparators that could be use programmatically."""
 
+    def test_equal_tree_raw_diffs(self, ref_tree, res_tree_equal):
+        """Test equal raw diff reports are not returned as differences."""
+        assert compare_trees(ref_tree, res_tree_equal, return_raw_diffs=True) == {}
+
     def test_diff_tree(self, ref_tree, res_tree_diff, pdf_diff, dict_diff):
         """Test with different trees."""
         res = compare_trees(ref_tree, res_tree_diff, return_raw_diffs=True)
 
         res_json = res["file.json"]
-
-        assert len(res_json) == 25
-        assert len(list(filter(lambda x: x[0] == "change", res_json))) == 17
-        assert len(list(filter(lambda x: x[0] == "add", res_json))) == 4
-        assert len(list(filter(lambda x: x[0] == "remove", res_json))) == 4
+        assert len(res_json["values_changed"]) == 17
+        assert len(res_json["dictionary_item_added"]) == 7
+        assert len(res_json["dictionary_item_removed"]) == 4
 
 
 class TestBaseFunctions:

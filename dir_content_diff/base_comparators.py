@@ -60,7 +60,7 @@ class _NumericToleranceOperator(BaseOperator):
             abs_tol=self.absolute_tolerance or 0,
         )
 
-    def normalize_value_for_hashing(self, parent, obj):
+    def normalize_value_for_hashing(self, parent, obj):  # pylint: disable=unused-argument
         """Return unmodified values when set items are hashed."""
         return obj
 

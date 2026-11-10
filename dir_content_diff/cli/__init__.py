@@ -72,7 +72,8 @@ def load_config(ctx, param, value):  # pylint: disable=unused-argument
     short_help="Compare the two given inputs",
     epilog=(
         "Note: When comparing directories, only the files located in the REFERENCE_INPUT will be "
-        "considered in the COMPARED_INPUT."
+        "considered in the COMPARED_INPUT.\n\n"
+        "The exit code is 1 when differences are found and 0 otherwise."
     ),
 )
 @click.argument("reference_input", type=click.Path(dir_okay=True, exists=True))
@@ -140,7 +141,7 @@ def main(ctx, *args, **kwargs):
     executor_type = kwargs.pop("executor_type", "sequential")
     max_workers = kwargs.pop("max_workers", None)
 
-    input_diff(
+    has_differences = input_diff(
         ref,
         comp,
         ctx.config,
@@ -149,6 +150,8 @@ def main(ctx, *args, **kwargs):
         executor_type,
         max_workers,
     )
+    if has_differences:
+        ctx.exit(1)
 
 
 def input_diff(
@@ -159,8 +162,12 @@ def input_diff(
     sort_diffs: bool = False,
     executor_type: str = "sequential",
     max_workers: Optional[int] = None,
-):
-    """Compute and display differences from given inputs."""
+) -> bool:
+    """Compute and display differences from given inputs.
+
+    Returns:
+        ``True`` if differences were found, ``False`` otherwise.
+    """
     ref = Path(ref)
     comp = Path(comp)
     ref_is_dir = ref.is_dir()
@@ -218,3 +225,5 @@ def input_diff(
         )
     else:
         LOGGER.info("No difference found between '%s' and '%s'", ref, comp)
+
+    return bool(res)

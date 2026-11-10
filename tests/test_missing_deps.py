@@ -37,8 +37,7 @@ def test_missing_deps(tmp_path):
         "These dependencies can be installed with 'pip install dir-content-diff[morphio]'."
         "\n"
         "Loading the voxcell module without the required dependencies installed "
-        "(requirements are the following: voxcell>=3.1.1, pynrrd<1.1,>=0.4 and "
-        "nptyping>=2.5). "
+        "(requirements are the following: voxcell>=3.1.1 and pynrrd>=0.4). "
         "Will crash at runtime if the related functionalities are used. "
         "These dependencies can be installed with 'pip install dir-content-diff[voxcell]'.\n"
     )

@@ -49,8 +49,8 @@ class _NumericToleranceOperator(BaseOperator):
 
     def give_up_diffing(self, level, diff_instance):
         """Return whether two numeric values should be treated as equal."""
-        first_is_nan = bool(level.t1 != level.t1)
-        second_is_nan = bool(level.t2 != level.t2)
+        first_is_nan = math.isnan(level.t1)
+        second_is_nan = math.isnan(level.t2)
         if first_is_nan or second_is_nan:
             return first_is_nan and second_is_nan
         return math.isclose(
@@ -103,7 +103,10 @@ class BaseComparator(ABC):
 
     def save(self, data, path, **kwargs):
         """Save formatted data into a file."""
-        raise NotImplementedError  # pragma: no cover
+        # pylint: disable=unused-argument
+        raise TypeError(  # pragma: no cover
+            f"{self.__class__.__name__} does not support saving formatted data."
+        )
 
     @property
     def save_capability(self):

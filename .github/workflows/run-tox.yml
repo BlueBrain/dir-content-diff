@@ -12,7 +12,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -86,6 +86,7 @@ jobs:
       with:
         name: tests-${{ matrix.python-version }}-${{ matrix.min_versions }}
         retention-days: 4
+        include-hidden-files: true
         path: |
           .tox/py*/tmp
           docs/build

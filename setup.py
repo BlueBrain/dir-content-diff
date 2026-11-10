@@ -29,7 +29,7 @@ with (
 # Requirements for tests
 test_reqs = [
     "dicttoxml>=1.7.16",
-    "matplotlib>=3.4",
+    "matplotlib>=3.4,<3.11",
     "rst2pdf>=0.99",
     "pandas>=1.4",
     "pytest>=6.2",

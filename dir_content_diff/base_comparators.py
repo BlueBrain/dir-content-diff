@@ -104,9 +104,9 @@ class BaseComparator(ABC):
     def save(self, data, path, **kwargs):
         """Save formatted data into a file."""
         # pylint: disable=unused-argument
-        raise TypeError(
+        raise TypeError(  # pragma: no cover
             f"{self.__class__.__name__} does not support saving formatted data."
-        )  # pragma: no cover
+        )
 
     @property
     def save_capability(self):

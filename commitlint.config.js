@@ -1,5 +1,15 @@
 module.exports = {
-	parserPreset: 'conventional-changelog-conventionalcommits',
+	parserPreset: {
+		parserOpts: {
+			headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
+			breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/,
+			headerCorrespondence: ['type', 'scope', 'subject'],
+			noteKeywords: ['BREAKING CHANGE', 'BREAKING-CHANGE'],
+			revertPattern: /^(?:Revert|revert:)\s"?([\s\S]+?)"?\s*This reverts commit (\w*)\./i,
+			revertCorrespondence: ['header', 'hash'],
+			issuePrefixes: ['#'],
+		},
+	},
 	rules: {
 		'body-leading-blank': [1, 'always'],
 		'body-max-line-length': [2, 'always', 100],

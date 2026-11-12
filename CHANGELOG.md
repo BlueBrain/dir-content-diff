@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.15.0](https://github.com/BlueBrain/dir-content-diff/compare/1.14.1..0.15.0)
+
+> 12 November 2026
+
+### Build
+
+- Update dependencies (Adrien Berchet - [#111](https://github.com/BlueBrain/dir-content-diff/pull/111))
+- Deprecate Python &lt; 3.10 (dependabot[bot] - [#105](https://github.com/BlueBrain/dir-content-diff/pull/105))
+
+### New Features
+
+- Exit with code 1 when differences are found (Adrien Berchet - [#112](https://github.com/BlueBrain/dir-content-diff/pull/112))
+
+### Refactoring and Updates
+
+- Use DeepDiff instead of DictDiffer (Adrien Berchet - [#106](https://github.com/BlueBrain/dir-content-diff/pull/106))
+
 ## [1.14.1](https://github.com/BlueBrain/dir-content-diff/compare/1.14.0..1.14.1)
 
 > 15 January 2026

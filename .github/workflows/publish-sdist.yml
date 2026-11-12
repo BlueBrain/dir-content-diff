@@ -9,6 +9,8 @@ jobs:
   build-n-publish:
     name: Build and publish on PyPI
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v7
       - name: Set up Python 3.10
@@ -21,5 +23,3 @@ jobs:
           python -m build -o dist
       - name: Publish distribution package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}

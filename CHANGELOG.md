@@ -1,6 +1,14 @@
 # Changelog
 
-## [0.15.0](https://github.com/BlueBrain/dir-content-diff/compare/1.14.1..0.15.0)
+## [0.15.1](https://github.com/BlueBrain/dir-content-diff/compare/1.15.0..0.15.1)
+
+> 12 November 2026
+
+### CI Improvements
+
+- Fix publish job (Adrien Berchet - [#114](https://github.com/BlueBrain/dir-content-diff/pull/114))
+
+## [1.15.0](https://github.com/BlueBrain/dir-content-diff/compare/1.14.1..1.15.0)
 
 > 12 November 2026
 
